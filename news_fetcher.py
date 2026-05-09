@@ -734,6 +734,42 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
 .cal-erange{font-size:9px;color:var(--muted);white-space:nowrap;
   text-align:right;padding-top:1px}
 .cal-empty-msg{font-size:11px;color:var(--dim);padding:10px 0;font-style:italic}
+
+/* ── Tablet (≤1100px) ────────────────────────────────────────── */
+@media(max-width:1100px){
+  .cal-months{grid-template-columns:repeat(2,1fr);gap:0 32px}
+}
+
+/* ── Mobile (≤768px) ─────────────────────────────────────────── */
+@media(max-width:768px){
+  header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  header h1{font-size:17px}
+  .ts{font-size:8.5px}
+  .btn{padding:6px 12px;font-size:8px;margin-left:0}
+
+  .sec-hd{padding:0 16px}
+  .story-list{padding:0 16px 16px}
+  .macro-list{padding:0 16px 16px}
+  .paris-list{padding:0 16px 16px}
+  .cards{padding:0 16px 14px}
+
+  .two-col{grid-template-columns:1fr}
+  .two-col>.section{border-right:none;border-bottom:1px solid var(--border)}
+  .two-col>.section:last-child{border-bottom:none}
+
+  .three-col{grid-template-columns:1fr}
+  .three-col>.section{height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .three-col>.section:last-child{border-bottom:none}
+  .three-col .story-list,.three-col .paris-list{max-height:280px}
+
+  .map-wrap{flex-direction:column;height:auto}
+  #map{flex:none;height:240px;width:100%}
+  .cp{border-left:none;border-top:1px solid var(--border);height:280px}
+
+  .cal-months{grid-template-columns:1fr;padding:16px 16px 24px;gap:24px 0}
+  .cal-legend{gap:5px 12px}
+  .cal-leg-i{font-size:7.5px}
+}
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  HTML BUILDERS
@@ -1098,14 +1134,16 @@ def build_calendar():
 <div class="cal-months" id="cal-months-wrap">{months_html}</div>
 <script>
 (function(){{
-  var cur={cur_idx},total={total},SHOW=3;
+  var cur={cur_idx},total={total};
   var names={json.dumps(month_names)};
   var sy={start_y},sm={start_m};
+  function getShow(){{return window.innerWidth<=768?1:window.innerWidth<=1100?2:3;}}
   function mname(idx){{
     var y=sy+Math.floor((sm-1+idx)/12),m=(sm-1+idx)%12;
     return names[m+1]+' '+y;
   }}
   function show(s){{
+    var SHOW=getShow();
     document.querySelectorAll('.cal-month').forEach(function(el){{
       var i=parseInt(el.dataset.ci);
       el.style.display=(i>=s&&i<s+SHOW)?'':'none';
@@ -1115,7 +1153,8 @@ def build_calendar():
     document.getElementById('cal-range').textContent=mname(s)+' – '+mname(s+SHOW-1);
   }}
   document.getElementById('cal-prev').onclick=function(){{if(cur>0){{cur--;show(cur);}}}};
-  document.getElementById('cal-next').onclick=function(){{if(cur+SHOW<total){{cur++;show(cur);}}}};
+  document.getElementById('cal-next').onclick=function(){{if(cur+getShow()<total){{cur++;show(cur);}}}};
+  window.addEventListener('resize',function(){{show(cur);}});
   show(cur);
 }})();
 </script>"""
