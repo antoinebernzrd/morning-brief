@@ -484,6 +484,49 @@ def _fetch_telegram():
     arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     print(f"    → {len(arts)} AFP messages")
     return arts
+def _fetch_event_news(name, max_items=8):
+    """Fetch latest news for a calendar event by name via Google News RSS."""
+    q = name.replace(" ", "+").replace("'", "").replace("&", "")
+    url = (f"https://news.google.com/rss/search?q=%22{q}%22"
+           f"&hl=en&gl=US&ceid=US:en")
+    try:
+        feed = feedparser.parse(
+            url,
+            agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+            request_headers={"Accept": "application/rss+xml,application/xml,text/xml,*/*"},
+        )
+        arts = []
+        for e in feed.entries[:max_items]:
+            dt  = _parse_date(e)
+            src = getattr(getattr(e, "source", None), "title", "") or ""
+            arts.append({
+                "title": e.get("title", "—"),
+                "link":  e.get("link", "#"),
+                "source": src,
+                "ago":   _ago(dt),
+            })
+        return arts
+    except Exception as ex:
+        print(f"  ⚠  event news ({name}): {ex}")
+        return []
+
+def _fetch_calendar_event_news():
+    """Fetch news for calendar events active within a ±30/+90 day window."""
+    from datetime import timedelta
+    today   = datetime.now()
+    w_start = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    w_end   = (today + timedelta(days=90)).strftime("%Y-%m-%d")
+    relevant = [e for e in CALENDAR_EVENTS
+                if e["start"] <= w_end and e["end"] >= w_start]
+    out = {}
+    for e in relevant:
+        print(f"    → event news: {e['name']}")
+        arts = _fetch_event_news(e["name"])
+        if arts:
+            out[e["name"]] = arts
+    return out
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  CSS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -735,6 +778,35 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
   text-align:right;padding-top:1px}
 .cal-empty-msg{font-size:11px;color:var(--dim);padding:10px 0;font-style:italic}
 
+/* ── Calendar event detail panel ────────────────────────────── */
+.cal-det{border-top:1px solid var(--border);padding:24px 40px 32px;
+  background:var(--bg2)}
+.cal-det-hd{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px}
+.cal-det-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.cal-det-name{font-family:var(--serif);font-size:17px;font-style:italic;
+  font-weight:600;color:var(--text)}
+.cal-det-range{font-size:10px;color:var(--muted);letter-spacing:.3px}
+.cal-det-close{background:none;border:1px solid var(--border);color:var(--muted);
+  font-size:16px;width:28px;height:28px;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:var(--sans);transition:all .15s}
+.cal-det-close:hover{background:var(--text);color:var(--bg2);border-color:var(--text)}
+.cal-det-arts{display:grid;grid-template-columns:repeat(2,1fr);
+  border-top:1px solid var(--border)}
+.cal-det-art{padding:9px 16px 9px 0;border-bottom:1px solid var(--border);
+  text-decoration:none;color:var(--text);display:block;font-size:12px;
+  line-height:1.55;font-weight:300;transition:color .12s}
+.cal-det-art:hover{color:var(--accent)}
+.cal-det-art small{display:block;font-size:9px;color:var(--dim);margin-top:2px}
+.cal-det-none{font-size:11px;color:var(--dim);padding:12px 0;font-style:italic;
+  border-top:1px solid var(--border)}
+.cal-erow[data-ev]{cursor:pointer}
+.cal-erow[data-ev]:hover .cal-ename{color:var(--accent)}
+.cal-erow.ev-sel .cal-ename{color:var(--accent)}
+.cal-erow.ev-sel{background:var(--bg3);border-radius:3px;
+  padding:5px 7px;margin:0 -7px 1px -7px;border-bottom:none}
+
 /* ── Tablet (≤1100px) ────────────────────────────────────────── */
 @media(max-width:1100px){
   .cal-months{grid-template-columns:repeat(2,1fr);gap:0 32px}
@@ -769,6 +841,8 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
   .cal-months{grid-template-columns:1fr;padding:16px 16px 24px;gap:24px 0}
   .cal-legend{gap:5px 12px}
   .cal-leg-i{font-size:7.5px}
+  .cal-det{padding:16px 16px 24px}
+  .cal-det-arts{grid-template-columns:1fr}
 }
 """
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1026,7 +1100,7 @@ def build_paris(arts):
         rows = '<p style="font-size:11px;color:var(--dim);padding:14px 0">No Paris events fetched — feeds may be unavailable.</p>'
     return _sec("#0C0C0C","Paris — What’s On",
                 f'<div class="paris-list">{rows}</div>')
-def build_calendar():
+def build_calendar(event_news={}):
     today     = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
 
@@ -1093,8 +1167,10 @@ def build_calendar():
                     cls = " ev-live"
                 else:
                     cls = ""
+                has_news = e["name"] in event_news
+                ev_attr  = f' data-ev="{_s(e["name"])}" data-range="{_s(rng)}"' if has_news else ""
                 rows += (
-                    f'<div class="cal-erow{cls}">'
+                    f'<div class="cal-erow{cls}"{ev_attr}>'
                     f'<span class="cal-edot" style="background:{col}"></span>'
                     f'<span class="cal-ename">{_s(e["name"])}</span>'
                     f'<span class="cal-erange">{rng}</span>'
@@ -1121,6 +1197,9 @@ def build_calendar():
         f'{cat_lbl[cat]}</span>'
         for cat, col in cat_col.items()
     )
+
+    event_news_js = json.dumps(event_news, ensure_ascii=False)
+
     body = f"""
 <div style="display:flex;align-items:center;justify-content:space-between;
   padding:16px 40px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px">
@@ -1132,11 +1211,24 @@ def build_calendar():
   </div>
 </div>
 <div class="cal-months" id="cal-months-wrap">{months_html}</div>
+<div id="cal-det" style="display:none">
+  <div class="cal-det-hd">
+    <div class="cal-det-title">
+      <span class="cal-det-name" id="cal-det-name"></span>
+      <span class="cal-det-range" id="cal-det-range"></span>
+    </div>
+    <button class="cal-det-close" id="cal-det-close">&#x2715;</button>
+  </div>
+  <div id="cal-det-body"></div>
+</div>
 <script>
 (function(){{
   var cur={cur_idx},total={total};
   var names={json.dumps(month_names)};
   var sy={start_y},sm={start_m};
+  var EN={event_news_js};
+  var activeEv=null;
+  function _esc(t){{return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}}
   function getShow(){{return window.innerWidth<=768?1:window.innerWidth<=1100?2:3;}}
   function mname(idx){{
     var y=sy+Math.floor((sm-1+idx)/12),m=(sm-1+idx)%12;
@@ -1152,6 +1244,45 @@ def build_calendar():
     document.getElementById('cal-next').disabled=s+SHOW>=total;
     document.getElementById('cal-range').textContent=mname(s)+' – '+mname(s+SHOW-1);
   }}
+  function openDetail(name, range){{
+    activeEv=name;
+    document.getElementById('cal-det-name').textContent=name;
+    document.getElementById('cal-det-range').textContent=range;
+    var arts=EN[name]||[];
+    var bodyEl=document.getElementById('cal-det-body');
+    if(arts.length){{
+      var html='<div class="cal-det-arts">';
+      arts.forEach(function(a){{
+        html+='<a href="'+_esc(a.link)+'" target="_blank" rel="noopener" class="cal-det-art">'
+          +_esc(a.title)
+          +'<small>'+_esc(a.source)+(a.ago?' · '+a.ago:'')+'</small>'
+          +'</a>';
+      }});
+      html+='</div>';
+      bodyEl.innerHTML=html;
+    }} else {{
+      bodyEl.innerHTML='<p class="cal-det-none">No recent coverage found.</p>';
+    }}
+    document.getElementById('cal-det').style.display='';
+    document.querySelectorAll('.cal-erow.ev-sel').forEach(function(el){{el.classList.remove('ev-sel');}});
+    document.querySelectorAll('.cal-erow[data-ev="'+CSS.escape(name)+'"]').forEach(function(el){{
+      el.classList.add('ev-sel');
+    }});
+  }}
+  function closeDetail(){{
+    activeEv=null;
+    document.getElementById('cal-det').style.display='none';
+    document.querySelectorAll('.cal-erow.ev-sel').forEach(function(el){{el.classList.remove('ev-sel');}});
+  }}
+  document.addEventListener('click',function(ev){{
+    var row=ev.target.closest('.cal-erow[data-ev]');
+    if(row){{
+      var name=row.dataset.ev, range=row.dataset.range;
+      if(activeEv===name){{closeDetail();}} else {{openDetail(name,range);}}
+      return;
+    }}
+    if(ev.target.closest('#cal-det-close')){{closeDetail();}}
+  }});
   document.getElementById('cal-prev').onclick=function(){{if(cur>0){{cur--;show(cur);}}}};
   document.getElementById('cal-next').onclick=function(){{if(cur+getShow()<total){{cur++;show(cur);}}}};
   window.addEventListener('resize',function(){{show(cur);}});
@@ -1192,6 +1323,9 @@ def main():
     print("  Fetching Cities (Marseille & Paris)…")
     cities_arts = _filter_recent(_fetch(CITIES_SOURCES))
     print(f"    → {len(cities_arts)} city articles")
+    print("  Fetching calendar event news…")
+    event_news = _fetch_calendar_event_news()
+    print(f"    → {len(event_news)} events with coverage")
     raw_match = _match_conflicts(conflict_pool)
     conf_arts_js = {
         cid: [{"title":a["title"],"link":a["link"],
@@ -1235,7 +1369,7 @@ def main():
 {build_cities(cities_arts)}
 {build_paris(paris_arts)}
 </div>
-{build_calendar()}
+{build_calendar(event_news)}
 </body>
 </html>"""
     OUTPUT_FILE.write_text(page, encoding="utf-8")
