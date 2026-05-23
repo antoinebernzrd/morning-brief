@@ -973,13 +973,43 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .hero-sec .ticker{position:absolute;bottom:0;left:0;right:0}
 
 /* ── Snap section inner layouts ──────────────────────────── */
-.snap-geo{height:72vh;min-height:460px}
-.snap-geo>.section{height:100%;display:flex;flex-direction:column}
-.snap-geo .map-wrap{flex:1;height:auto}
+.snap-geo{height:100vh!important}
+.snap-geo>.section{height:100%!important;display:flex;flex-direction:column;overflow:hidden}
+.snap-geo .map-wrap{flex:1!important;height:0!important;min-height:0}
+.snap-geo #map{height:100%!important}
 .cp-list{position:relative}
 .cp-list::after{content:'';position:sticky;bottom:0;display:block;
-  height:36px;background:linear-gradient(to bottom,transparent,var(--bg2));
+  height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
+/* ── Map aesthetic: dot-matrix world ─────────────────────── */
+#map{background:#050505!important}
+#map .leaflet-tile-pane{
+  filter:grayscale(1) brightness(0.14) contrast(6)!important;
+  image-rendering:pixelated}
+#map .leaflet-control-zoom a{background:#111;color:#555;border-color:#222}
+#map .leaflet-control-zoom a:hover{background:#1a1a1a;color:#aaa}
+/* dot-grid mask punches circular holes so tiles show through as dots */
+#map::after{content:'';position:absolute;inset:0;z-index:450;pointer-events:none;
+  background:
+    radial-gradient(circle,transparent 35%,#050505 36%) 0 0 / 5px 5px,
+    radial-gradient(circle,transparent 35%,#050505 36%) 2.5px 2.5px / 5px 5px}
+.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-overlay-pane{z-index:500!important}
+.leaflet-popup-pane{z-index:700!important}
+/* ── Glow markers ────────────────────────────────────────── */
+.gm{border-radius:50%}
+.gm-c{width:10px;height:10px;background:#EF4444;
+  box-shadow:0 0 0 3px rgba(239,68,68,.2),0 0 14px 5px rgba(239,68,68,.45),
+             0 0 30px 12px rgba(239,68,68,.18)}
+.gm-t{width:7px;height:7px;background:#F97316;
+  box-shadow:0 0 0 2px rgba(249,115,22,.2),0 0 10px 4px rgba(249,115,22,.4)}
+.gm-pulse{width:12px;height:12px;background:#EF4444;
+  box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 18px 7px rgba(239,68,68,.5),
+             0 0 40px 16px rgba(239,68,68,.22);
+  animation:glow-pulse 1.8s ease-in-out infinite}
+@keyframes glow-pulse{
+  0%,100%{box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 18px 7px rgba(239,68,68,.5),0 0 40px 16px rgba(239,68,68,.22)}
+  50%{box-shadow:0 0 0 6px rgba(239,68,68,.15),0 0 28px 11px rgba(239,68,68,.7),0 0 60px 24px rgba(239,68,68,.3)}
+}
 
 .snap-feed>.two-col{height:100%;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
@@ -1072,7 +1102,7 @@ def build_map(conflicts_json, articles_json):
   var map = L.map('map',{{center:[20,10],zoom:2,minZoom:2,
     maxZoom:6,zoomControl:true,attributionControl:false,
     maxBounds:[[-75,-180],[85,180]],maxBoundsViscosity:1.0}});
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png',
+  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png',
     {{subdomains:'abcd',maxZoom:19,noWrap:true}}).addTo(map);
   function isNew(id) {{
     var arts = A[id] || [];
@@ -1091,10 +1121,12 @@ def build_map(conflicts_json, articles_json):
     if (li) {{ li.querySelector('.new-badge') && (li.querySelector('.new-badge').style.display='none'); }}
     if (markers[id] && markers[id]._isPulse) {{
       markers[id].remove();
-      var col = TC[c.type]||'#888';
-      var m = L.circleMarker([c.lat,c.lon],{{
-        radius:c.type==='conflict'?7:5,color:col,fillColor:col,fillOpacity:.75,weight:1.5
-      }}).addTo(map);
+      var cls2 = c.type==='conflict'?'gm gm-c':'gm gm-t';
+      var sz2  = c.type==='conflict'?10:7;
+      var m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
+        className:'',html:'<div class="'+cls2+'"></div>',
+        iconSize:[sz2,sz2],iconAnchor:[sz2/2,sz2/2]
+      }})}}).addTo(map);
       m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
       m.on('click',function(){{showDetail(c.id);}});
       markers[id]=m;
@@ -1139,17 +1171,18 @@ def build_map(conflicts_json, articles_json):
     listEl.appendChild(item);
     var m;
     if (hasNew) {{
-      var icon = L.divIcon({{
-        className:'pulse-icon',
-        html:'<div style="width:14px;height:14px;background:'+col+';border-radius:50%"></div>',
-        iconSize:[14,14],iconAnchor:[7,7]
-      }});
-      m = L.marker([c.lat,c.lon],{{icon:icon}}).addTo(map);
+      m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
+        className:'',html:'<div class="gm gm-pulse"></div>',
+        iconSize:[12,12],iconAnchor:[6,6]
+      }})}}).addTo(map);
       m._isPulse = true;
     }} else {{
-      m = L.circleMarker([c.lat,c.lon],{{
-        radius:c.type==='conflict'?7:5,color:col,fillColor:col,fillOpacity:.75,weight:1.5
-      }}).addTo(map);
+      var cls = c.type==='conflict'?'gm gm-c':'gm gm-t';
+      var sz  = c.type==='conflict'?10:7;
+      m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
+        className:'',html:'<div class="'+cls+'"></div>',
+        iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]
+      }})}}).addTo(map);
     }}
     m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
     m.on('click',function(){{showDetail(c.id);}});
