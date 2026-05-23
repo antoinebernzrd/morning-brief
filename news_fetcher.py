@@ -640,8 +640,8 @@ def _fetch_calendar_event_news():
 CSS = """
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#EBF0F8;--bg2:#F5F8FC;--bg3:#DDE5F2;
-  --border:#C8D4E8;--text:#0C0C0C;--muted:#7A90B0;--dim:#A8BACE;
+  --bg:#D6E4F7;--bg2:#E8F1FB;--bg3:#C4D8F2;
+  --border:#A8C4E8;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -661,7 +661,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);
 header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
-  background:rgba(235,240,248,.96);backdrop-filter:blur(24px)}
+  background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
 @media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
@@ -973,8 +973,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .hero-sec .ticker{position:absolute;bottom:0;left:0;right:0}
 
 /* ── Snap section inner layouts ──────────────────────────── */
+.snap-geo{height:72vh;min-height:460px}
 .snap-geo>.section{height:100%;display:flex;flex-direction:column}
 .snap-geo .map-wrap{flex:1;height:auto}
+.cp-list{position:relative}
+.cp-list::after{content:'';position:sticky;bottom:0;display:block;
+  height:36px;background:linear-gradient(to bottom,transparent,var(--bg2));
+  pointer-events:none}
 
 .snap-feed>.two-col{height:100%;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
@@ -1064,10 +1069,11 @@ def build_map(conflicts_json, articles_json):
   var detEl  = document.getElementById('cp-det');
   var bodyEl = document.getElementById('cp-body');
   var markers = {{}};
-  var map = L.map('map',{{center:[20,10],zoom:2,minZoom:1,
-    zoomControl:true,attributionControl:false}});
+  var map = L.map('map',{{center:[20,10],zoom:2,minZoom:2,
+    maxZoom:6,zoomControl:true,attributionControl:false,
+    maxBounds:[[-75,-180],[85,180]],maxBoundsViscosity:1.0}});
   L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png',
-    {{subdomains:'abcd',maxZoom:19}}).addTo(map);
+    {{subdomains:'abcd',maxZoom:19,noWrap:true}}).addTo(map);
   function isNew(id) {{
     var arts = A[id] || [];
     if (!arts.length) return false;
