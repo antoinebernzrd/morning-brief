@@ -409,6 +409,19 @@ def _snip(entry):
     txt = re.sub(r"<[^>]+>"," ", raw)
     txt = re.sub(r"\s+"," ", txt).strip()
     return txt[:280] + "…" if len(txt) > 280 else txt
+# Strip source name suffixes that Google News RSS embeds in article titles
+# e.g. "Italy extends tax cuts – Les Echos" → "Italy extends tax cuts"
+_TITLE_SUFFIX_RE = re.compile(
+    r'\s*[\-–|]\s*(?:Les Echos|Le Monde|Le Parisien|L\'[ÉE]quipe|Télérama|Telerama|'
+    r'Financial Times|The Economist|Reuters|BBC(?:\s+\w+)?|Al Jazeera|'
+    r'The New York Times|Defense News|NSS Magazine|The Art Newspaper|'
+    r'Timeout(?:\s+\w+)?|The NBS|Silicon(?:Mania|Carne)|TBPN|'
+    r'FT(?:\s+\w+)?|AFP|AP News|Politico|Bloomberg)\s*$',
+    re.IGNORECASE
+)
+def _clean_title(t):
+    return _TITLE_SUFFIX_RE.sub('', (t or '—').strip()).strip()
+
 def _fetch(sources):
     arts = []
     for name, url in sources:
@@ -420,7 +433,7 @@ def _fetch(sources):
             for e in feed.entries[:MAX_PER_SOURCE]:
                 arts.append({
                     "source":  name,
-                    "title":   e.get("title","—"),
+                    "title":   _clean_title(e.get("title","—")),
                     "link":    e.get("link","#"),
                     "date":    _parse_date(e),
                     "ts":      _ts(_parse_date(e)),
@@ -479,11 +492,11 @@ def _dedup(arts):
             u  = wi | wj
             # Same-language: word overlap ≥ 25%
             word_match   = bool(u) and len(wi & wj)/len(u) >= 0.25
-            # Cross-language: share a distinctive proper noun / acronym
+            # Cross-language: share 2+ proper nouns/acronyms (1 is too broad — e.g. "Italy")
             shared_ent   = ei & ej
-            entity_match = len(shared_ent) >= 1 and (
-                any(len(e) >= 5 for e in shared_ent)   # long brand/name
-                or len(shared_ent) >= 2                 # or two acronyms
+            entity_match = (
+                len(shared_ent) >= 2                          # two entities match
+                or any(len(e) >= 8 for e in shared_ent)      # or one very long brand name
             )
             if word_match or entity_match:
                 grp.append(b); used.add(j)
