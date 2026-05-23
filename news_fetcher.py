@@ -9,10 +9,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 _PARIS = ZoneInfo("Europe/Paris")
-OUTPUT_DIR   = Path(__file__).parent
-OUTPUT_FILE  = OUTPUT_DIR / "index.html"
-CONFIG_FILE  = OUTPUT_DIR / "telegram_config.json"
-SESSION_FILE = OUTPUT_DIR / "telegram_session"
+OUTPUT_DIR          = Path(__file__).parent
+OUTPUT_FILE         = OUTPUT_DIR / "index.html"
+CONFIG_FILE         = OUTPUT_DIR / "telegram_config.json"
+SESSION_FILE        = OUTPUT_DIR / "telegram_session"
+OPENAI_CONFIG_FILE  = OUTPUT_DIR / "openai_config.json"
+HEADLINE_CACHE_FILE = OUTPUT_DIR / "headline_cache.json"
 MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
@@ -1051,6 +1053,78 @@ def build_map(conflicts_json, articles_json):
 }})();
 </script>
 """
+def _load_openai():
+    """Return an OpenAI client if configured, else None."""
+    import os
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key and OPENAI_CONFIG_FILE.exists():
+        try:
+            api_key = json.loads(OPENAI_CONFIG_FILE.read_text()).get("api_key")
+        except Exception:
+            pass
+    if not api_key:
+        print("  ⚠  OpenAI: no API key found — skipping AI headlines")
+        return None
+    try:
+        from openai import OpenAI
+        return OpenAI(api_key=api_key)
+    except ImportError:
+        print("  ⚠  OpenAI: package not installed — run: pip install openai")
+        return None
+
+def _load_headline_cache():
+    if HEADLINE_CACHE_FILE.exists():
+        try:
+            return json.loads(HEADLINE_CACHE_FILE.read_text())
+        except Exception:
+            pass
+    return {}
+
+def _save_headline_cache(cache):
+    try:
+        HEADLINE_CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2))
+    except Exception:
+        pass
+
+def _ai_headline(titles, client, cache):
+    """Generate a clean one-line headline for a story group via GPT-4o-mini."""
+    cache_key = "||".join(sorted(t.strip().lower() for t in titles[:8]))
+    if cache_key in cache:
+        return cache[cache_key]
+    try:
+        prompt = (
+            "These headlines from different sources all cover the same news story.\n"
+            "Write ONE clean, factual headline in English (max 12 words) capturing the core event.\n"
+            "Rules: no source names, no opinion words, just the fact, no quotes around output.\n\n"
+            + "\n".join(f"- {t}" for t in titles[:8])
+            + "\n\nHeadline:"
+        )
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=40,
+            temperature=0.2,
+        )
+        headline = resp.choices[0].message.content.strip().strip('"').strip("'")
+        cache[cache_key] = headline
+        return headline
+    except Exception as e:
+        print(f"  ⚠  AI headline: {e}")
+        return titles[0]
+
+def _enrich_groups(groups, client, cache):
+    """Add AI-generated headline to every multi-source story group."""
+    if not client:
+        return groups
+    result = []
+    for g in groups:
+        if len(g) > 1:
+            titles   = [a["title"] for a in g]
+            headline = _ai_headline(titles, client, cache)
+            g        = [dict(g[0], _headline=headline)] + list(g[1:])
+        result.append(g)
+    return result
+
 def _build_group_row(g, extra_cls="", data_attrs=""):
     """Render a story group. Single article → direct link. Multiple → click to expand."""
     primary  = g[0]
@@ -1075,11 +1149,12 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
         f'</a>'
         for a in g
     )
+    display_title = primary.get("_headline") or primary["title"]
     return (
         f'<div class="sg sg-multi{" "+extra_cls if extra_cls else ""}"{attrs} '
         f'onclick="this.classList.toggle(\'open\')">'
         f'<div class="sg-hd">'
-        f'<span class="sg-title">{_s(primary["title"])}</span>'
+        f'<span class="sg-title">{_s(display_title)}</span>'
         f'<span class="sg-cnt">{n} sources</span>'
         f'<span class="sg-time">{time_str}</span>'
         f'</div>'
@@ -1364,6 +1439,9 @@ def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Morning Brief v4 — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print("─"*54)
+    print("  Loading OpenAI…")
+    ai_client     = _load_openai()
+    headline_cache = _load_headline_cache()
     print("  Fetching AFP (Telegram)…")
     tg_arts  = _fetch_telegram()
     afp      = _route_afp(tg_arts)
@@ -1395,6 +1473,13 @@ def main():
     cities_raw = _dedup_exact(_filter_recent(_fetch(CITIES_SOURCES)))
     cities_grp = _dedup(cities_raw)
     print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
+    print("  Generating AI headlines…")
+    tech_grp   = _enrich_groups(tech_grp,   ai_client, headline_cache)
+    macro_grp  = _enrich_groups(macro_grp,  ai_client, headline_cache)
+    sports_grp = _enrich_groups(sports_grp, ai_client, headline_cache)
+    cities_grp = _enrich_groups(cities_grp, ai_client, headline_cache)
+    _save_headline_cache(headline_cache)
+    print(f"    → {sum(1 for g in tech_grp+macro_grp+sports_grp+cities_grp if len(g)>1)} groups enriched")
     print("  Fetching calendar event news…")
     event_news = _fetch_calendar_event_news()
     print(f"    → {len(event_news)} events with coverage")

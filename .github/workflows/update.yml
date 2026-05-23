@@ -25,6 +25,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run news fetcher
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python news_fetcher.py
 
       - name: Commit and push fresh index.html
