@@ -17,7 +17,6 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "The NBS", "SiliconMania",
-    "The Economist",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -387,7 +386,7 @@ def _img(entry):
         if m and m.group(1).startswith("http"):
             return m.group(1)
     return ""
-def _filter_recent(arts, days=1, weekly_days=7):
+def _filter_recent(arts, days=2, weekly_days=7):
     """Keep articles from last `days` days. Weekly newsletter sources get `weekly_days`."""
     now_ts = datetime.now(timezone.utc).timestamp()
     cutoff_daily  = now_ts - days * 86400
