@@ -3,3 +3,7 @@ dashboard.log
 telegram_session.session
 telegram_session
 telegram_config.json
+openai_config.json
+headline_cache.json
+openai_config.json
+headline_cache.json
