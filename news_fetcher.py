@@ -640,20 +640,16 @@ def _fetch_calendar_event_news():
 CSS = """
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#F0EFE9;--bg2:#FFFFFF;--bg3:#E8E6DE;
-  --border:#DDDAD0;--text:#0C0C0C;--muted:#888;--dim:#C2BFB5;
+  --bg:#EBF0F8;--bg2:#F5F8FC;--bg3:#DDE5F2;
+  --border:#C8D4E8;--text:#0C0C0C;--muted:#7A90B0;--dim:#A8BACE;
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
-    --border:#1c1c1c;--text:#d4d4d4;--muted:#444;--dim:#242424;--accent:#E84040}
+    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040}
   header{background:rgba(6,6,6,.97)}
-  .sg-title,.pi-title{color:#686868}
-  a.sg-title:hover,.sg-multi:hover .sg-title,.pi-title:hover{color:var(--text)}
-  .ct{color:#686868}
-  .card:hover .ct,.mi.open .mi-title{color:var(--text)}
   .cp-sum{color:#555}
   .cp-art{color:#555}
   .cp-art:hover{color:#bbb}
@@ -662,21 +658,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);
   font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
 /* ── Header ──────────────────────────────────────────────────── */
-header{display:flex;justify-content:space-between;align-items:center;
-  padding:16px 40px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;
-  background:rgba(240,239,233,.97);
-  backdrop-filter:blur(20px);z-index:200}
-@media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.97)}}
-header h1{font-family:var(--serif);font-size:20px;font-weight:600;
-  font-style:italic;color:var(--text);letter-spacing:-.3px}
-.ts{font-size:9.5px;color:var(--muted);letter-spacing:.9px;text-transform:uppercase}
-.ts-count{font-size:9.5px;color:var(--accent);letter-spacing:.6px;font-weight:500;white-space:nowrap}
-.btn{background:var(--text);color:var(--bg2);border:none;
-  font-size:9px;padding:7px 16px;border-radius:4px;cursor:pointer;
-  font-family:var(--sans);font-weight:700;letter-spacing:1.2px;
-  text-transform:uppercase;transition:background .15s;margin-left:12px}
-.btn:hover{background:var(--accent)}
+header{display:flex;flex-direction:column;padding:0 60px;
+  border-top:3px solid var(--text);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+  background:rgba(235,240,248,.96);backdrop-filter:blur(24px)}
+@media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
+.hd-inner{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 0 14px}
+.hd-left{display:flex;flex-direction:column}
+.hd-label{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;font-family:var(--sans)}
+header h1{font-family:var(--serif);font-size:34px;font-weight:600;
+  font-style:italic;color:var(--text);letter-spacing:-1px;line-height:1}
+.hd-right{display:flex;align-items:center;gap:20px}
+.ts{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.ts-count{font-size:9px;color:var(--accent);letter-spacing:.5px;font-weight:600;
+  white-space:nowrap;text-transform:uppercase}
+.btn{background:transparent;color:var(--text);
+  border:1px solid var(--border);
+  font-size:9px;padding:7px 18px;border-radius:0;cursor:pointer;
+  font-family:var(--sans);font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;transition:all .15s}
+.btn:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
 
 /* ── Filter buttons (city tab bar) ──────────────────────────────── */
 .fb{background:none;border:1px solid var(--border);color:var(--muted);
@@ -709,13 +712,12 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
 
 /* ── Section ─────────────────────────────────────────────────── */
 .section{border-bottom:1px solid var(--border)}
-.sec-hd{padding:0 40px;border-bottom:1px solid var(--border);
+.sec-hd{padding:0 60px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between}
-.dot{display:none} /* hidden in sec-hd; restored for cp-item below */
+.dot{display:none}
 .cp-item .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sec-hd-text{font-size:9.5px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;color:var(--text);font-family:var(--sans);
-  font-style:normal;padding:20px 0 16px}
+.sec-hd-text{font-family:var(--serif);font-size:20px;font-style:italic;
+  font-weight:600;color:var(--text);padding:22px 0 18px;letter-spacing:-.3px}
 .sec-hd-meta{font-size:9px;color:var(--dim);letter-spacing:.3px}
 
 /* ── Layouts ─────────────────────────────────────────────────── */
@@ -780,75 +782,73 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
 /* ── Story rows ──────────────────────────────────────────────── */
-.sg{padding:11px 0;border-bottom:1px solid var(--border)}
-.sg:not(.sg-multi){display:flex;align-items:baseline;gap:10px}
+.sg{padding:13px 0;border-bottom:1px solid var(--border)}
+.sg:not(.sg-multi){display:flex;align-items:baseline;gap:12px}
 .sg:last-child{border-bottom:none}
-.sg-title{font-size:13px;color:#3a3a3a;text-decoration:none;
-  flex:1;line-height:1.55;transition:color .12s;font-weight:300}
-a.sg-title:hover{color:var(--text)}
-.badge{font-size:8px;font-weight:600;color:var(--muted);
-  border:1px solid var(--border);padding:2px 8px;flex-shrink:0;
-  border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
-.sg-time{font-size:9.5px;color:var(--dim);flex-shrink:0}
+.sg-title{font-size:14px;color:var(--text);text-decoration:none;
+  flex:1;line-height:1.5;transition:opacity .12s;font-weight:300;opacity:.72}
+a.sg-title:hover{opacity:1}
+.badge{font-size:7.5px;font-weight:600;color:var(--dim);flex-shrink:0;
+  white-space:nowrap;letter-spacing:.9px;text-transform:uppercase}
+.sg-time{font-size:9px;color:var(--dim);flex-shrink:0}
 /* ── Multi-source expandable groups ─────────────────────────── */
 .sg-multi{cursor:pointer}
-.sg-multi:hover .sg-title,.sg-multi.open .sg-title{color:var(--text)}
-.sg-hd{display:flex;align-items:baseline;gap:10px}
+.sg-multi:hover .sg-title,.sg-multi.open .sg-title{opacity:1}
+.sg-hd{display:flex;align-items:baseline;gap:12px}
 .sg-cnt{font-size:7.5px;font-weight:700;color:var(--accent);flex-shrink:0;
-  border:1px solid var(--accent);padding:2px 7px;border-radius:20px;
-  letter-spacing:.6px;text-transform:uppercase}
-.sg-arts{display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:4px}
+  letter-spacing:.9px;text-transform:uppercase}
+.sg-arts{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:2px}
 .sg-multi.open .sg-arts{display:flex;flex-direction:column}
-.sg-art-link{display:flex;gap:12px;align-items:baseline;padding:7px 0;
+.sg-art-link{display:flex;gap:14px;align-items:baseline;padding:8px 0;
   border-bottom:1px solid var(--border);text-decoration:none;color:var(--text)}
 .sg-art-link:last-child{border-bottom:none}
-.sg-art-src{font-size:7.5px;color:var(--muted);width:80px;flex-shrink:0;
-  letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+.sg-art-src{font-size:7px;color:var(--dim);width:72px;flex-shrink:0;
+  letter-spacing:.8px;text-transform:uppercase;font-weight:600;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sg-art-ttl{font-size:12px;color:#3a3a3a;flex:1;line-height:1.5;font-weight:300;
-  transition:color .12s}
-.sg-art-link:hover .sg-art-ttl{color:var(--accent)}
+.sg-art-ttl{font-size:12.5px;color:var(--text);flex:1;line-height:1.5;
+  font-weight:300;opacity:.68;transition:opacity .12s}
+.sg-art-link:hover .sg-art-ttl{opacity:1;color:var(--accent)}
 .sg-art-time{font-size:9px;color:var(--dim);flex-shrink:0}
 
 /* ── Culture cards ───────────────────────────────────────────── */
-.cards{display:flex;gap:13px;overflow-x:auto;padding:0 40px 22px;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.cards{display:flex;gap:1px;overflow-x:auto;padding:0 0 0;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  border-top:1px solid var(--border)}
 .cards::-webkit-scrollbar{height:2px}
-.cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.card{flex:0 0 200px;background:var(--bg2);border:1px solid var(--border);
-  border-radius:var(--r);text-decoration:none;color:inherit;overflow:hidden;
-  display:flex;flex-direction:column;transition:border-color .18s,transform .2s,box-shadow .2s}
-.card:hover{transform:translateY(-5px);border-color:var(--text);
-  box-shadow:0 10px 28px rgba(0,0,0,.09)}
-.card:hover .ct{color:var(--text)}
-.ci{height:120px;background-size:cover;background-position:center;
+.cards::-webkit-scrollbar-thumb{background:var(--border)}
+.card{flex:0 0 220px;background:var(--bg);border:none;
+  border-right:1px solid var(--border);
+  text-decoration:none;color:inherit;overflow:hidden;
+  display:flex;flex-direction:column;transition:background .18s}
+.card:hover{background:var(--bg2)}
+.card:hover .ct{opacity:1}
+.ci{height:148px;background-size:cover;background-position:center;
   position:relative;flex-shrink:0}
 .ci::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.45) 0%,transparent 55%)}
-.cs{position:absolute;bottom:8px;left:9px;z-index:1;
-  font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
-  padding:2px 8px;border-radius:20px;color:#e0e0e0}
-.cb{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;
+  background:linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 60%)}
+.cs{position:absolute;bottom:9px;left:10px;z-index:1;
+  font-size:7.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:rgba(255,255,255,.8)}
+.cb{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column;
   justify-content:space-between}
-.ct{font-size:11.5px;line-height:1.5;color:#555;transition:color .15s;
-  flex:1;margin-bottom:6px;font-weight:300}
-.ctime{font-size:9px;color:var(--muted)}
+.ct{font-size:12px;line-height:1.5;color:var(--text);transition:opacity .15s;
+  flex:1;margin-bottom:6px;font-weight:300;opacity:.72}
+.ctime{font-size:9px;color:var(--dim)}
 
 /* ── Paris / What's On ───────────────────────────────────────── */
 .paris-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
 .pi{display:flex;gap:12px;align-items:baseline;
-  padding:10px 0;border-bottom:1px solid var(--border)}
+  padding:13px 0;border-bottom:1px solid var(--border)}
 .pi:last-child{border-bottom:none}
-.pi-src{font-size:8px;color:var(--muted);width:74px;flex-shrink:0;
+.pi-src{font-size:7px;color:var(--dim);width:72px;flex-shrink:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  letter-spacing:.7px;text-transform:uppercase;font-weight:600}
-.pi-title{font-size:13px;color:#3a3a3a;text-decoration:none;
-  flex:1;line-height:1.55;transition:color .12s;font-weight:300}
-.pi-title:hover{color:var(--text)}
-.pi-t{font-size:9.5px;color:var(--dim);flex-shrink:0}
+  letter-spacing:.8px;text-transform:uppercase;font-weight:600}
+.pi-title{font-size:14px;color:var(--text);text-decoration:none;
+  flex:1;line-height:1.5;transition:opacity .12s;font-weight:300;opacity:.72}
+.pi-title:hover{opacity:1}
+.pi-t{font-size:9px;color:var(--dim);flex-shrink:0}
 
 /* ── Calendar nav & event list ───────────────────────────────── */
 .cal-btn{background:none;border:1px solid var(--border);color:var(--text);
@@ -919,8 +919,9 @@ a.sg-title:hover{color:var(--text)}
 
 /* ── Mobile (≤768px) ─────────────────────────────────────────── */
 @media(max-width:768px){
-  header{padding:12px 16px;flex-wrap:wrap;gap:8px}
-  header h1{font-size:17px}
+  header{padding:0 16px}
+  .hd-inner{padding:12px 0 10px;flex-wrap:wrap;gap:8px}
+  header h1{font-size:20px}
   .ts{font-size:8.5px}
   .btn{padding:6px 12px;font-size:8px;margin-left:0}
 
@@ -948,6 +949,63 @@ a.sg-title:hover{color:var(--text)}
   .cal-leg-i{font-size:7.5px}
   .cal-det{padding:20px 20px 32px}
   .cal-det-arts{grid-template-columns:1fr;gap:0}
+}
+
+/* ── Snap scroll layout ──────────────────────────────────── */
+html{scroll-snap-type:y mandatory;overflow-y:scroll}
+.snap-sec{height:100vh;scroll-snap-align:start;overflow:hidden;position:relative}
+
+/* ── Hero section ────────────────────────────────────────── */
+.hero-sec{display:flex;flex-direction:column;justify-content:center;
+  padding:0 60px;border-top:3px solid var(--text);background:var(--bg)}
+.hero-eyebrow{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
+  color:var(--muted);font-family:var(--sans);margin-bottom:16px;display:block}
+.hero-h1{font-family:var(--serif);font-size:clamp(60px,8.5vw,118px);
+  font-style:italic;font-weight:600;color:var(--text);
+  letter-spacing:-4px;line-height:.93;margin-bottom:36px}
+.hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:36px}
+.hero-count{font-size:9px;color:var(--accent);letter-spacing:.9px;
+  font-weight:600;text-transform:uppercase}
+.hero-date-str{font-size:9px;color:var(--muted);letter-spacing:.9px;text-transform:uppercase}
+.hero-sep{color:var(--dim);font-size:12px}
+.hero-hint{position:absolute;bottom:90px;left:60px;font-size:7.5px;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--dim)}
+.hero-sec .ticker{position:absolute;bottom:0;left:0;right:0}
+
+/* ── Snap section inner layouts ──────────────────────────── */
+.snap-geo>.section{height:100%;display:flex;flex-direction:column}
+.snap-geo .map-wrap{flex:1;height:auto}
+
+.snap-feed>.two-col{height:100%;border-bottom:none}
+.snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
+  overflow:hidden;border-bottom:none}
+.snap-feed .story-list{flex:1;max-height:none;overflow-y:auto}
+
+.snap-culture>.section{height:100%;display:flex;flex-direction:column}
+.snap-culture .cards{flex:1;min-height:0}
+.snap-culture .card{flex:0 0 220px}
+
+.snap-bottom>.three-col{height:100%;border-bottom:none}
+.snap-bottom .three-col>.section{height:100%!important}
+.snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
+
+.snap-cal>.section{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.snap-cal .cal-months{flex:1;overflow-y:auto}
+
+/* ── Mobile snap overrides ───────────────────────────────── */
+@media(max-width:768px){
+  html{scroll-snap-type:none}
+  .snap-sec{height:auto;overflow:visible}
+  .hero-sec{min-height:100vh;padding:60px 16px}
+  .hero-h1{font-size:clamp(48px,14vw,80px);letter-spacing:-2px}
+  .hero-hint{display:none}
+  .snap-feed>.two-col{height:auto}
+  .snap-feed .two-col>.section{height:auto}
+  .snap-feed .story-list{max-height:400px}
+  .snap-bottom>.three-col{height:auto}
+  .snap-bottom .three-col>.section{height:auto!important}
+  .snap-bottom .story-list,.snap-bottom .paris-list{max-height:320px}
+  .snap-cal>.section{height:auto;overflow:visible}
 }
 """
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1556,29 +1614,55 @@ def main():
 <style>{CSS}</style>
 </head>
 <body>
-<header>
-  <h1>☀ Morning Brief</h1>
-  <div style="display:flex;align-items:center;gap:16px">
-    <span class="ts-count">{new_today_str}</span>
-    <span class="ts">Updated {now_str}</span>
-    <button class="btn" onclick="location.reload()">↻ Refresh</button>
-  </div>
-</header>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-{build_ticker(afp["ticker"])}
+
+<!-- ① HERO -->
+<section class="snap-sec hero-sec">
+  <span class="hero-eyebrow">Daily Intelligence</span>
+  <h1 class="hero-h1">Morning<br>Brief</h1>
+  <div class="hero-meta">
+    <span class="hero-count">{new_today_str}</span>
+    <span class="hero-sep">·</span>
+    <span class="hero-date-str">{now_str}</span>
+    <button class="btn" onclick="location.reload()" style="margin-left:8px">↻</button>
+  </div>
+  <span class="hero-hint">Scroll to explore ↓</span>
+  {build_ticker(afp["ticker"])}
+</section>
+
+<!-- ② GEOPOLITICAL -->
+<section class="snap-sec snap-geo">
 {build_map(json.dumps(conf_js, ensure_ascii=False),
            json.dumps(conf_arts_js, ensure_ascii=False))}
-<div class="two-col">
+</section>
+
+<!-- ③ TECH + MACRO -->
+<section class="snap-sec snap-feed">
+  <div class="two-col">
 {build_tech(tech_grp)}
 {build_macro(macro_grp)}
-</div>
+  </div>
+</section>
+
+<!-- ④ CULTURE -->
+<section class="snap-sec snap-culture">
 {build_culture(culture_arts)}
-<div class="three-col">
+</section>
+
+<!-- ⑤ SPORTS + CITIES + PARIS -->
+<section class="snap-sec snap-bottom">
+  <div class="three-col">
 {build_sports(sports_grp)}
 {build_cities(cities_grp)}
 {build_paris(paris_arts)}
-</div>
+  </div>
+</section>
+
+<!-- ⑥ CALENDAR -->
+<section class="snap-sec snap-cal">
 {build_calendar(event_news)}
+</section>
+
 </body>
 </html>"""
     OUTPUT_FILE.write_text(page, encoding="utf-8")
