@@ -973,28 +973,23 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .hero-sec .ticker{position:absolute;bottom:0;left:0;right:0}
 
 /* ── Snap section inner layouts ──────────────────────────── */
-.snap-geo{height:100vh!important}
-.snap-geo>.section{height:100%!important;display:flex;flex-direction:column;overflow:hidden}
-.snap-geo .map-wrap{flex:1!important;height:0!important;min-height:0}
-.snap-geo #map{height:100%!important}
+.snap-geo{height:100vh!important;overflow:hidden!important}
+.snap-geo>.section{position:absolute!important;inset:0;display:flex;flex-direction:column}
+.snap-geo .sec-hd{flex-shrink:0}
+.snap-geo .map-wrap{flex:1!important;height:auto!important;min-height:0;position:relative!important}
+.snap-geo #map{position:absolute!important;inset:0!important;height:auto!important}
 .cp-list{position:relative}
 .cp-list::after{content:'';position:sticky;bottom:0;display:block;
   height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
 /* ── Map aesthetic: dot-matrix world ─────────────────────── */
 #map{background:#050505!important}
-#map .leaflet-tile-pane{
-  filter:grayscale(1) brightness(0.14) contrast(6)!important;
-  image-rendering:pixelated}
-#map .leaflet-control-zoom a{background:#111;color:#555;border-color:#222}
-#map .leaflet-control-zoom a:hover{background:#1a1a1a;color:#aaa}
-/* dot-grid mask punches circular holes so tiles show through as dots */
+#map .leaflet-tile-pane img{
+  filter:grayscale(1) brightness(0.13) contrast(7)!important}
+#map .leaflet-control-zoom a{background:#111!important;color:#444!important;border-color:#1a1a1a!important}
+/* single radial-gradient: transparent dots on dark bg → tiles show as dot grid */
 #map::after{content:'';position:absolute;inset:0;z-index:450;pointer-events:none;
-  background:
-    radial-gradient(circle,transparent 35%,#050505 36%) 0 0 / 5px 5px,
-    radial-gradient(circle,transparent 35%,#050505 36%) 2.5px 2.5px / 5px 5px}
-.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-overlay-pane{z-index:500!important}
-.leaflet-popup-pane{z-index:700!important}
+  background:radial-gradient(circle,transparent 42%,#050505 43%) 0 0 / 6px 6px}
 /* ── Glow markers ────────────────────────────────────────── */
 .gm{border-radius:50%}
 .gm-c{width:10px;height:10px;background:#EF4444;
@@ -1188,6 +1183,8 @@ def build_map(conflicts_json, articles_json):
     m.on('click',function(){{showDetail(c.id);}});
     markers[c.id]=m;
   }});
+  setTimeout(function(){{map.invalidateSize();}},100);
+  window.addEventListener('resize',function(){{map.invalidateSize();}});
 }})();
 </script>
 """
