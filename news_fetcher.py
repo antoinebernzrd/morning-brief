@@ -18,7 +18,7 @@ HEADLINE_CACHE_FILE = OUTPUT_DIR / "headline_cache.json"
 MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
-    "Not Boring", "Silicon Carne", "TBPN", "The NBS", "SiliconMania",
+    "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -446,6 +446,18 @@ def _dedup_exact(arts):
             result.append(a)
     return result
 
+def _entities(title):
+    """Extract proper nouns / brand names — language-agnostic (OpenAI = OpenAI in FR and EN)."""
+    # Capitalised words 5+ chars, excluding sentence-start stop words
+    ECAP_STOP = {"The","This","That","These","Those","With","From","After",
+                 "Before","About","Under","While","Their","There","Where","When",
+                 "Pour","Dans","Avec","Sous","Mais","Plus","Tout","Sans","Vers",
+                 "Entre","Contre","Selon"}
+    caps = {w for w in re.findall(r'\b[A-Z][A-Za-z]{4,}\b', title) if w not in ECAP_STOP}
+    # All-caps acronyms 2-6 chars (Fed, ECB, NATO, AI...)
+    acro = set(re.findall(r'\b[A-Z]{2,6}\b', title))
+    return caps | acro
+
 def _dedup(arts):
     STOP = {"the","a","an","in","of","to","and","for","on","at","is","are","was",
             "with","by","that","this","as","it","its","from","be","or","has","have",
@@ -458,15 +470,31 @@ def _dedup(arts):
     for i, a in enumerate(arts):
         if i in used: continue
         wi = words(a["title"])
+        ei = _entities(a["title"])
         grp = [a]
         for j, b in enumerate(arts):
             if j<=i or j in used: continue
             wj = words(b["title"])
-            u = wi | wj
-            if u and len(wi & wj)/len(u) >= 0.35:
+            ej = _entities(b["title"])
+            u  = wi | wj
+            # Same-language: word overlap ≥ 25%
+            word_match   = bool(u) and len(wi & wj)/len(u) >= 0.25
+            # Cross-language: share a distinctive proper noun / acronym
+            shared_ent   = ei & ej
+            entity_match = len(shared_ent) >= 1 and (
+                any(len(e) >= 5 for e in shared_ent)   # long brand/name
+                or len(shared_ent) >= 2                 # or two acronyms
+            )
+            if word_match or entity_match:
                 grp.append(b); used.add(j)
         used.add(i); groups.append(grp)
     return groups
+
+def _sort_groups(groups):
+    """Float multi-source groups to the top, both halves sorted by recency."""
+    multi  = [g for g in groups if len(g) > 1]
+    single = [g for g in groups if len(g) == 1]
+    return multi + single
 def _match_conflicts(arts):
     """Return {conflict_id: [article_dict, ...]}"""
     out = {c["id"]: [] for c in CONFLICTS}
@@ -1163,16 +1191,16 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
     )
 
 def build_tech(groups):
-    rows = "".join(_build_group_row(g) for g in groups)
+    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:50])
     if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 24h.</p>'
+        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Tech — Startups — VC",
                 f'<div class="story-list">{rows}</div>')
 
 def build_macro(groups):
-    rows = "".join(_build_group_row(g) for g in groups)
+    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:40])
     if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 24h.</p>'
+        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Macro — Finance — Markets",
                 f'<div class="story-list">{rows}</div>')
 
@@ -1192,7 +1220,7 @@ def build_culture(arts):
                 f'<div class="cards">{cards}</div>')
 
 def build_sports(groups):
-    rows = "".join(_build_group_row(g) for g in groups)
+    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:30])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
     return _sec("#0C0C0C","Sports", f'<div class="story-list">{rows}</div>')
@@ -1200,7 +1228,7 @@ def build_sports(groups):
 def build_cities(groups):
     MARSEILLE_SOURCES = {"Les Echos PACA", "Le Monde Marseille"}
     rows = ""
-    for g in groups:
+    for g in _sort_groups(groups)[:40]:
         city = "marseille" if g[0]["source"] in MARSEILLE_SOURCES else "paris"
         rows += _build_group_row(g, extra_cls="city-item", data_attrs=f'data-city="{city}"')
     if not rows:
