@@ -6310,3 +6310,74 @@ Morning Brief v4 — 2026-05-23 18:47
     → 28 events with coverage
 ──────────────────────────────────────────────────────
 ✓  Saved → /Users/antoinebernard/news_dashboard/index.html
+Morning Brief v4 — 2026-05-23 20:06
+──────────────────────────────────────────────────────
+  Loading OpenAI…
+  Fetching AFP (Telegram)…
+  ⚠  Telegram https://t.me/+5VtjHHeuarNjYTBk: The API access for bot users is restricted. The method you tried to invoke cannot be executed as a bot (caused by CheckChatInviteRequest)
+    → 0 AFP messages
+  Fetching Tech/VC…
+    → 30 articles → 25 stories
+  Fetching Macro…
+    → 111 articles → 106 stories
+  Fetching Culture/Fashion…
+    → 77 articles
+  Fetching Sports…
+    → 139 articles → 82 stories
+  Fetching conflict news…
+    → 217 articles for conflict matching
+  Fetching Paris…
+    → 23 Paris articles
+  Fetching Cities (Marseille & Paris)…
+    → 111 articles → 86 stories
+  Generating AI headlines…
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+  ⚠  AI headline: Error code: 401 - {'error': {'message': 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************eQAA. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'param': None}, 'status': 401}
+    → 34 groups enriched
+  Fetching calendar event news…
+    → event news: F1 Season 2026
+    → event news: Venice Biennale
+    → event news: Met Gala
+    → event news: Frieze New York
+    → event news: European Aquatics Champs
+    → event news: Cannes Film Festival
+    → event news: UEFA Europa League Final
+    → event news: F1 Monaco GP
+    → event news: Roland Garros
+    → event news: UEFA Champions League Final
+    → event news: Epsom Derby
+    → event news: Prix du Jockey Club
+    → event news: FIFA World Cup 2026
+    → event news: Vivatech Paris
+    → event news: G7 Summit
+    → event news: Royal Ascot
+    → event news: Art Basel Basel
+    → event news: US Open Golf
+    → event news: Paris Men's Fashion Week
+    → event news: Glastonbury
+    → event news: Wimbledon
+    → event news: Henley Royal Regatta
+    → event news: Tour de France
+    → event news: F1 British GP (Silverstone)
+    → event news: Haute Couture FW
+    → event news: The Open Championship
+    → event news: World Aquatics Champs
+    → event news: Rolex Fastnet Race
+    → 28 events with coverage
+──────────────────────────────────────────────────────
+✓  Saved → /Users/antoinebernard/news_dashboard/index.html
