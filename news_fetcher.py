@@ -7,11 +7,17 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
+_PARIS = ZoneInfo("Europe/Paris")
 OUTPUT_DIR   = Path(__file__).parent
 OUTPUT_FILE  = OUTPUT_DIR / "index.html"
 CONFIG_FILE  = OUTPUT_DIR / "telegram_config.json"
 SESSION_FILE = OUTPUT_DIR / "telegram_session"
-MAX_PER_SOURCE = 10
+MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
+# Sources that publish weekly or less — get a 7-day window instead of 24h
+WEEKLY_SOURCES = frozenset([
+    "Not Boring", "Silicon Carne", "TBPN", "The NBS", "SiliconMania",
+])
 # ── Telegram ─────────────────────────────────────────────────────────────────
 TELEGRAM_CHANNELS = [
     ("AFP", "https://t.me/+5VtjHHeuarNjYTBk"),
@@ -364,10 +370,22 @@ def _img(entry):
         if m and m.group(1).startswith("http"):
             return m.group(1)
     return ""
-def _filter_recent(arts, days=7):
-    """Drop articles older than `days` days. Articles with no date are kept."""
-    cutoff = datetime.now(timezone.utc).timestamp() - days * 86400
-    return [a for a in arts if not a["ts"] or a["ts"] >= cutoff]
+def _filter_recent(arts, days=1, weekly_days=7):
+    """Keep articles from last `days` days. Weekly newsletter sources get `weekly_days`."""
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cutoff_daily  = now_ts - days * 86400
+    cutoff_weekly = now_ts - weekly_days * 86400
+    result = []
+    for a in arts:
+        if not a["ts"]:          # no date → keep
+            result.append(a)
+        elif a["source"] in WEEKLY_SOURCES:
+            if a["ts"] >= cutoff_weekly:
+                result.append(a)
+        else:
+            if a["ts"] >= cutoff_daily:
+                result.append(a)
+    return result
 def _snip(entry):
     raw = entry.get("summary","") or ""
     txt = re.sub(r"<[^>]+>"," ", raw)
@@ -484,9 +502,18 @@ def _fetch_telegram():
     arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     print(f"    → {len(arts)} AFP messages")
     return arts
+_TRUSTED_PUBS = frozenset([
+    "financial times","ft","economist","les echos","le monde","reuters","bbc",
+    "al jazeera","new york times","nyt","nss magazine","art newspaper",
+    "télérama","telerama","l'équipe","l'equipe","equipe","defense news",
+    "timeout","the liber","theliber","the free press","thefp",
+    "silicon carne","not boring","tbpn","the nbs","siliconmania","silicon mania",
+    "sortir","leparisien","parisien",
+])
+
 def _fetch_event_news(name, max_items=8):
-    """Fetch latest news for a calendar event by name via Google News RSS."""
-    q = name.replace(" ", "+").replace("'", "").replace("&", "")
+    """Fetch latest news for a calendar event, filtered to trusted sources."""
+    q = name.replace(" ", "+").replace("'", "").replace("&", "and")
     url = (f"https://news.google.com/rss/search?q=%22{q}%22"
            f"&hl=en&gl=US&ceid=US:en")
     try:
@@ -496,16 +523,22 @@ def _fetch_event_news(name, max_items=8):
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
             request_headers={"Accept": "application/rss+xml,application/xml,text/xml,*/*"},
         )
-        arts = []
-        for e in feed.entries[:max_items]:
+        def _make(e):
             dt  = _parse_date(e)
             src = getattr(getattr(e, "source", None), "title", "") or ""
-            arts.append({
-                "title": e.get("title", "—"),
-                "link":  e.get("link", "#"),
-                "source": src,
-                "ago":   _ago(dt),
-            })
+            return {"title": e.get("title", "—"), "link": e.get("link", "#"),
+                    "source": src, "ago": _ago(dt)}
+        # First pass: trusted publishers only
+        arts = []
+        for e in feed.entries[:30]:
+            src = (getattr(getattr(e, "source", None), "title", "") or "").lower()
+            if any(p in src for p in _TRUSTED_PUBS):
+                arts.append(_make(e))
+            if len(arts) >= max_items:
+                break
+        # Fallback: too few trusted results → take top unfiltered
+        if len(arts) < 3:
+            arts = [_make(e) for e in feed.entries[:max_items]]
         return arts
     except Exception as ex:
         print(f"  ⚠  event news ({name}): {ex}")
@@ -543,8 +576,8 @@ CSS = """
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
     --border:#1c1c1c;--text:#d4d4d4;--muted:#444;--dim:#242424;--accent:#E84040}
   header{background:rgba(6,6,6,.97)}
-  .sg-title,.mi-title,.pi-title{color:#686868}
-  .sg-title:hover,.mi:hover .mi-title,.pi-title:hover{color:var(--text)}
+  .sg-title,.pi-title{color:#686868}
+  a.sg-title:hover,.sg-multi:hover .sg-title,.pi-title:hover{color:var(--text)}
   .ct{color:#686868}
   .card:hover .ct,.mi.open .mi-title{color:var(--text)}
   .cp-sum{color:#555}
@@ -564,6 +597,7 @@ header{display:flex;justify-content:space-between;align-items:center;
 header h1{font-family:var(--serif);font-size:20px;font-weight:600;
   font-style:italic;color:var(--text);letter-spacing:-.3px}
 .ts{font-size:9.5px;color:var(--muted);letter-spacing:.9px;text-transform:uppercase}
+.ts-count{font-size:9.5px;color:var(--accent);letter-spacing:.6px;font-weight:500;white-space:nowrap}
 .btn{background:var(--text);color:var(--bg2);border:none;
   font-size:9px;padding:7px 16px;border-radius:4px;cursor:pointer;
   font-family:var(--sans);font-weight:700;letter-spacing:1.2px;
@@ -671,39 +705,36 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
 .story-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
-.sg{padding:11px 0;border-bottom:1px solid var(--border);
-  display:flex;align-items:baseline;gap:10px}
+/* ── Story rows ──────────────────────────────────────────────── */
+.sg{padding:11px 0;border-bottom:1px solid var(--border)}
+.sg:not(.sg-multi){display:flex;align-items:baseline;gap:10px}
 .sg:last-child{border-bottom:none}
 .sg-title{font-size:13px;color:#3a3a3a;text-decoration:none;
   flex:1;line-height:1.55;transition:color .12s;font-weight:300}
-.sg-title:hover{color:var(--text)}
-.badges{display:flex;flex-wrap:wrap;gap:3px;flex-shrink:0}
+a.sg-title:hover{color:var(--text)}
 .badge{font-size:8px;font-weight:600;color:var(--muted);
-  border:1px solid var(--border);padding:2px 8px;
+  border:1px solid var(--border);padding:2px 8px;flex-shrink:0;
   border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
 .sg-time{font-size:9.5px;color:var(--dim);flex-shrink:0}
-
-/* ── Macro ───────────────────────────────────────────────────── */
-.macro-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.macro-list::-webkit-scrollbar{width:2px}
-.mi{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
-.mi:last-child{border-bottom:none}
-.mi-row{display:flex;gap:12px;align-items:baseline}
-.mi-src{font-size:8px;color:var(--muted);width:66px;flex-shrink:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  letter-spacing:.7px;text-transform:uppercase;font-weight:600}
-.mi-title{font-size:13px;color:#3a3a3a;flex:1;line-height:1.55;
-  transition:color .12s;font-weight:300}
-.mi:hover .mi-title{color:var(--text)}
-.mi-time{font-size:9.5px;color:var(--dim);flex-shrink:0}
-.mi-expand{display:none;padding:8px 0 4px 78px;font-size:11.5px;
-  color:var(--muted);line-height:1.65;font-weight:300}
-.mi-expand a{color:var(--accent);text-decoration:none;font-size:11px;
-  display:inline-block;margin-top:6px}
-.mi-expand a:hover{text-decoration:underline}
-.mi.open .mi-expand{display:block}
-.mi.open .mi-title{color:var(--text)}
+/* ── Multi-source expandable groups ─────────────────────────── */
+.sg-multi{cursor:pointer}
+.sg-multi:hover .sg-title,.sg-multi.open .sg-title{color:var(--text)}
+.sg-hd{display:flex;align-items:baseline;gap:10px}
+.sg-cnt{font-size:7.5px;font-weight:700;color:var(--accent);flex-shrink:0;
+  border:1px solid var(--accent);padding:2px 7px;border-radius:20px;
+  letter-spacing:.6px;text-transform:uppercase}
+.sg-arts{display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:4px}
+.sg-multi.open .sg-arts{display:flex;flex-direction:column}
+.sg-art-link{display:flex;gap:12px;align-items:baseline;padding:7px 0;
+  border-bottom:1px solid var(--border);text-decoration:none;color:var(--text)}
+.sg-art-link:last-child{border-bottom:none}
+.sg-art-src{font-size:7.5px;color:var(--muted);width:80px;flex-shrink:0;
+  letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-art-ttl{font-size:12px;color:#3a3a3a;flex:1;line-height:1.5;font-weight:300;
+  transition:color .12s}
+.sg-art-link:hover .sg-art-ttl{color:var(--accent)}
+.sg-art-time{font-size:9px;color:var(--dim);flex-shrink:0}
 
 /* ── Culture cards ───────────────────────────────────────────── */
 .cards{display:flex;gap:13px;overflow-x:auto;padding:0 40px 22px;
@@ -779,28 +810,28 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
 .cal-empty-msg{font-size:11px;color:var(--dim);padding:10px 0;font-style:italic}
 
 /* ── Calendar event detail panel ────────────────────────────── */
-.cal-det{border-top:1px solid var(--border);padding:24px 40px 32px;
-  background:var(--bg2)}
+.cal-det{border-top:2px solid var(--text);padding:36px 80px 64px;background:var(--bg2)}
 .cal-det-hd{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:18px}
-.cal-det-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.cal-det-name{font-family:var(--serif);font-size:17px;font-style:italic;
-  font-weight:600;color:var(--text)}
+  padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.cal-det-title{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.cal-det-name{font-family:var(--serif);font-size:18px;font-style:italic;
+  font-weight:600;color:var(--text);text-decoration:none;
+  border-bottom:1px solid transparent;transition:color .12s,border-color .12s}
+.cal-det-name:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .cal-det-range{font-size:10px;color:var(--muted);letter-spacing:.3px}
 .cal-det-close{background:none;border:1px solid var(--border);color:var(--muted);
   font-size:16px;width:28px;height:28px;border-radius:50%;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   font-family:var(--sans);transition:all .15s}
 .cal-det-close:hover{background:var(--text);color:var(--bg2);border-color:var(--text)}
-.cal-det-arts{display:grid;grid-template-columns:repeat(2,1fr);
-  border-top:1px solid var(--border)}
-.cal-det-art{padding:9px 16px 9px 0;border-bottom:1px solid var(--border);
-  text-decoration:none;color:var(--text);display:block;font-size:12px;
-  line-height:1.55;font-weight:300;transition:color .12s}
+.cal-det-arts{display:grid;grid-template-columns:repeat(2,1fr);gap:0 40px}
+.cal-det-art{padding:11px 0;border-bottom:1px solid var(--border);
+  text-decoration:none;color:var(--text);display:block;font-size:12.5px;
+  line-height:1.6;font-weight:300;transition:color .12s}
 .cal-det-art:hover{color:var(--accent)}
-.cal-det-art small{display:block;font-size:9px;color:var(--dim);margin-top:2px}
-.cal-det-none{font-size:11px;color:var(--dim);padding:12px 0;font-style:italic;
-  border-top:1px solid var(--border)}
+.cal-det-art small{display:block;font-size:9px;color:var(--muted);margin-top:3px;
+  letter-spacing:.3px}
+.cal-det-none{font-size:11px;color:var(--dim);padding:12px 0;font-style:italic}
 .cal-erow[data-ev]{cursor:pointer}
 .cal-erow[data-ev]:hover .cal-ename{color:var(--accent)}
 .cal-erow.ev-sel .cal-ename{color:var(--accent)}
@@ -821,7 +852,7 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
 
   .sec-hd{padding:0 16px}
   .story-list{padding:0 16px 16px}
-  .macro-list{padding:0 16px 16px}
+  .sg-art-src{width:60px}
   .paris-list{padding:0 16px 16px}
   .cards{padding:0 16px 14px}
 
@@ -841,8 +872,8 @@ header h1{font-family:var(--serif);font-size:20px;font-weight:600;
   .cal-months{grid-template-columns:1fr;padding:16px 16px 24px;gap:24px 0}
   .cal-legend{gap:5px 12px}
   .cal-leg-i{font-size:7.5px}
-  .cal-det{padding:16px 16px 24px}
-  .cal-det-arts{grid-template-columns:1fr}
+  .cal-det{padding:20px 20px 32px}
+  .cal-det-arts{grid-template-columns:1fr;gap:0}
 }
 """
 # ══════════════════════════════════════════════════════════════════════════════
@@ -989,40 +1020,56 @@ def build_map(conflicts_json, articles_json):
 }})();
 </script>
 """
-def build_tech(groups):
-    rows = ""
-    for g in groups[:40]:
-        primary = g[0]
-        sources = list(dict.fromkeys(a["source"] for a in g))
-        badges  = "".join(f'<span class="badge">{_s(s)}</span>' for s in sources)
-        rows += (
-            f'<div class="sg">'
+def _build_group_row(g, extra_cls="", data_attrs=""):
+    """Render a story group. Single article → direct link. Multiple → click to expand."""
+    primary  = g[0]
+    n        = len(g)
+    time_str = _ago(primary["date"])
+    attrs    = f" {data_attrs}" if data_attrs else ""
+    if n == 1:
+        return (
+            f'<div class="sg{" "+extra_cls if extra_cls else ""}"{attrs}>'
             f'<a href="{_s(primary["link"])}" target="_blank" rel="noopener" class="sg-title">'
             f'{_s(primary["title"])}</a>'
-            f'<div class="badges">{badges}</div>'
-            f'<span class="sg-time">{_ago(primary["date"])}</span>'
+            f'<span class="badge">{_s(primary["source"])}</span>'
+            f'<span class="sg-time">{time_str}</span>'
             f'</div>\n'
         )
+    arts_html = "".join(
+        f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
+        f'class="sg-art-link" onclick="event.stopPropagation()">'
+        f'<span class="sg-art-src">{_s(a["source"])}</span>'
+        f'<span class="sg-art-ttl">{_s(a["title"])}</span>'
+        f'<span class="sg-art-time">{_ago(a["date"])}</span>'
+        f'</a>'
+        for a in g
+    )
+    return (
+        f'<div class="sg sg-multi{" "+extra_cls if extra_cls else ""}"{attrs} '
+        f'onclick="this.classList.toggle(\'open\')">'
+        f'<div class="sg-hd">'
+        f'<span class="sg-title">{_s(primary["title"])}</span>'
+        f'<span class="sg-cnt">{n} sources</span>'
+        f'<span class="sg-time">{time_str}</span>'
+        f'</div>'
+        f'<div class="sg-arts">{arts_html}</div>'
+        f'</div>\n'
+    )
+
+def build_tech(groups):
+    rows = "".join(_build_group_row(g) for g in groups)
+    if not rows:
+        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 24h.</p>'
     return _sec("#0C0C0C","Tech — Startups — VC",
                 f'<div class="story-list">{rows}</div>')
-def build_macro(arts):
-    rows = ""
-    for a in arts[:35]:
-        snip = _s(a["snip"]) if a.get("snip") else ""
-        rows += (
-            f'<div class="mi" onclick="this.classList.toggle(\'open\')">'
-            f'<div class="mi-row">'
-            f'<span class="mi-src">{_s(a["source"])}</span>'
-            f'<span class="mi-title">{_s(a["title"])}</span>'
-            f'<span class="mi-time">{_ago(a["date"])}</span>'
-            f'</div>'
-            f'<div class="mi-expand">{snip}'
-            f'<br><a href="{_s(a["link"])}" target="_blank" rel="noopener">'
-            f'→ Read on {_s(a["source"])}</a></div>'
-            f'</div>\n'
-        )
+
+def build_macro(groups):
+    rows = "".join(_build_group_row(g) for g in groups)
+    if not rows:
+        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 24h.</p>'
     return _sec("#0C0C0C","Macro — Finance — Markets",
-                f'<div class="macro-list">{rows}</div>')
+                f'<div class="story-list">{rows}</div>')
+
 def build_culture(arts):
     cards = ""
     for a in arts[:24]:
@@ -1037,35 +1084,19 @@ def build_culture(arts):
         )
     return _sec("#D42B17","Fashion &amp; Culture",
                 f'<div class="cards">{cards}</div>')
-def build_sports(fr_arts, int_arts):
-    all_arts = sorted(fr_arts + int_arts,
-                      key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
-                      reverse=True)
-    rows = "".join(
-        f'<div class="sg">'
-        f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="sg-title">'
-        f'{_s(a["title"])}</a>'
-        f'<div class="badges"><span class="badge">{_s(a["source"])}</span></div>'
-        f'<span class="sg-time">{_ago(a["date"])}</span>'
-        f'</div>\n'
-        for a in all_arts[:20]
-    )
+
+def build_sports(groups):
+    rows = "".join(_build_group_row(g) for g in groups)
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
     return _sec("#0C0C0C","Sports", f'<div class="story-list">{rows}</div>')
-def build_cities(arts):
+
+def build_cities(groups):
     MARSEILLE_SOURCES = {"Les Echos PACA", "Le Monde Marseille"}
     rows = ""
-    for a in arts[:30]:
-        city = "marseille" if a["source"] in MARSEILLE_SOURCES else "paris"
-        rows += (
-            f'<div class="sg city-item" data-city="{city}">'
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="sg-title">'
-            f'{_s(a["title"])}</a>'
-            f'<div class="badges"><span class="badge">{_s(a["source"])}</span></div>'
-            f'<span class="sg-time">{_ago(a["date"])}</span>'
-            f'</div>\n'
-        )
+    for g in groups:
+        city = "marseille" if g[0]["source"] in MARSEILLE_SOURCES else "paris"
+        rows += _build_group_row(g, extra_cls="city-item", data_attrs=f'data-city="{city}"')
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
     body = f"""<div style="padding:0 40px 10px;display:flex;gap:6px;flex-shrink:0">
@@ -1161,14 +1192,15 @@ def build_calendar(event_news={}):
             for e in events:
                 col = cat_col.get(e["cat"], "#555")
                 rng = fmt_range(e["start"], e["end"])
-                if e["end"] < today_str:
+                has_news = e["name"] in event_news
+                ev_attr  = f' data-ev="{_s(e["name"])}" data-range="{_s(rng)}"' if has_news else ""
+                # Don't dim past events if they have news (still clickable/relevant)
+                if e["end"] < today_str and not has_news:
                     cls = " ev-past"
                 elif e["start"] <= today_str <= e["end"]:
                     cls = " ev-live"
                 else:
                     cls = ""
-                has_news = e["name"] in event_news
-                ev_attr  = f' data-ev="{_s(e["name"])}" data-range="{_s(rng)}"' if has_news else ""
                 rows += (
                     f'<div class="cal-erow{cls}"{ev_attr}>'
                     f'<span class="cal-edot" style="background:{col}"></span>'
@@ -1214,7 +1246,7 @@ def build_calendar(event_news={}):
 <div id="cal-det" style="display:none">
   <div class="cal-det-hd">
     <div class="cal-det-title">
-      <span class="cal-det-name" id="cal-det-name"></span>
+      <a class="cal-det-name" id="cal-det-name" href="#" target="_blank" rel="noopener"></a>
       <span class="cal-det-range" id="cal-det-range"></span>
     </div>
     <button class="cal-det-close" id="cal-det-close">&#x2715;</button>
@@ -1246,7 +1278,9 @@ def build_calendar(event_news={}):
   }}
   function openDetail(name, range){{
     activeEv=name;
-    document.getElementById('cal-det-name').textContent=name;
+    var nameEl=document.getElementById('cal-det-name');
+    nameEl.textContent=name;
+    nameEl.href='https://www.google.com/search?q='+encodeURIComponent(name+' 2026');
     document.getElementById('cal-det-range').textContent=range;
     var arts=EN[name]||[];
     var bodyEl=document.getElementById('cal-det-body');
@@ -1263,7 +1297,9 @@ def build_calendar(event_news={}):
     }} else {{
       bodyEl.innerHTML='<p class="cal-det-none">No recent coverage found.</p>';
     }}
-    document.getElementById('cal-det').style.display='';
+    var detEl=document.getElementById('cal-det');
+    detEl.style.display='';
+    detEl.scrollIntoView({{behavior:'smooth',block:'start'}});
     document.querySelectorAll('.cal-erow.ev-sel').forEach(function(el){{el.classList.remove('ev-sel');}});
     document.querySelectorAll('.cal-erow[data-ev="'+CSS.escape(name)+'"]').forEach(function(el){{
       el.classList.add('ev-sel');
@@ -1305,15 +1341,19 @@ def main():
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
-    macro_arts = _filter_recent(_fetch(MACRO_SOURCES) + afp["macro"])
-    print(f"    → {len(macro_arts)} articles")
+    macro_raw  = _filter_recent(_fetch(MACRO_SOURCES) + afp["macro"])
+    macro_grp  = _dedup(macro_raw)
+    print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
     culture_arts = _filter_recent(_fetch(CULTURE_SOURCES))
     print(f"    → {len(culture_arts)} articles")
     print("  Fetching Sports…")
-    fr_arts  = _filter_recent(_fetch(SPORTS_SOURCES_FR))
-    int_arts = _filter_recent(_fetch(SPORTS_SOURCES_INT))
-    print(f"    → L'Équipe: {len(fr_arts)}, BBC Sport: {len(int_arts)}")
+    sports_raw = _filter_recent(
+        _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
+    )
+    sports_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    sports_grp = _dedup(sports_raw)
+    print(f"    → {len(sports_raw)} articles → {len(sports_grp)} stories")
     print("  Fetching conflict news…")
     conflict_pool = _filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"])
     print(f"    → {len(conflict_pool)} articles for conflict matching")
@@ -1321,8 +1361,9 @@ def main():
     paris_arts = _filter_recent(_fetch(PARIS_SOURCES))
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (Marseille & Paris)…")
-    cities_arts = _filter_recent(_fetch(CITIES_SOURCES))
-    print(f"    → {len(cities_arts)} city articles")
+    cities_raw = _filter_recent(_fetch(CITIES_SOURCES))
+    cities_grp = _dedup(cities_raw)
+    print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
     print("  Fetching calendar event news…")
     event_news = _fetch_calendar_event_news()
     print(f"    → {len(event_news)} events with coverage")
@@ -1334,7 +1375,17 @@ def main():
         for cid, arts in raw_match.items()
     }
     conf_js = [{k:v for k,v in c.items() if k!="keywords"} for c in CONFLICTS]
-    now_str = datetime.now().strftime("%A %d %B %Y — %H:%M")
+    now_paris = datetime.now(_PARIS)
+    now_str   = now_paris.strftime("%A %d %B %Y — %H:%M")
+    # Count articles published since midnight Paris time
+    today_start_ts = now_paris.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+    all_arts = (
+        list(tech_raw) + list(macro_raw) + list(culture_arts)
+        + list(sports_raw) + list(conflict_pool)
+        + list(paris_arts) + list(cities_raw)
+    )
+    new_today = sum(1 for a in all_arts if a.get("ts") and a["ts"] >= today_start_ts)
+    new_today_str = f"{new_today} new article{'s' if new_today != 1 else ''} today"
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1350,7 +1401,8 @@ def main():
 <body>
 <header>
   <h1>☀ Morning Brief</h1>
-  <div style="display:flex;align-items:center">
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="ts-count">{new_today_str}</span>
     <span class="ts">Updated {now_str}</span>
     <button class="btn" onclick="location.reload()">↻ Refresh</button>
   </div>
@@ -1361,12 +1413,12 @@ def main():
            json.dumps(conf_arts_js, ensure_ascii=False))}
 <div class="two-col">
 {build_tech(tech_grp)}
-{build_macro(macro_arts)}
+{build_macro(macro_grp)}
 </div>
 {build_culture(culture_arts)}
 <div class="three-col">
-{build_sports(fr_arts, int_arts)}
-{build_cities(cities_arts)}
+{build_sports(sports_grp)}
+{build_cities(cities_grp)}
 {build_paris(paris_arts)}
 </div>
 {build_calendar(event_news)}
