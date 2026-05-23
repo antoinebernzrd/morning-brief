@@ -17,7 +17,24 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "The NBS", "SiliconMania",
+    "The Economist",
 ])
+# Map sub-feeds to their canonical publication name for exact-dupe collapsing
+SOURCE_CANONICAL = {
+    "FT Tech":           "FT",
+    "FT Companies Tech": "FT",
+    "Les Echos Start":   "Les Echos",
+    "Les Echos Deals":   "Les Echos",
+    "Les Echos Portraits":"Les Echos",
+    "Les Echos PACA":    "Les Echos",
+    "BBC Sport":         "BBC",
+    "BBC World":         "BBC",
+    "Reuters World":     "Reuters",
+    "Reuters Top":       "Reuters",
+    "Le Monde Int":      "Le Monde",
+    "Le Monde Marseille":"Le Monde",
+    "Le Monde Paris":    "Le Monde",
+}
 # ── Telegram ─────────────────────────────────────────────────────────────────
 TELEGRAM_CHANNELS = [
     ("AFP", "https://t.me/+5VtjHHeuarNjYTBk"),
@@ -413,6 +430,21 @@ def _fetch(sources):
             print(f"  ⚠  {name}: {ex}")
     arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     return arts
+def _dedup_exact(arts):
+    """Collapse articles with identical titles from the same canonical publication.
+    e.g. FT Tech + FT Companies Tech publishing the same article → keep one."""
+    seen = {}   # (canonical_source, normalised_title) → index kept
+    result = []
+    for a in arts:
+        canon  = SOURCE_CANONICAL.get(a["source"], a["source"])
+        key    = (canon, re.sub(r"\s+", " ", a["title"].strip().lower()))
+        if key not in seen:
+            seen[key] = True
+            # Store canonical name so grouping later sees it correctly
+            a = dict(a); a["_canon"] = canon
+            result.append(a)
+    return result
+
 def _dedup(arts):
     STOP = {"the","a","an","in","of","to","and","for","on","at","is","are","was",
             "with","by","that","this","as","it","its","from","be","or","has","have",
@@ -1038,7 +1070,7 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
     arts_html = "".join(
         f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
         f'class="sg-art-link" onclick="event.stopPropagation()">'
-        f'<span class="sg-art-src">{_s(a["source"])}</span>'
+        f'<span class="sg-art-src">{_s(a.get("_canon") or a["source"])}</span>'
         f'<span class="sg-art-ttl">{_s(a["title"])}</span>'
         f'<span class="sg-art-time">{_ago(a["date"])}</span>'
         f'</a>'
@@ -1337,31 +1369,31 @@ def main():
     tg_arts  = _fetch_telegram()
     afp      = _route_afp(tg_arts)
     print("  Fetching Tech/VC…")
-    tech_raw = _filter_recent(_fetch(TECH_SOURCES) + afp["tech"])
+    tech_raw = _dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + afp["tech"]))
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
-    macro_raw  = _filter_recent(_fetch(MACRO_SOURCES) + afp["macro"])
+    macro_raw  = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + afp["macro"]))
     macro_grp  = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
-    culture_arts = _filter_recent(_fetch(CULTURE_SOURCES))
+    culture_arts = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
     print(f"    → {len(culture_arts)} articles")
     print("  Fetching Sports…")
-    sports_raw = _filter_recent(
+    sports_raw = _dedup_exact(_filter_recent(
         _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
-    )
+    ))
     sports_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     sports_grp = _dedup(sports_raw)
     print(f"    → {len(sports_raw)} articles → {len(sports_grp)} stories")
     print("  Fetching conflict news…")
-    conflict_pool = _filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"])
+    conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
     print("  Fetching Paris…")
-    paris_arts = _filter_recent(_fetch(PARIS_SOURCES))
+    paris_arts = _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (Marseille & Paris)…")
-    cities_raw = _filter_recent(_fetch(CITIES_SOURCES))
+    cities_raw = _dedup_exact(_filter_recent(_fetch(CITIES_SOURCES)))
     cities_grp = _dedup(cities_raw)
     print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
     print("  Fetching calendar event news…")
