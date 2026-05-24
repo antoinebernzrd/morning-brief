@@ -1071,17 +1071,21 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   background:#060606}
 .snap-culture .sec-hd{background:#060606!important;border-color:#1c1c1c!important}
 .snap-culture .sec-hd-text{color:#d4d4d4!important}
-/* culture: 3-row horizontal scroll — explicit squares with generous spacing */
-.snap-culture .cards{
+/* culture body: flex column splits grid (3/4) vs event band (1/4) */
+.snap-culture .culture-body{
   flex:1;min-height:0;
+  display:flex;flex-direction:column}
+/* culture: 3-row horizontal scroll — 3/4 of available height */
+.snap-culture .cards{
+  flex:3 0 0;min-height:0;
   display:grid!important;
-  /* row height = (available height - padding - gaps) / 3
-     header ~66px + padding 14+18px + 2×gap 16px = ~130px overhead */
-  grid-template-rows:repeat(3,calc((100vh - 130px) / 3));
+  /* rows share the flex height equally */
+  grid-template-rows:repeat(3,1fr);
   grid-auto-flow:column;
-  /* column width = row height → guaranteed squares */
-  grid-auto-columns:calc((100vh - 130px) / 3);
-  gap:16px;padding:14px 20px 18px;
+  /* column width ≈ row height → squares
+     row height ≈ (100vh - 66px)*3/4 / 3 - gaps ≈ (100vh-66px)/4 - 15px */
+  grid-auto-columns:calc((100vh - 66px) / 4 - 15px);
+  gap:12px;padding:14px 20px 8px;
   overflow-x:auto;overflow-y:hidden;
   border-top:none!important;
   scrollbar-width:none}
@@ -1150,6 +1154,79 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-radius:4px;padding:3px 9px;text-decoration:none;
   transition:background .15s}
 .snap-culture .cv-read:hover{background:rgba(255,255,255,.25)}
+/* ── culture event band (bottom 1/4 of culture section) ──── */
+.snap-culture .culture-cal-band{
+  flex:1 0 0;min-height:0;
+  display:flex;flex-direction:row;align-items:stretch;
+  overflow-x:auto;overflow-y:hidden;
+  gap:8px;
+  /* side padding = 50% − half expanded width (55%÷2=27.5%) so edge cards can reach centre */
+  padding:8px 22.5% 10px;
+  border-top:1px solid #1c1c1c;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
+.snap-culture .culture-cal-band .cal-ev-card{
+  flex:0 0 12%;
+  position:relative;border-radius:10px;overflow:hidden;
+  cursor:pointer;opacity:.4;
+  will-change:flex-basis,opacity;
+  transition:flex-basis .38s cubic-bezier(.25,0,.1,1),opacity .3s ease,box-shadow .25s ease}
+.snap-culture .culture-cal-band .cal-ev-card.ev-center{
+  flex:0 0 55%;opacity:1;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past{opacity:.2;cursor:default}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.35}
+.snap-culture .culture-cal-band .cal-ev-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--evc,#555) 0%,rgba(8,8,8,.97) 65%)}
+.snap-culture .culture-cal-band .cal-ev-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.2) 0%,rgba(0,0,0,.7) 100%)}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.7)}
+.snap-culture .culture-cal-band .cal-ev-body{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:14px 16px 16px;
+  background:linear-gradient(to top,rgba(0,0,0,.78) 0%,transparent 100%);
+  transition:transform .35s ease}
+.snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-body{transform:translateY(-6px)}
+.snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.snap-culture .culture-cal-band .cal-ev-cat-chip{
+  font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--evc,#fff);background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:2px 7px}
+.snap-culture .culture-cal-band .cal-live-badge{
+  font-size:8px;font-weight:700;letter-spacing:.5px;
+  color:#fff;background:#16A34A;border-radius:4px;padding:2px 6px;
+  animation:live-pulse 2s ease-in-out infinite}
+.snap-culture .culture-cal-band .cal-ev-name{
+  font-size:clamp(12px,1.4vw,20px);font-weight:700;
+  color:#fff;line-height:1.2;margin-bottom:3px;
+  text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.snap-culture .culture-cal-band .cal-ev-range{
+  font-size:10px;color:rgba(255,255,255,.5);font-weight:300}
+.snap-culture .culture-cal-band .cal-ev-panel{
+  position:absolute;left:0;right:0;bottom:0;height:65%;
+  background:rgba(4,4,4,.9);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:10px 14px 12px;
+  overflow-y:auto;scrollbar-width:none;
+  transform:translateY(100%);transition:transform .38s ease}
+.snap-culture .culture-cal-band .cal-ev-panel::-webkit-scrollbar{display:none}
+.snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-panel{transform:translateY(0)}
+.snap-culture .culture-cal-band .cal-ev-panel-hd{
+  font-size:8px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px}
+.snap-culture .culture-cal-band .cal-det-art{
+  display:flex;flex-direction:column;gap:2px;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);text-decoration:none}
+.snap-culture .culture-cal-band .cal-det-art:last-of-type{border-bottom:none}
+.snap-culture .culture-cal-band .cal-det-art-title{font-size:11px;color:#fff;line-height:1.35;font-weight:400}
+.snap-culture .culture-cal-band .cal-det-art-meta{font-size:9px;color:rgba(255,255,255,.4)}
+.snap-culture .culture-cal-band .cal-det-none{font-size:10px;color:rgba(255,255,255,.4);margin:3px 0}
+.snap-culture .culture-cal-band .cal-search-link{
+  display:inline-block;margin-top:8px;
+  font-size:9px;font-weight:600;color:rgba(255,255,255,.5);
+  text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2)}
+.snap-culture .culture-cal-band .cal-search-link:hover{color:#fff}
 
 .snap-bottom>.three-col{height:100%;border-bottom:none}
 .snap-bottom .three-col>.section{height:100%!important}
@@ -1684,7 +1761,144 @@ def build_macro(groups):
     return _sec("#0C0C0C","Macro — Finance — Markets",
                 f'<div class="story-list">{rows}</div>')
 
-def build_culture(arts):
+def _build_cal_band_html(event_news={}):
+    """Returns the HTML+JS for the compact event band embedded in the culture section."""
+    today     = datetime.now()
+    today_str = today.strftime("%Y-%m-%d")
+    cat_col = {
+        "culture":"#7C3AED","fashion":"#EA580C","football":"#15803D",
+        "f1":"#DC2626","horses":"#B45309","swimming":"#1D4ED8",
+        "rowing":"#0E7490","sailing":"#0F766E","tennis":"#0284C7",
+        "golf":"#166534","cycling":"#D97706","rugby":"#7E22CE",
+        "music":"#DB2777","tech":"#0369A1","finance":"#374151",
+    }
+    cat_lbl = {
+        "culture":"Culture","fashion":"Fashion","football":"Football",
+        "f1":"F1","horses":"Horses","swimming":"Swimming",
+        "rowing":"Rowing","sailing":"Sailing","tennis":"Tennis",
+        "golf":"Golf","cycling":"Cycling","rugby":"Rugby",
+        "music":"Music","tech":"Tech","finance":"Finance",
+    }
+    mon_abbr = ["","Jan","Feb","Mar","Apr","May","Jun",
+                "Jul","Aug","Sep","Oct","Nov","Dec"]
+    def fmt_range(s_str, e_str):
+        from datetime import datetime as _dt
+        s = _dt.strptime(s_str, "%Y-%m-%d")
+        e = _dt.strptime(e_str, "%Y-%m-%d")
+        if s_str == e_str: return f"{s.day} {mon_abbr[s.month]}"
+        if s.year == e.year and s.month == e.month:
+            return f"{s.day}–{e.day} {mon_abbr[s.month]}"
+        if s.year != e.year:
+            return f"{s.day} {mon_abbr[s.month]} – {e.day} {mon_abbr[e.month]} {e.year}"
+        span = (e - s).days
+        if span > 60: return f"{mon_abbr[s.month]} – {mon_abbr[e.month]} {s.year}"
+        return f"{s.day} {mon_abbr[s.month]} – {e.day} {mon_abbr[e.month]}"
+    def _ev_sort(e):
+        if e["start"] <= today_str <= e["end"]: return (0, e["start"])
+        if e["end"] >= today_str:               return (1, e["start"])
+        return                                        (2, e["start"])
+    sorted_evs = sorted(CALENDAR_EVENTS, key=_ev_sort)
+    scroll_idx = 0
+    for i, e in enumerate(sorted_evs):
+        if e["end"] >= today_str:
+            scroll_idx = i
+            break
+    cards_html = ""
+    for i, ev in enumerate(sorted_evs):
+        col     = cat_col.get(ev["cat"], "#555")
+        lbl     = cat_lbl.get(ev["cat"], ev["cat"])
+        rng     = fmt_range(ev["start"], ev["end"])
+        is_live = ev["start"] <= today_str <= ev["end"]
+        is_past = ev["end"] < today_str
+        cls     = (" ev-live" if is_live else " ev-past" if is_past else "")
+        live_badge = '<span class="cal-live-badge">LIVE</span>' if is_live else ""
+        arts = event_news.get(ev["name"], [])
+        card_img = next((a["img"] for a in arts if a.get("img")), "")
+        arts_html = ""
+        for a in arts:
+            arts_html += (
+                f'<a href="{_s(a.get("link","#"))}" target="_blank" rel="noopener" class="cal-det-art">'
+                f'<span class="cal-det-art-title">{_s(a.get("title",""))}</span>'
+                f'<span class="cal-det-art-meta">{_s(a.get("source",""))}'
+                f'{(" · "+_s(a["ago"])) if a.get("ago") else ""}</span>'
+                f'</a>'
+            )
+        if not arts_html:
+            arts_html = '<p class="cal-det-none">No recent coverage.</p>'
+        search_url = f'https://www.google.com/search?q={_s(ev["name"]+" 2026")}'
+        if card_img:
+            bg_style = (f"background-image:url({_s(card_img)});"
+                        f"background-size:cover;background-position:center top")
+        else:
+            bg_style = (f"background:linear-gradient(135deg,{col} 0%,"
+                        f"rgba(8,8,8,.97) 65%)")
+        cards_html += (
+            f'<div class="cal-ev-card{cls}" id="ccv-{i}" style="--evc:{col}">'
+            f'<div class="cal-ev-bg" style="{bg_style}"></div>'
+            f'<div class="cal-ev-body">'
+            f'<div class="cal-ev-meta">'
+            f'<span class="cal-ev-cat-chip">{_s(lbl)}</span>'
+            f'{live_badge}'
+            f'</div>'
+            f'<div class="cal-ev-name">{_s(ev["name"])}</div>'
+            f'<div class="cal-ev-range">{_s(rng)}</div>'
+            f'</div>'
+            f'<div class="cal-ev-panel">'
+            f'<div class="cal-ev-panel-hd">Recent Coverage</div>'
+            f'{arts_html}'
+            f'<a href="{search_url}" target="_blank" rel="noopener" class="cal-search-link">Search Google →</a>'
+            f'</div>'
+            f'</div>\n'
+        )
+    js = f"""<script>
+(function(){{
+  var band=document.getElementById('culture-cal-band');
+  var all=[].slice.call(band.querySelectorAll('.cal-ev-card'));
+  var hoverTimer=null;
+  function setCenter(card){{
+    all.forEach(function(c){{c.classList.remove('ev-center');}});
+    if(card)card.classList.add('ev-center');
+  }}
+  function scrollToCard(card){{
+    var target=card.offsetLeft+card.offsetWidth/2-band.clientWidth/2;
+    band.scrollTo({{left:Math.max(0,target),behavior:'smooth'}});
+  }}
+  all.forEach(function(card){{
+    if(card.classList.contains('ev-past'))return;
+    card.addEventListener('mouseenter',function(){{
+      clearTimeout(hoverTimer);
+      hoverTimer=setTimeout(function(){{
+        setCenter(card);
+        setTimeout(function(){{scrollToCard(card);}},80);
+      }},220);
+    }});
+    card.addEventListener('mouseleave',function(){{
+      clearTimeout(hoverTimer);
+      if(!card.classList.contains('ev-open')){{ setCenter(null); }}
+    }});
+    card.addEventListener('click',function(){{
+      var isOpen=card.classList.contains('ev-open');
+      all.forEach(function(c){{c.classList.remove('ev-open');}});
+      if(!isOpen){{
+        card.classList.add('ev-open');
+        setCenter(card);
+        setTimeout(function(){{scrollToCard(card);}},80);
+      }}
+    }});
+  }});
+  var si=document.getElementById('ccv-{scroll_idx}');
+  if(si&&!si.classList.contains('ev-past')){{
+    setCenter(si);
+    setTimeout(function(){{
+      var target=si.offsetLeft+si.offsetWidth/2-band.clientWidth/2;
+      band.scrollLeft=Math.max(0,target);
+    }},120);
+  }}
+}})();
+</script>"""
+    return f'<div class="culture-cal-band" id="culture-cal-band">{cards_html}</div>{js}'
+
+def build_culture(arts, event_news={}):
     html_cards = ""
     for a in arts[:24]:
         img  = a.get("img","")
@@ -1708,14 +1922,13 @@ def build_culture(arts):
             f'</div></div>'
             f'</a>\n'
         )
-    js = """<script>
+    js_culture = """<script>
 (function(){
   var cc=[].slice.call(document.querySelectorAll('.snap-culture .card'));
   cc.forEach(function(card){
     card.addEventListener('click',function(e){
       if(card.classList.contains('cv-open')){
         card.classList.remove('cv-open');
-        /* second click — let <a> navigate */
         return;
       }
       e.preventDefault();
@@ -1729,8 +1942,12 @@ def build_culture(arts):
   });
 })();
 </script>"""
-    return _sec("#D42B17","Fashion &amp; Culture",
-                f'<div class="cards">{html_cards}</div>{js}')
+    cal_band = _build_cal_band_html(event_news)
+    body = (f'<div class="culture-body">'
+            f'<div class="cards">{html_cards}</div>'
+            f'{cal_band}'
+            f'</div>{js_culture}')
+    return _sec("#D42B17","Fashion &amp; Culture", body)
 
 def build_sports(groups):
     rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:30])
@@ -2255,9 +2472,9 @@ def main():
   </div>
 </section>
 
-<!-- ④ CULTURE -->
+<!-- ④ CULTURE + EVENTS -->
 <section class="snap-sec snap-culture">
-{build_culture(culture_arts)}
+{build_culture(culture_arts, event_news)}
 </section>
 
 <!-- ⑤ SPORTS + CITIES + PARIS -->
@@ -2267,11 +2484,6 @@ def main():
 {build_cities(cities_grp)}
 {build_paris(paris_arts)}
   </div>
-</section>
-
-<!-- ⑥ CALENDAR -->
-<section class="snap-sec snap-cal">
-{build_calendar(event_news)}
 </section>
 
 </body>
