@@ -19,6 +19,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
+    "Le Monde Marseille", "Marsactu", "Le Monde Paris",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
