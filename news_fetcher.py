@@ -222,16 +222,26 @@ CONFLICT_NEWS_SOURCES = [
 PARIS_SOURCES = [
     ("Sortir à Paris", "https://www.sortiraparis.com/rss/"),
     ("Timeout Paris",  "https://www.timeout.com/paris/rss"),
-    ("Télérama",       "https://news.google.com/rss/search?q=site:telerama.fr&hl=fr&gl=FR&ceid=FR:fr"),
+]
+# Keywords: at least one must appear in title/snippet for Paris What's On
+PARIS_WHATSON_KEYWORDS = [
+    "exposition", "expo", "musée", "galerie", "vernissage",
+    "spectacle", "concert", "théâtre", "opéra", "ballet",
+    "à voir", "à faire", "sortir", "visite", "exhibition",
+    "performance", "installation", "comédie", "cirque",
+    "festival", "danse", "atelier", "projection",
 ]
 CITIES_SOURCES = [
-    # Marseille
-    ("Les Echos PACA",    "https://news.google.com/rss/search?q=marseille+site:lesechos.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Le Monde Marseille","https://news.google.com/rss/search?q=marseille+site:lemonde.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    # Paris
-    ("Le Monde Paris",    "https://news.google.com/rss/search?q=paris+actualit%C3%A9+site:lemonde.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Le Parisien",       "https://news.google.com/rss/search?q=site:leparisien.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Marseille — local sources
+    ("Marsactu",         "https://marsactu.fr/feed/"),
+    ("La Provence",      "https://news.google.com/rss/search?q=marseille+site:laprovence.com&hl=fr&gl=FR&ceid=FR:fr"),
+    ("20 Min Marseille", "https://news.google.com/rss/search?q=marseille+%22fait+divers%22+OR+%22quartier%22+OR+%22incendie%22+OR+%22accident%22+site:20minutes.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Paris — local sources
+    ("Le Parisien",      "https://news.google.com/rss/search?q=%22Paris%22+%22arrondissement%22+OR+%22Seine%22+OR+%22banlieue%22+OR+%22Île-de-France%22+site:leparisien.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    ("20 Min Paris",     "https://news.google.com/rss/search?q=paris+%22fait+divers%22+OR+%22arrondissement%22+OR+%22Seine-Saint-Denis%22+site:20minutes.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
+# For build_cities: identify which sources are Marseille vs Paris
+MARSEILLE_SOURCE_NAMES = {"Marsactu", "La Provence", "20 Min Marseille"}
 # ══════════════════════════════════════════════════════════════════════════════
 #  CALENDAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -414,6 +424,13 @@ def _filter_recent(arts, days=2, weekly_days=7):
             if a["ts"] >= cutoff_daily:
                 result.append(a)
     return result
+def _filter_keywords(arts, keywords):
+    """Keep only articles whose title+snippet contains at least one keyword (case-insensitive)."""
+    pats = [re.compile(re.escape(kw), re.IGNORECASE) for kw in keywords]
+    def _matches(a):
+        text = (a.get("title","") or "") + " " + (a.get("snip","") or "")
+        return any(p.search(text) for p in pats)
+    return [a for a in arts if _matches(a)]
 def _snip(entry):
     raw = entry.get("summary","") or ""
     txt = re.sub(r"<[^>]+>"," ", raw)
@@ -1884,7 +1901,7 @@ def _build_cal_band_html(event_news={}):
 
 def build_culture(arts, event_news={}):
     html_cards = ""
-    for a in arts[:24]:
+    for a in arts[:48]:
         img  = a.get("img","")
         snip = _s(a.get("snip","") or "")
         bg   = (f"background-image:url({_s(img)});background-size:cover;background-position:center;"
@@ -1940,10 +1957,9 @@ def build_sports(groups):
     return _sec("#0C0C0C","Sports", f'<div class="story-list">{rows}</div>')
 
 def build_cities(groups):
-    MARSEILLE_SOURCES = {"Les Echos PACA", "Le Monde Marseille"}
     rows = ""
     for g in _sort_groups(groups)[:40]:
-        city = "marseille" if g[0]["source"] in MARSEILLE_SOURCES else "paris"
+        city = "marseille" if g[0]["source"] in MARSEILLE_SOURCE_NAMES else "paris"
         rows += _build_group_row(g, extra_cls="city-item", data_attrs=f'data-city="{city}"')
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
@@ -2376,7 +2392,9 @@ def main():
     conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
     print("  Fetching Paris…")
-    paris_arts = _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))
+    paris_arts = _filter_keywords(
+        _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES))),
+        PARIS_WHATSON_KEYWORDS)
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (Marseille & Paris)…")
     cities_raw = _dedup_exact(_filter_recent(_fetch(CITIES_SOURCES)))
