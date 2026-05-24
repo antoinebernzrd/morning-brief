@@ -1076,25 +1076,27 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gm-sonar.gm-tension::after{border-color:#F97316}
 
 .snap-feed{display:flex;flex-direction:column;overflow:hidden}
-.snap-feed>.two-col{flex:1;min-height:0;border-bottom:none}
+.snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
   overflow:hidden;border-bottom:none}
-/* ── Polymarket band ─────────────────────────────────────────── */
-.poly-band{display:flex;align-items:stretch;border-top:1px solid var(--border);
-  background:var(--bg);overflow:hidden;min-height:44px;flex-shrink:0}
+/* ── Polymarket band (1/4 of snap-feed, mirrors culture event band) ── */
+.poly-band{flex:1 0 0;min-height:0;
+  display:flex;align-items:stretch;
+  border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
 .poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
-  padding:0 18px;display:flex;align-items:center;flex-shrink:0}
+  padding:0 18px;display:flex;align-items:center;flex-shrink:0;
+  writing-mode:initial}
 .poly-band-track{flex:1;overflow:hidden;position:relative}
-.poly-band-items{display:flex;width:max-content;
+.poly-band-items{display:flex;height:100%;width:max-content;
   animation:ticker-scroll 70s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
 .poly-item{font-size:11px;color:var(--muted);text-decoration:none;
-  padding:0 24px;border-right:1px solid var(--border);white-space:nowrap;
-  transition:color .12s;display:flex;align-items:center;gap:8px;
-  height:44px;flex-shrink:0}
+  padding:0 28px;border-right:1px solid var(--border);white-space:nowrap;
+  transition:color .12s;display:flex;align-items:center;gap:10px;
+  height:100%;flex-shrink:0}
 .poly-item:hover{color:var(--text)}
-.poly-prob{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px}
+.poly-prob{font-size:11px;font-weight:700;padding:3px 8px;border-radius:3px}
 .poly-prob.yes{color:#16A34A;background:rgba(22,163,74,.12)}
 .poly-prob.no{color:#DC2626;background:rgba(220,38,38,.12)}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
