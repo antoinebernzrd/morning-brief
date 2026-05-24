@@ -222,14 +222,8 @@ CONFLICT_NEWS_SOURCES = [
 PARIS_SOURCES = [
     ("Sortir à Paris", "https://www.sortiraparis.com/rss/"),
     ("Timeout Paris",  "https://www.timeout.com/paris/rss"),
-]
-# Keywords: at least one must appear in title/snippet for Paris What's On
-PARIS_WHATSON_KEYWORDS = [
-    "exposition", "expo", "musée", "galerie", "vernissage",
-    "spectacle", "concert", "théâtre", "opéra", "ballet",
-    "à voir", "à faire", "sortir", "visite", "exhibition",
-    "performance", "installation", "comédie", "cirque",
-    "festival", "danse", "atelier", "projection",
+    # Télérama: filtered to exhibitions/events only (see _filter_telerama_events)
+    ("Télérama",       "https://news.google.com/rss/search?q=site:telerama.fr+exposition+OR+expo+OR+mus%C3%A9e+OR+galerie+OR+spectacle+OR+concert+OR+th%C3%A9%C3%A2tre&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 CITIES_SOURCES = [
     # Marseille — local sources
@@ -431,6 +425,34 @@ def _filter_keywords(arts, keywords):
         text = (a.get("title","") or "") + " " + (a.get("snip","") or "")
         return any(p.search(text) for p in pats)
     return [a for a in arts if _matches(a)]
+
+def _filter_city_local(arts):
+    """Keep only articles whose title mentions the city they're attributed to.
+    Marsactu is purely local — no title check needed.
+    All other Marseille sources must mention Marseille in the title.
+    All Paris sources must mention Paris or an IDF geographic term in the title.
+    """
+    MARSEILLE_PATS = [re.compile(t, re.IGNORECASE) for t in [
+        r"marseille", r"marseillais", r"PACA", r"bouches.du.rh"
+    ]]
+    PARIS_PATS = [re.compile(t, re.IGNORECASE) for t in [
+        r"paris", r"parisien", r"parisienne", r"arrondissement",
+        r"île.de.france", r"seine.saint.denis", r"val.de.marne",
+        r"hauts.de.seine", r"Seine", r"\bIDF\b",
+    ]]
+    result = []
+    for a in arts:
+        src = a.get("source", "")
+        title = a.get("title", "") or ""
+        if src == "Marsactu":
+            result.append(a)  # always local
+        elif src in MARSEILLE_SOURCE_NAMES:
+            if any(p.search(title) for p in MARSEILLE_PATS):
+                result.append(a)
+        else:  # Paris sources
+            if any(p.search(title) for p in PARIS_PATS):
+                result.append(a)
+    return result
 def _snip(entry):
     raw = entry.get("summary","") or ""
     txt = re.sub(r"<[^>]+>"," ", raw)
@@ -2392,12 +2414,10 @@ def main():
     conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
     print("  Fetching Paris…")
-    paris_arts = _filter_keywords(
-        _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES))),
-        PARIS_WHATSON_KEYWORDS)
+    paris_arts = _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (Marseille & Paris)…")
-    cities_raw = _dedup_exact(_filter_recent(_fetch(CITIES_SOURCES)))
+    cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     cities_grp = _dedup(cities_raw)
     print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
     print("  Generating AI headlines…")
