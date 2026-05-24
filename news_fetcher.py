@@ -19,7 +19,6 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
-    "Constantine", "The Liber", "Lyst Insights",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -172,15 +171,12 @@ MACRO_SOURCES = [
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
 CULTURE_SOURCES = [
-    ("NSS Magazine",      "https://news.google.com/rss/search?q=site:nssmag.com&hl=en&gl=US&ceid=US:en"),
-    ("The Art Newspaper", "https://news.google.com/rss/search?q=site:theartnewspaper.com&hl=en&gl=US&ceid=US:en"),
-    ("Télérama",          "https://news.google.com/rss/search?q=site:telerama.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("NYT Arts",          "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"),
-    # Added
+    ("NSS Magazine",      "https://www.nssmag.com/en/feeds/rss"),
+    ("The Art Newspaper", "https://www.theartnewspaper.com/rss"),
     ("Hypebeast",         "https://hypebeast.com/feed"),
-    ("Constantine",       "https://news.google.com/rss/search?q=site:const.co.uk&hl=en&gl=US&ceid=US:en"),
-    ("The Liber",         "https://news.google.com/rss/search?q=site:theliber.co&hl=en&gl=US&ceid=US:en"),
-    ("Lyst Insights",     "https://news.google.com/rss/search?q=site:lyst.com+fashion&hl=en&gl=US&ceid=US:en"),
+    ("Highsnobiety",      "https://www.highsnobiety.com/feed/"),
+    ("Dezeen",            "https://www.dezeen.com/feed/"),
+    ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
 ]
 SPORTS_SOURCES_FR = [
     ("L'Équipe", "https://news.google.com/rss/search?q=site:lequipe.fr&hl=fr&gl=FR&ceid=FR:fr"),
@@ -1854,7 +1850,6 @@ def _build_cal_band_html(event_news={}):
 (function(){{
   var band=document.getElementById('culture-cal-band');
   var all=[].slice.call(band.querySelectorAll('.cal-ev-card'));
-  var hoverTimer=null;
   function setCenter(card){{
     all.forEach(function(c){{c.classList.remove('ev-center');}});
     if(card)card.classList.add('ev-center');
@@ -1865,23 +1860,12 @@ def _build_cal_band_html(event_news={}):
   }}
   all.forEach(function(card){{
     if(card.classList.contains('ev-past'))return;
-    card.addEventListener('mouseenter',function(){{
-      clearTimeout(hoverTimer);
-      hoverTimer=setTimeout(function(){{
-        setCenter(card);
-        setTimeout(function(){{scrollToCard(card);}},80);
-      }},220);
-    }});
-    card.addEventListener('mouseleave',function(){{
-      clearTimeout(hoverTimer);
-      if(!card.classList.contains('ev-open')){{ setCenter(null); }}
-    }});
     card.addEventListener('click',function(){{
       var isOpen=card.classList.contains('ev-open');
-      all.forEach(function(c){{c.classList.remove('ev-open');}});
+      all.forEach(function(c){{c.classList.remove('ev-open');c.classList.remove('ev-center');}});
       if(!isOpen){{
         card.classList.add('ev-open');
-        setCenter(card);
+        card.classList.add('ev-center');
         setTimeout(function(){{scrollToCard(card);}},80);
       }}
     }});
