@@ -701,9 +701,9 @@ CSS = """
   --display:'Clash Grotesk','DM Sans',-apple-system,sans-serif;
 }
 @media(prefers-color-scheme:dark){
-  :root{--bg:#2b2b2b;--bg2:#333333;--bg3:#3c3c3c;
-    --border:#484848;--text:#d4d4d4;--muted:#888;--dim:#404040;--accent:#E84040}
-  header{background:rgba(43,43,43,.97)}
+  :root{--bg:#00112e;--bg2:#001845;--bg3:#002060;
+    --border:#1a3a80;--text:#d4d4d4;--muted:#6688cc;--dim:#1a3a80;--accent:#E84040}
+  header{background:rgba(0,17,46,.97)}
   .cp-sum{color:#555}
   .cp-art{color:#555}
   .cp-art:hover{color:#bbb}
@@ -716,7 +716,7 @@ header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
   background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
-@media(prefers-color-scheme:dark){header{background:rgba(43,43,43,.96)}}
+@media(prefers-color-scheme:dark){header{background:rgba(0,17,46,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
 .hd-left{display:flex;flex-direction:column}
@@ -824,8 +824,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 }
 .pulse-icon div{animation:pulse-ring 1.8s infinite;border-radius:50%}
 .dark-popup .leaflet-popup-content-wrapper{
-  background:#3c3c3c;color:#ddd;border:1px solid #555;border-radius:10px}
-.dark-popup .leaflet-popup-tip{background:#3c3c3c}
+  background:#001845;color:#ddd;border:1px solid #1a3a80;border-radius:10px}
+.dark-popup .leaflet-popup-tip{background:#001845}
 
 /* ── Story list (Tech / Sports / Cities) ─────────────────────── */
 .story-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
@@ -1075,9 +1075,28 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar.gm-tension::after{border-color:#F97316}
 
-.snap-feed>.two-col{height:100%;border-bottom:none}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden}
+.snap-feed>.two-col{flex:1;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
   overflow:hidden;border-bottom:none}
+/* ── Polymarket band ─────────────────────────────────────────── */
+.poly-band{display:flex;align-items:stretch;border-top:1px solid var(--border);
+  background:var(--bg);overflow:hidden;min-height:44px;flex-shrink:0}
+.poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:#fff;background:#0066FF;
+  padding:0 18px;display:flex;align-items:center;flex-shrink:0}
+.poly-band-track{flex:1;overflow:hidden;position:relative}
+.poly-band-items{display:flex;width:max-content;
+  animation:ticker-scroll 70s linear infinite}
+.poly-band:hover .poly-band-items{animation-play-state:paused}
+.poly-item{font-size:11px;color:var(--muted);text-decoration:none;
+  padding:0 24px;border-right:1px solid var(--border);white-space:nowrap;
+  transition:color .12s;display:flex;align-items:center;gap:8px;
+  height:44px;flex-shrink:0}
+.poly-item:hover{color:var(--text)}
+.poly-prob{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px}
+.poly-prob.yes{color:#16A34A;background:rgba(22,163,74,.12)}
+.poly-prob.no{color:#DC2626;background:rgba(220,38,38,.12)}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
   padding:12px 20px 20px;display:flex;flex-direction:column;gap:0}
 /* story rows — transparent baseline, white 3D card rises from bottom on hover */
@@ -1786,6 +1805,60 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
         f'</div>\n'
     )
 
+def _fetch_polymarket(limit=18):
+    """Fetch top Polymarket markets by 24h volume."""
+    try:
+        import urllib.request, json as _json
+        url = ("https://gamma-api.polymarket.com/markets"
+               "?active=true&closed=false&limit=25&order=volume24hr&ascending=false")
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = _json.loads(r.read())
+        markets = []
+        for m in data:
+            q = (m.get("question") or "").strip()
+            if not q or len(q) < 8:
+                continue
+            prices_raw = m.get("outcomePrices")
+            try:
+                prices = _json.loads(prices_raw) if isinstance(prices_raw, str) else prices_raw
+                yes_pct = round(float(prices[0]) * 100)
+            except Exception:
+                yes_pct = None
+            slug = m.get("slug") or ""
+            markets.append({"q": q[:72], "yes": yes_pct, "slug": slug})
+            if len(markets) >= limit:
+                break
+        print(f"    → {len(markets)} Polymarket markets")
+        return markets
+    except Exception as ex:
+        print(f"  ⚠  Polymarket: {ex}")
+        return []
+
+def build_polymarket_band(markets):
+    if not markets:
+        return ""
+    def item_html(m):
+        q = _s(m["q"])
+        link = (f'https://polymarket.com/event/{_s(m["slug"])}'
+                if m.get("slug") else "https://polymarket.com")
+        if m["yes"] is not None:
+            cls = "yes" if m["yes"] >= 50 else "no"
+            prob = f'<span class="poly-prob {cls}">YES {m["yes"]}%</span>'
+        else:
+            prob = ""
+        return (f'<a href="{link}" target="_blank" rel="noopener" class="poly-item">'
+                f'{q}{prob}</a>')
+    once = "".join(item_html(m) for m in markets)
+    items = once + once   # duplicate for seamless loop
+    return (
+        f'<div class="poly-band">'
+        f'<span class="poly-band-label">POLYMARKET</span>'
+        f'<div class="poly-band-track">'
+        f'<div class="poly-band-items">{items}</div>'
+        f'</div></div>\n'
+    )
+
 def build_tech(groups):
     rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:50])
     if not rows:
@@ -2436,6 +2509,8 @@ def main():
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     cities_grp = _dedup(cities_raw)
     print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
+    print("  Fetching Polymarket…")
+    poly_markets = _fetch_polymarket()
     print("  Generating AI headlines…")
     tech_grp   = _enrich_groups(tech_grp,   ai_client, headline_cache)
     macro_grp  = _enrich_groups(macro_grp,  ai_client, headline_cache)
@@ -2508,6 +2583,7 @@ def main():
 {build_tech(tech_grp)}
 {build_macro(macro_grp)}
   </div>
+{build_polymarket_band(poly_markets)}
 </section>
 
 <!-- ④ CULTURE + EVENTS -->
