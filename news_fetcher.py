@@ -228,16 +228,15 @@ PARIS_SOURCES = [
     ("Sorties Paris",  "https://news.google.com/rss/search?q=agenda+paris+concert+OR+th%C3%A9%C3%A2tre+OR+spectacle+OR+danse+OR+ballet&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 CITIES_SOURCES = [
-    # Marseille — local sources
-    ("Marsactu",         "https://marsactu.fr/feed/"),
-    ("La Provence",      "https://news.google.com/rss/search?q=marseille+site:laprovence.com&hl=fr&gl=FR&ceid=FR:fr"),
-    ("20 Min Marseille", "https://news.google.com/rss/search?q=marseille+%22fait+divers%22+OR+%22quartier%22+OR+%22incendie%22+OR+%22accident%22+site:20minutes.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    # Paris — local sources
-    ("Le Parisien",      "https://news.google.com/rss/search?q=%22Paris%22+%22arrondissement%22+OR+%22Seine%22+OR+%22banlieue%22+OR+%22Île-de-France%22+site:leparisien.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("20 Min Paris",     "https://news.google.com/rss/search?q=paris+%22fait+divers%22+OR+%22arrondissement%22+OR+%22Seine-Saint-Denis%22+site:20minutes.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Marseille — curated city section + local investigative
+    ("Le Monde Marseille", "https://www.lemonde.fr/marseille/rss_full.xml"),
+    ("Marsactu",           "https://marsactu.fr/feed/"),
+    # Paris — curated city section + regional daily
+    ("Le Monde Paris",     "https://www.lemonde.fr/paris/rss_full.xml"),
+    ("Le Parisien",        "https://news.google.com/rss/search?q=%22Paris%22+%22arrondissement%22+OR+%22Seine%22+OR+%22Île-de-France%22+site:leparisien.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 # For build_cities: identify which sources are Marseille vs Paris
-MARSEILLE_SOURCE_NAMES = {"Marsactu", "La Provence", "20 Min Marseille"}
+MARSEILLE_SOURCE_NAMES = {"Le Monde Marseille", "Marsactu"}
 # ══════════════════════════════════════════════════════════════════════════════
 #  CALENDAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -430,24 +429,26 @@ def _filter_keywords(arts, keywords):
 
 def _filter_city_local(arts):
     """Keep only articles whose title mentions the city they're attributed to.
-    Marsactu is purely local — no title check needed.
-    All other Marseille sources must mention Marseille in the title.
-    All Paris sources must mention Paris or an IDF geographic term in the title.
+    Curated city-section sources (Le Monde Marseille/Paris, Marsactu) pass through
+    untouched — they're editorially scoped to the city already.
+    Other sources require the city name in the title.
     """
+    # These sources are editorially scoped — trust them entirely
+    TRUSTED_LOCAL = {"Marsactu", "Le Monde Marseille", "Le Monde Paris"}
     MARSEILLE_PATS = [re.compile(t, re.IGNORECASE) for t in [
-        r"marseille", r"marseillais", r"PACA", r"bouches.du.rh"
+        r"marseille", r"marseillais", r"bouches.du.rh",
     ]]
     PARIS_PATS = [re.compile(t, re.IGNORECASE) for t in [
         r"paris", r"parisien", r"parisienne", r"arrondissement",
         r"île.de.france", r"seine.saint.denis", r"val.de.marne",
-        r"hauts.de.seine", r"Seine", r"\bIDF\b",
+        r"hauts.de.seine",
     ]]
     result = []
     for a in arts:
         src = a.get("source", "")
         title = a.get("title", "") or ""
-        if src == "Marsactu":
-            result.append(a)  # always local
+        if src in TRUSTED_LOCAL:
+            result.append(a)
         elif src in MARSEILLE_SOURCE_NAMES:
             if any(p.search(title) for p in MARSEILLE_PATS):
                 result.append(a)
