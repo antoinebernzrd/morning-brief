@@ -701,9 +701,9 @@ CSS = """
   --display:'Clash Grotesk','DM Sans',-apple-system,sans-serif;
 }
 @media(prefers-color-scheme:dark){
-  :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
-    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040}
-  header{background:rgba(6,6,6,.97)}
+  :root{--bg:#2b2b2b;--bg2:#333333;--bg3:#3c3c3c;
+    --border:#484848;--text:#d4d4d4;--muted:#888;--dim:#404040;--accent:#E84040}
+  header{background:rgba(43,43,43,.97)}
   .cp-sum{color:#555}
   .cp-art{color:#555}
   .cp-art:hover{color:#bbb}
@@ -716,7 +716,7 @@ header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
   background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
-@media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
+@media(prefers-color-scheme:dark){header{background:rgba(43,43,43,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
 .hd-left{display:flex;flex-direction:column}
@@ -824,8 +824,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 }
 .pulse-icon div{animation:pulse-ring 1.8s infinite;border-radius:50%}
 .dark-popup .leaflet-popup-content-wrapper{
-  background:#141414;color:#ddd;border:1px solid #252525;border-radius:10px}
-.dark-popup .leaflet-popup-tip{background:#141414}
+  background:#3c3c3c;color:#ddd;border:1px solid #555;border-radius:10px}
+.dark-popup .leaflet-popup-tip{background:#3c3c3c}
 
 /* ── Story list (Tech / Sports / Cities) ─────────────────────── */
 .story-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
