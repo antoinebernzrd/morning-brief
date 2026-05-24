@@ -19,6 +19,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
+    "Constantine", "The Liber", "Lyst Insights",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -155,18 +156,31 @@ TECH_SOURCES = [
     ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
     ("Les Echos Deals",     "https://news.google.com/rss/search?q=site:lesechos.fr/start-up/deals&hl=fr&gl=FR&ceid=FR:fr"),
     ("Les Echos Portraits", "https://news.google.com/rss/search?q=site:lesechos.fr/start-up/portraits&hl=fr&gl=FR&ceid=FR:fr"),
+    # Added
+    ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
+    ("TechCrunch",          "https://techcrunch.com/feed/"),
+    ("First Round Review",  "https://news.google.com/rss/search?q=site:review.firstround.com&hl=en&gl=US&ceid=US:en"),
+    ("Lenny's Newsletter",  "https://www.lennysnewsletter.com/feed"),
+    ("Pragmatic Engineer",  "https://newsletter.pragmaticengineer.com/feed"),
 ]
 MACRO_SOURCES = [
     # GN site:ft.com returns ~100 articles vs homepage RSS's 10
     ("FT",            "https://news.google.com/rss/search?q=site:ft.com&hl=en&gl=US&ceid=US:en"),
     ("The Economist", "https://www.economist.com/the-world-this-week/rss.xml"),
     ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Added
+    ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
 CULTURE_SOURCES = [
     ("NSS Magazine",      "https://news.google.com/rss/search?q=site:nssmag.com&hl=en&gl=US&ceid=US:en"),
     ("The Art Newspaper", "https://news.google.com/rss/search?q=site:theartnewspaper.com&hl=en&gl=US&ceid=US:en"),
     ("Télérama",          "https://news.google.com/rss/search?q=site:telerama.fr&hl=fr&gl=FR&ceid=FR:fr"),
     ("NYT Arts",          "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"),
+    # Added
+    ("Hypebeast",         "https://hypebeast.com/feed"),
+    ("Constantine",       "https://news.google.com/rss/search?q=site:const.co.uk&hl=en&gl=US&ceid=US:en"),
+    ("The Liber",         "https://news.google.com/rss/search?q=site:theliber.co&hl=en&gl=US&ceid=US:en"),
+    ("Lyst Insights",     "https://news.google.com/rss/search?q=site:lyst.com+fashion&hl=en&gl=US&ceid=US:en"),
 ]
 SPORTS_SOURCES_FR = [
     ("L'Équipe", "https://news.google.com/rss/search?q=site:lequipe.fr&hl=fr&gl=FR&ceid=FR:fr"),
@@ -601,7 +615,7 @@ def _fetch_event_news(name, max_items=8):
             dt  = _parse_date(e)
             src = getattr(getattr(e, "source", None), "title", "") or ""
             return {"title": e.get("title", "—"), "link": e.get("link", "#"),
-                    "source": src, "ago": _ago(dt)}
+                    "source": src, "ago": _ago(dt), "img": _img(e)}
         # First pass: trusted publishers only
         arts = []
         for e in feed.entries[:30]:
@@ -645,6 +659,7 @@ CSS = """
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --display:'Clash Grotesk','DM Sans',-apple-system,sans-serif;
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
@@ -716,8 +731,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
   display:flex;align-items:center;justify-content:space-between}
 .dot{display:none}
 .cp-item .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sec-hd-text{font-family:var(--serif);font-size:20px;font-style:italic;
-  font-weight:600;color:var(--text);padding:22px 0 18px;letter-spacing:-.3px}
+.sec-hd-text{font-family:var(--display);font-size:20px;font-style:normal;
+  font-weight:600;color:var(--text);padding:22px 0 18px;letter-spacing:-.5px}
 .sec-hd-meta{font-size:9px;color:var(--dim);letter-spacing:.3px}
 
 /* ── Layouts ─────────────────────────────────────────────────── */
@@ -740,24 +755,20 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
   border-bottom:1px solid var(--border);flex-shrink:0}
 .cp-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .cp-list::-webkit-scrollbar{width:2px}
-.cp-item{display:flex;align-items:center;gap:9px;padding:9px 16px;
-  border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
-.cp-item:hover,.cp-item.active{background:var(--bg3)}
+/* accordion item */
+.cp-item{border-bottom:1px solid var(--border)}
+.cp-item-row{display:flex;align-items:center;gap:9px;padding:9px 16px;
+  cursor:pointer;transition:background .1s}
+.cp-item-row:hover,.cp-item.open .cp-item-row{background:var(--bg3)}
 .cp-item-name{font-size:12px;color:#999;flex:1;font-weight:300}
-.new-badge{font-size:8px;font-weight:500;color:#F59E0B;background:#F59E0B12;
-  padding:2px 7px;border-radius:20px;flex-shrink:0;letter-spacing:.4px}
-.cp-det{display:none;flex-direction:column;height:100%}
-.cp-det.on{display:flex}
-.cp-back{padding:9px 16px;font-size:11px;color:var(--muted);cursor:pointer;
-  border-bottom:1px solid var(--border);flex-shrink:0;transition:color .12s}
-.cp-back:hover{color:var(--text)}
-.cp-body{flex:1;overflow-y:auto;padding:14px 16px;
-  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.cp-name{font-family:var(--serif);font-size:15px;font-style:italic;
-  font-weight:500;color:#fff;margin-bottom:3px}
-.cp-meta{font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:.2px}
-.cp-sum{font-size:12px;color:#666;line-height:1.7;margin-bottom:13px;
-  padding-left:10px;border-left:1px solid var(--border);font-weight:300}
+.cp-chevron{font-size:13px;color:#555;transition:transform .2s;flex-shrink:0}
+.cp-item.open .cp-chevron{transform:rotate(90deg)}
+.new-badge{font-size:9px;color:#F59E0B;flex-shrink:0}
+/* expandable body */
+.cp-item-body{display:none;padding:0 14px 14px 14px;border-top:1px solid #111}
+.cp-item.open .cp-item-body{display:block}
+.cp-meta{font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.2px;padding-top:10px}
+.cp-sum{font-size:11px;color:#666;line-height:1.7;margin-bottom:10px;font-weight:300}
 .cp-arts-hd{font-size:9px;font-weight:500;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--dim);margin-bottom:7px}
 .cp-art{display:block;padding:7px 0;border-bottom:1px solid var(--border);
@@ -960,9 +971,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   padding:0 60px;border-top:3px solid var(--text);background:var(--bg)}
 .hero-eyebrow{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
   color:var(--muted);font-family:var(--sans);margin-bottom:16px;display:block}
-.hero-h1{font-family:var(--serif);font-size:clamp(60px,8.5vw,118px);
-  font-style:italic;font-weight:600;color:var(--text);
-  letter-spacing:-4px;line-height:.93;margin-bottom:36px}
+.hero-h1{font-family:var(--display);font-size:clamp(60px,8.5vw,118px);
+  font-style:normal;font-weight:700;color:var(--text);
+  letter-spacing:-3px;line-height:.93;margin-bottom:36px}
 .hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:36px}
 .hero-count{font-size:9px;color:var(--accent);letter-spacing:.9px;
   font-weight:600;text-transform:uppercase}
@@ -974,53 +985,318 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── Snap section inner layouts ──────────────────────────── */
 .snap-geo{height:100vh!important;overflow:hidden!important}
-.snap-geo>.section{position:absolute!important;inset:0;display:flex;flex-direction:column}
+.snap-geo>.section{height:100%!important;display:flex!important;flex-direction:column!important}
 .snap-geo .sec-hd{flex-shrink:0}
-.snap-geo .map-wrap{flex:1!important;height:auto!important;min-height:0;position:relative!important}
-.snap-geo #map{position:absolute!important;inset:0!important;height:auto!important}
+.snap-geo .map-wrap{flex:1!important;height:0!important;min-height:0!important}
+.snap-geo #map{height:100%!important;position:relative!important}
 .cp-list{position:relative}
 .cp-list::after{content:'';position:sticky;bottom:0;display:block;
   height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
-/* ── Map aesthetic: dot-matrix world ─────────────────────── */
-#map{background:#050505!important}
-#map .leaflet-tile-pane img{
-  filter:grayscale(1) brightness(0.13) contrast(7)!important}
-#map .leaflet-control-zoom a{background:#111!important;color:#444!important;border-color:#1a1a1a!important}
-/* single radial-gradient: transparent dots on dark bg → tiles show as dot grid */
-#map::after{content:'';position:absolute;inset:0;z-index:450;pointer-events:none;
-  background:radial-gradient(circle,transparent 42%,#050505 43%) 0 0 / 6px 6px}
-/* ── Glow markers ────────────────────────────────────────── */
-.gm{border-radius:50%}
-.gm-c{width:10px;height:10px;background:#EF4444;
-  box-shadow:0 0 0 3px rgba(239,68,68,.2),0 0 14px 5px rgba(239,68,68,.45),
-             0 0 30px 12px rgba(239,68,68,.18)}
-.gm-t{width:7px;height:7px;background:#F97316;
-  box-shadow:0 0 0 2px rgba(249,115,22,.2),0 0 10px 4px rgba(249,115,22,.4)}
-.gm-pulse{width:12px;height:12px;background:#EF4444;
-  box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 18px 7px rgba(239,68,68,.5),
-             0 0 40px 16px rgba(239,68,68,.22);
-  animation:glow-pulse 1.8s ease-in-out infinite}
-@keyframes glow-pulse{
-  0%,100%{box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 18px 7px rgba(239,68,68,.5),0 0 40px 16px rgba(239,68,68,.22)}
-  50%{box-shadow:0 0 0 6px rgba(239,68,68,.15),0 0 28px 11px rgba(239,68,68,.7),0 0 60px 24px rgba(239,68,68,.3)}
+/* ── Map: dark theme — dot world rendered on canvas ──────── */
+#map{background:#080808!important}
+#map .leaflet-control-zoom a{background:#111!important;color:#333!important;
+  border-color:#1a1a1a!important}
+#map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
+.snap-geo>.section{background:#080808}
+.snap-geo .sec-hd{background:#080808!important;border-bottom:1px solid #1a1a1a;padding:0 16px}
+.snap-geo .sec-hd-text{color:#666}
+.snap-geo .sec-hd-meta{color:#2a2a2a}
+.snap-geo .cp{background:#080808;border-left-color:#1a1a1a}
+.snap-geo .cp-hd{color:#444;border-bottom-color:#1a1a1a}
+.snap-geo .cp-item{border-bottom-color:#111}
+.snap-geo .cp-item-name{color:#666}
+.snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:#0f0f0f}
+.snap-geo .cp-chevron{color:#333}
+.snap-geo .cp-item-body{border-top-color:#111}
+.snap-geo .cp-meta{color:#555}
+.snap-geo .cp-sum{color:#444}
+.snap-geo .cp-arts-hd{color:#444}
+.snap-geo .cp-art{color:#555;border-bottom-color:#111}
+.snap-geo .cp-art:hover{color:#888}
+.snap-geo .cp-art small{color:#333}
+.snap-geo .new-badge{color:#F59E0B}
+.snap-geo .cp-list::after{display:none!important}
+/* ── Conflict markers: match grid dot size (2×R = 5px) ──── */
+.gm-dot{width:5px;height:5px;border-radius:50%;position:relative}
+.gm-conflict{background:#EF4444}
+.gm-tension{background:#F97316}
+/* sonar ring: expands outward when there's new coverage */
+@keyframes sonar-ring{
+  0%  {transform:translate(-50%,-50%) scale(1);opacity:.7}
+  100%{transform:translate(-50%,-50%) scale(7);opacity:0}
 }
+.gm-sonar::after{
+  content:'';position:absolute;top:50%;left:50%;
+  width:5px;height:5px;border-radius:50%;
+  border:1px solid #EF4444;
+  transform:translate(-50%,-50%);
+  animation:sonar-ring 2.4s ease-out infinite;
+  pointer-events:none
+}
+.gm-sonar.gm-tension::after{border-color:#F97316}
 
 .snap-feed>.two-col{height:100%;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
   overflow:hidden;border-bottom:none}
-.snap-feed .story-list{flex:1;max-height:none;overflow-y:auto}
+.snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
+  padding:12px 20px 20px;display:flex;flex-direction:column;gap:0}
+/* story rows — transparent baseline, white 3D card rises from bottom on hover */
+.snap-feed .sg{
+  border-bottom:1px solid var(--border);padding:16px 14px;margin:0;
+  background:transparent;border-radius:0;
+  position:relative;overflow:visible}
+.snap-feed .sg:last-child{border-bottom:none}
+.snap-feed .sg::before{
+  content:'';position:absolute;inset:0;
+  background:#fff;border-radius:var(--r);
+  transform-origin:bottom center;
+  transform:perspective(500px) rotateX(45deg);
+  opacity:0;
+  transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s ease;
+  z-index:0;pointer-events:none}
+.snap-feed .sg:hover::before,
+.snap-feed .sg-multi.open::before{
+  transform:perspective(500px) rotateX(0deg);opacity:1}
+.snap-feed .sg>*,.snap-feed .sg .sg-hd{position:relative;z-index:1}
+.snap-feed .sg:hover .sg-title,
+.snap-feed .sg-multi.open .sg-title{color:#111!important;opacity:1}
+.snap-feed .sg:hover .badge,.snap-feed .sg:hover .sg-time,
+.snap-feed .sg:hover .sg-cnt,.snap-feed .sg-multi.open .badge,
+.snap-feed .sg-multi.open .sg-time,.snap-feed .sg-multi.open .sg-cnt{color:rgba(0,0,0,.4)}
+.snap-feed .sg-arts{border-top:1px solid rgba(0,0,0,.1);margin-top:8px;padding-top:0}
+.snap-feed .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
-.snap-culture>.section{height:100%;display:flex;flex-direction:column}
-.snap-culture .cards{flex:1;min-height:0}
-.snap-culture .card{flex:0 0 220px}
+.snap-culture>.section{height:100%;display:flex;flex-direction:column;
+  background:#060606}
+.snap-culture .sec-hd{background:#060606!important;border-color:#1c1c1c!important}
+.snap-culture .sec-hd-text{color:#d4d4d4!important}
+/* culture: 3-row horizontal scroll — explicit squares with generous spacing */
+.snap-culture .cards{
+  flex:1;min-height:0;
+  display:grid!important;
+  /* row height = (available height - padding - gaps) / 3
+     header ~66px + padding 14+18px + 2×gap 16px = ~130px overhead */
+  grid-template-rows:repeat(3,calc((100vh - 130px) / 3));
+  grid-auto-flow:column;
+  /* column width = row height → guaranteed squares */
+  grid-auto-columns:calc((100vh - 130px) / 3);
+  gap:16px;padding:14px 20px 18px;
+  overflow-x:auto;overflow-y:hidden;
+  border-top:none!important;
+  scrollbar-width:none}
+.snap-culture .cards::-webkit-scrollbar{display:none}
+.snap-culture .card{
+  display:block!important;
+  position:relative;
+  width:100%;height:100%;
+  border-right:none;
+  border-radius:var(--r);overflow:hidden;
+  cursor:pointer;
+  transition:transform .2s ease,box-shadow .2s ease,z-index .2s ease;
+  text-decoration:none}
+.snap-culture .card:hover:not(.cv-open){
+  transform:scale(1.05);
+  z-index:2;
+  box-shadow:0 10px 30px rgba(0,0,0,.45)}
+/* image fills the whole card */
+.snap-culture .ci{
+  position:absolute!important;inset:0!important;
+  height:100%!important;width:100%!important;flex-shrink:0}
+.snap-culture .ci::after{
+  background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.65) 42%,rgba(0,0,0,.15) 68%,transparent 85%)}
+/* source label — dark pill so it reads on any image */
+.snap-culture .cs{
+  top:9px;bottom:auto;z-index:3;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  border-radius:4px;padding:3px 7px;
+  color:#fff!important;font-size:8px;letter-spacing:1.2px}
+/* normal text bottom */
+.snap-culture .cb{
+  position:absolute!important;bottom:0;left:0;right:0;
+  padding:22px 11px 12px;background:none;
+  display:flex;flex-direction:column;justify-content:flex-end;z-index:2;
+  transition:opacity .2s}
+.snap-culture .card.cv-open .cb{opacity:0;pointer-events:none}
+.snap-culture .ct{
+  color:#fff!important;opacity:1!important;
+  font-size:18px;margin-bottom:4px;line-height:1.3;font-weight:500;
+  text-shadow:0 1px 6px rgba(0,0,0,1),0 2px 10px rgba(0,0,0,.8)}
+.snap-culture .ctime{color:rgba(255,255,255,.45);font-size:11px}
+/* info overlay — slides up from bottom within card */
+.snap-culture .cv-overlay{
+  position:absolute;left:0;right:0;bottom:0;
+  height:100%;z-index:6;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:13px 12px 14px;
+  display:flex;flex-direction:column;justify-content:flex-end;gap:5px;
+  transform:translateY(100%);
+  transition:transform .3s ease}
+.snap-culture .card.cv-open .cv-overlay{transform:translateY(0)}
+.snap-culture .cv-src{font-size:8px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.45)}
+.snap-culture .cv-title{font-size:12px;font-weight:500;color:#fff;line-height:1.4}
+.snap-culture .cv-snip{font-size:10px;color:rgba(255,255,255,.65);line-height:1.45;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.snap-culture .cv-footer{display:flex;align-items:center;justify-content:space-between;
+  margin-top:6px}
+.snap-culture .cv-time{font-size:8px;color:rgba(255,255,255,.38)}
+.snap-culture .cv-read{
+  font-size:10px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:4px;padding:3px 9px;text-decoration:none;
+  transition:background .15s}
+.snap-culture .cv-read:hover{background:rgba(255,255,255,.25)}
 
 .snap-bottom>.three-col{height:100%;border-bottom:none}
 .snap-bottom .three-col>.section{height:100%!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
+/* ── shared card token (used below) ─────────────────────────
+   padding: 11px 12px  |  gap: 5px  |  radius: var(--r)
+   ────────────────────────────────────────────────────────── */
+
+/* ── snap-bottom: sport / cities / paris ─────────────────── */
+.snap-bottom .story-list,.snap-bottom .paris-list{
+  padding:12px 16px 16px;display:flex;flex-direction:column;gap:0}
+.snap-bottom .sg,.snap-bottom .pi{
+  border-bottom:1px solid var(--border);padding:16px 14px;margin:0;
+  background:transparent;border-radius:0;
+  position:relative;overflow:visible}
+.snap-bottom .sg:last-child,.snap-bottom .pi:last-child{border-bottom:none}
+.snap-bottom .sg::before,.snap-bottom .pi::before{
+  content:'';position:absolute;inset:0;
+  background:#fff;border-radius:var(--r);
+  transform-origin:bottom center;
+  transform:perspective(500px) rotateX(45deg);
+  opacity:0;
+  transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s ease;
+  z-index:0;pointer-events:none}
+.snap-bottom .sg:hover::before,.snap-bottom .pi:hover::before,
+.snap-bottom .sg-multi.open::before{
+  transform:perspective(500px) rotateX(0deg);opacity:1}
+.snap-bottom .sg>*,.snap-bottom .pi>*,.snap-bottom .sg .sg-hd{position:relative;z-index:1}
+.snap-bottom .sg:hover .sg-title,.snap-bottom .sg-multi.open .sg-title,
+.snap-bottom .pi:hover .pi-title{color:#111!important;opacity:1}
+.snap-bottom .sg:hover .badge,.snap-bottom .sg:hover .sg-time,
+.snap-bottom .sg:hover .sg-cnt,.snap-bottom .pi:hover .pi-src,
+.snap-bottom .pi:hover .pi-t{color:rgba(0,0,0,.4)}
+.snap-bottom .sg-arts{border-top:1px solid rgba(0,0,0,.1);margin-top:8px;padding-top:0}
+.snap-bottom .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
+
+/* ── snap-geo: conflict accordion items ──────────────────── */
+.snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:0}
+.snap-geo .cp-item{
+  border-bottom:1px solid #1a1a1a;
+  background:transparent}
+.snap-geo .cp-item:last-child{border-bottom:none}
+.snap-geo .cp-item-row{
+  position:relative;overflow:hidden;border-radius:var(--r)}
+.snap-geo .cp-item-row::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,.07);border-radius:var(--r);
+  transform-origin:bottom center;
+  transform:perspective(500px) rotateX(45deg);
+  opacity:0;
+  transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s ease;
+  z-index:0;pointer-events:none}
+.snap-geo .cp-item-row:hover::before,
+.snap-geo .cp-item.open .cp-item-row::before{
+  transform:perspective(500px) rotateX(0deg);opacity:1}
+.snap-geo .cp-item-row>*{position:relative;z-index:1}
+.snap-geo .cp-item-body{border-top-color:#1a1a1a}
+
+/* ── snap-cal: big full-height slides ───────────────────── */
 .snap-cal>.section{height:100%;display:flex;flex-direction:column;overflow:hidden}
-.snap-cal .cal-months{flex:1;overflow-y:auto}
+.snap-cal .cal-band{
+  flex:1;min-height:0;
+  display:flex;flex-direction:row;align-items:stretch;
+  overflow-x:auto;overflow-y:hidden;
+  gap:10px;
+  /* 34% side padding = 50% - half expanded width (68%/2) — lets edge cards reach centre */
+  padding:14px 34% 18px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none}
+.snap-cal .cal-band::-webkit-scrollbar{display:none}
+/* big slide card — narrow by default, widens on hover/focus */
+.snap-cal .cal-ev-card{
+  flex:0 0 18%;
+  position:relative;border-radius:12px;overflow:hidden;
+  cursor:pointer;
+  opacity:.45;
+  will-change:flex-basis,opacity;
+  transition:flex-basis .38s cubic-bezier(.25,0,.1,1),
+             opacity .3s ease,
+             box-shadow .25s ease}
+.snap-cal .cal-ev-card.ev-center{
+  flex:0 0 68%;
+  opacity:1;
+  box-shadow:0 12px 48px rgba(0,0,0,.55)}
+.snap-cal .cal-ev-card.ev-past{opacity:.22;cursor:default}
+.snap-cal .cal-ev-card.ev-past.ev-center{opacity:.4}
+/* card background — photo or colour gradient */
+.snap-cal .cal-ev-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--evc,#555) 0%,rgba(8,8,8,.97) 65%)}
+/* darken photo with a simple gradient — no mix-blend-mode so photos show */
+.snap-cal .cal-ev-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.25) 0%,rgba(0,0,0,.65) 100%)}
+.snap-cal .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.7)}
+/* bottom text layer */
+.snap-cal .cal-ev-body{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:28px 32px 32px;
+  background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 100%);
+  transition:transform .35s ease}
+.snap-cal .cal-ev-card.ev-open .cal-ev-body{transform:translateY(-8px)}
+.snap-cal .cal-ev-meta{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.snap-cal .cal-ev-cat-chip{
+  font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--evc,#fff);background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:3px 9px}
+.snap-cal .cal-live-badge{
+  font-size:9px;font-weight:700;letter-spacing:.6px;
+  color:#fff;background:#16A34A;
+  border-radius:4px;padding:3px 8px;
+  animation:live-pulse 2s ease-in-out infinite}
+@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:.65}}
+.snap-cal .cal-ev-name{
+  font-size:clamp(22px,2.8vw,38px);font-weight:700;
+  color:#fff;line-height:1.15;margin-bottom:8px;
+  text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.snap-cal .cal-ev-range{font-size:13px;color:rgba(255,255,255,.55);font-weight:300}
+/* articles panel slides up */
+.snap-cal .cal-ev-panel{
+  position:absolute;left:0;right:0;bottom:0;
+  height:58%;
+  background:rgba(4,4,4,.88);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:20px 32px 24px;
+  overflow-y:auto;scrollbar-width:none;
+  transform:translateY(100%);
+  transition:transform .38s ease}
+.snap-cal .cal-ev-panel::-webkit-scrollbar{display:none}
+.snap-cal .cal-ev-card.ev-open .cal-ev-panel{transform:translateY(0)}
+.snap-cal .cal-ev-panel-hd{
+  font-size:9px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:12px}
+.snap-cal .cal-det-art{
+  display:flex;flex-direction:column;gap:3px;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);
+  text-decoration:none}
+.snap-cal .cal-det-art:last-of-type{border-bottom:none}
+.snap-cal .cal-det-art-title{font-size:12px;color:#fff;line-height:1.4;font-weight:400}
+.snap-cal .cal-det-art-meta{font-size:9.5px;color:rgba(255,255,255,.4)}
+.snap-cal .cal-det-none{font-size:11px;color:rgba(255,255,255,.4);margin:4px 0}
+.snap-cal .cal-search-link{
+  display:inline-block;margin-top:12px;
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.5);
+  text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2)}
+.snap-cal .cal-search-link:hover{color:#fff}
 
 /* ── Mobile snap overrides ───────────────────────────────── */
 @media(max-width:768px){
@@ -1036,6 +1312,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   .snap-bottom .three-col>.section{height:auto!important}
   .snap-bottom .story-list,.snap-bottom .paris-list{max-height:320px}
   .snap-cal>.section{height:auto;overflow:visible}
+  .snap-cal .cal-band{flex-wrap:nowrap;padding:12px 16px}
 }
 """
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1078,10 +1355,6 @@ def build_map(conflicts_json, articles_json):
     <div class="cp">
       <div class="cp-hd">Conflicts &amp; Tensions</div>
       <div id="cp-list" class="cp-list"></div>
-      <div id="cp-det" class="cp-det">
-        <div class="cp-back" id="cp-back">← All conflicts</div>
-        <div class="cp-body" id="cp-body"></div>
-      </div>
     </div>
   </div>
 </div>
@@ -1091,14 +1364,105 @@ def build_map(conflicts_json, articles_json):
   var A = {articles_json};
   var TC = {{ conflict:'#EF4444', tension:'#F97316' }};
   var listEl = document.getElementById('cp-list');
-  var detEl  = document.getElementById('cp-det');
-  var bodyEl = document.getElementById('cp-body');
   var markers = {{}};
-  var map = L.map('map',{{center:[20,10],zoom:2,minZoom:2,
-    maxZoom:6,zoomControl:true,attributionControl:false,
-    maxBounds:[[-75,-180],[85,180]],maxBoundsViscosity:1.0}});
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png',
-    {{subdomains:'abcd',maxZoom:19,noWrap:true}}).addTo(map);
+  var GRID_SPACING = 8; /* must match canvas SPACING below */
+
+  function _snapToGrid(latlng) {{
+    /* snap a lat/lng to the nearest canvas grid dot */
+    var px   = map.latLngToContainerPoint(latlng);
+    var half = GRID_SPACING / 2;
+    var sx   = Math.round((px.x - half) / GRID_SPACING) * GRID_SPACING + half;
+    var sy   = Math.round((px.y - half) / GRID_SPACING) * GRID_SPACING + half;
+    return map.containerPointToLatLng([sx, sy]);
+  }}
+
+  /* ── Leaflet map: static (no pan/zoom), canvas handles base map ── */
+  var map = L.map('map',{{center:[20,10],zoom:2,minZoom:2,maxZoom:2,
+    zoomControl:false,attributionControl:false,
+    dragging:false,scrollWheelZoom:false,doubleClickZoom:false,
+    touchZoom:false,keyboard:false,boxZoom:false,
+    maxBounds:[[-80,-200],[85,200]],maxBoundsViscosity:1.0}});
+
+  /* ── Canvas dot-world ───────────────────────────────────────── */
+  var mapEl = document.getElementById('map');
+  var dotCanvas = document.createElement('canvas');
+  dotCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:250';
+  mapEl.appendChild(dotCanvas);
+  var _landGeo = null;
+
+  function _drawDotWorld() {{
+    if (!_landGeo) return;
+    var w = mapEl.offsetWidth, h = mapEl.offsetHeight;
+    if (!w || !h) return;
+    dotCanvas.width  = w;
+    dotCanvas.height = h;
+
+    /* Step 1 — rasterise land polygons onto a temporary canvas */
+    var tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    var tc = tmp.getContext('2d');
+    tc.fillStyle = '#fff';
+
+    function drawRings(rings) {{
+      rings.forEach(function(ring) {{
+        tc.beginPath();
+        var prevLng = null;
+        for (var i = 0; i < ring.length; i++) {{
+          var lng = ring[i][0], lat = ring[i][1];
+          /* skip antimeridian wrap artefacts */
+          if (prevLng !== null && Math.abs(lng - prevLng) > 180) {{
+            tc.closePath(); tc.fill(); tc.beginPath();
+          }}
+          var px = map.latLngToContainerPoint(L.latLng(lat, lng));
+          if (i === 0) tc.moveTo(px.x, px.y);
+          else         tc.lineTo(px.x, px.y);
+          prevLng = lng;
+        }}
+        tc.closePath();
+        tc.fill();
+      }});
+    }}
+
+    _landGeo.features.forEach(function(f) {{
+      var g = f.geometry;
+      if (g.type === 'Polygon')      drawRings(g.coordinates);
+      else if (g.type === 'MultiPolygon')
+        g.coordinates.forEach(function(poly) {{ drawRings(poly); }});
+    }});
+
+    /* Step 2 — pixel-test and place dots on the real canvas */
+    var imgData = tc.getImageData(0, 0, w, h).data;
+    var ctx = dotCanvas.getContext('2d');
+    var SPACING = GRID_SPACING, R = 2.4;
+    ctx.fillStyle = 'rgba(58,58,58,0.95)';
+
+    for (var y = SPACING / 2; y < h; y += SPACING) {{
+      for (var x = SPACING / 2; x < w; x += SPACING) {{
+        var xi = Math.min(Math.floor(x), w - 1);
+        var yi = Math.min(Math.floor(y), h - 1);
+        var idx = (yi * w + xi) * 4;
+        if (imgData[idx] > 128) {{
+          ctx.beginPath();
+          ctx.arc(x, y, R, 0, Math.PI * 2);
+          ctx.fill();
+        }}
+      }}
+    }}
+  }}
+
+  /* Load world land topojson (120 KB) */
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+    .then(function(r) {{ return r.json(); }})
+    .then(function(topo) {{
+      _landGeo = topojson.feature(topo, topo.objects.land);
+      _drawDotWorld();
+    }})
+    .catch(function(e) {{ console.warn('world-atlas load failed', e); }});
+
+  window.addEventListener('resize', function() {{ map.invalidateSize(); _drawDotWorld(); }});
+  function _esc(t) {{
+    return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }}
   function isNew(id) {{
     var arts = A[id] || [];
     if (!arts.length) return false;
@@ -1108,83 +1472,92 @@ def build_map(conflicts_json, articles_json):
   function markSeen(id) {{
     localStorage.setItem('seen_'+id, Date.now());
   }}
-  function showDetail(id) {{
-    var c = C.find(function(x){{return x.id===id;}});
-    if (!c) return;
-    markSeen(id);
-    var li = listEl.querySelector('[data-id="'+id+'"]');
-    if (li) {{ li.querySelector('.new-badge') && (li.querySelector('.new-badge').style.display='none'); }}
-    if (markers[id] && markers[id]._isPulse) {{
-      markers[id].remove();
-      var cls2 = c.type==='conflict'?'gm gm-c':'gm gm-t';
-      var sz2  = c.type==='conflict'?10:7;
-      var m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
-        className:'',html:'<div class="'+cls2+'"></div>',
-        iconSize:[sz2,sz2],iconAnchor:[sz2/2,sz2/2]
+  function _replacePulse(c) {{
+    if (markers[c.id] && markers[c.id]._isPulse) {{
+      markers[c.id].remove();
+      var cls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension');
+      var snapped = _snapToGrid(L.latLng(c.lat,c.lon));
+      var m = L.marker(snapped,{{icon:L.divIcon({{
+        className:'',html:'<div class="'+cls+'"></div>',
+        iconSize:[5,5],iconAnchor:[2,2]
       }})}}).addTo(map);
       m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
-      m.on('click',function(){{showDetail(c.id);}});
-      markers[id]=m;
+      m.on('click',function(){{toggleItem(c.id);}});
+      markers[c.id]=m;
     }}
-    var arts = A[id]||[];
+  }}
+  function toggleItem(id) {{
+    var c = C.find(function(x){{return x.id===id;}});
+    if (!c) return;
+    var item = listEl.querySelector('[data-id="'+id+'"]');
+    if (!item) return;
+    var wasOpen = item.classList.contains('open');
+    /* close all */
+    listEl.querySelectorAll('.cp-item.open').forEach(function(el){{
+      el.classList.remove('open');
+    }});
+    if (!wasOpen) {{
+      item.classList.add('open');
+      markSeen(id);
+      _replacePulse(c);
+      var badge = item.querySelector('.new-badge');
+      if (badge) badge.style.display='none';
+      item.scrollIntoView({{behavior:'smooth',block:'nearest'}});
+    }}
+  }}
+
+  /* Build accordion list */
+  C.forEach(function(c){{
+    var col    = TC[c.type]||'#888';
+    var hasNew = isNew(c.id);
+    var arts   = A[c.id]||[];
     var artsHtml = arts.length
       ? arts.map(function(a){{
-          return '<a href="'+a.link+'" target="_blank" rel="noopener" class="cp-art">'
+          return '<a href="'+_esc(a.link)+'" target="_blank" rel="noopener" class="cp-art">'
             +_esc(a.title)+'<br><small>'+_esc(a.source)+(a.ago?' · '+a.ago:'')+'</small></a>';
         }}).join('')
       : '<p class="cp-no">No recent articles matched.</p>';
-    bodyEl.innerHTML =
-      '<div class="cp-name">'+_esc(c.name)+'</div>'
-      +'<div class="cp-meta">Since '+_esc(c.started)
-        +' &nbsp;·&nbsp; <span style="color:'+(TC[c.type]||'#888')+'">'+c.type+'</span></div>'
-      +'<div class="cp-sum">'+_esc(c.summary)+'</div>'
-      +'<div class="cp-arts-hd">Recent Coverage</div>'
-      +artsHtml;
-    listEl.style.display='none';
-    detEl.classList.add('on');
-    document.querySelectorAll('.cp-item').forEach(function(el){{
-      el.classList.toggle('active', el.dataset.id===id);
-    }});
-  }}
-  function _esc(t) {{
-    return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }}
-  document.getElementById('cp-back').addEventListener('click',function(){{
-    detEl.classList.remove('on');
-    listEl.style.display='';
-    document.querySelectorAll('.cp-item').forEach(function(el){{el.classList.remove('active');}});
-  }});
-  C.forEach(function(c){{
-    var col = TC[c.type]||'#888';
-    var hasNew = isNew(c.id);
+
     var item = document.createElement('div');
     item.className='cp-item'; item.dataset.id=c.id;
-    item.innerHTML='<span class="dot" style="background:'+col+'"></span>'
-      +'<span class="cp-item-name">'+_esc(c.name)+'</span>'
-      +(hasNew?'<span class="new-badge">⚡ new</span>':'');
-    item.addEventListener('click',function(){{showDetail(c.id);}});
+    item.innerHTML=
+      '<div class="cp-item-row">'
+        +'<span class="dot" style="background:'+col+'"></span>'
+        +'<span class="cp-item-name">'+_esc(c.name)+'</span>'
+        +(hasNew?'<span class="new-badge">⚡</span>':'')
+        +'<span class="cp-chevron">›</span>'
+      +'</div>'
+      +'<div class="cp-item-body">'
+        +'<div class="cp-meta">Since '+_esc(c.started)+' &nbsp;·&nbsp; <span style="color:'+(TC[c.type]||'#888')+'">'+c.type+'</span></div>'
+        +'<div class="cp-sum">'+_esc(c.summary)+'</div>'
+        +(arts.length?'<div class="cp-arts-hd">Recent Coverage</div>'+artsHtml:'')
+      +'</div>';
+
+    item.querySelector('.cp-item-row').addEventListener('click',function(){{toggleItem(c.id);}});
     listEl.appendChild(item);
+
+    /* Map marker — snapped to nearest canvas grid dot */
+    var snapped = _snapToGrid(L.latLng(c.lat,c.lon));
     var m;
     if (hasNew) {{
-      m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
-        className:'',html:'<div class="gm gm-pulse"></div>',
-        iconSize:[12,12],iconAnchor:[6,6]
+      var sonarCls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension')+' gm-sonar';
+      m = L.marker(snapped,{{icon:L.divIcon({{
+        className:'',html:'<div class="'+sonarCls+'"></div>',
+        iconSize:[5,5],iconAnchor:[2,2]
       }})}}).addTo(map);
       m._isPulse = true;
     }} else {{
-      var cls = c.type==='conflict'?'gm gm-c':'gm gm-t';
-      var sz  = c.type==='conflict'?10:7;
-      m = L.marker([c.lat,c.lon],{{icon:L.divIcon({{
-        className:'',html:'<div class="'+cls+'"></div>',
-        iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]
+      var dotCls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension');
+      m = L.marker(snapped,{{icon:L.divIcon({{
+        className:'',html:'<div class="'+dotCls+'"></div>',
+        iconSize:[5,5],iconAnchor:[2,2]
       }})}}).addTo(map);
     }}
     m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
-    m.on('click',function(){{showDetail(c.id);}});
+    m.on('click',function(){{toggleItem(c.id);}});
     markers[c.id]=m;
   }});
-  setTimeout(function(){{map.invalidateSize();}},100);
-  window.addEventListener('resize',function(){{map.invalidateSize();}});
+  setTimeout(function(){{map.invalidateSize();_drawDotWorld();}},300);
 }})();
 </script>
 """
@@ -1312,19 +1685,52 @@ def build_macro(groups):
                 f'<div class="story-list">{rows}</div>')
 
 def build_culture(arts):
-    cards = ""
+    html_cards = ""
     for a in arts[:24]:
-        img = a.get("img","")
-        bg  = (f"background-image:url({_s(img)});background-size:cover;background-position:center;"
-               if img else "background:linear-gradient(135deg,#E879F922,#FB923C11);")
-        cards += (
+        img  = a.get("img","")
+        snip = _s(a.get("snip","") or "")
+        bg   = (f"background-image:url({_s(img)});background-size:cover;background-position:center;"
+                if img else "background:linear-gradient(135deg,#4a1040,#1a0a2e);")
+        snip_html = f'<div class="cv-snip">{snip}</div>' if snip else ""
+        html_cards += (
             f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="card">'
-            f'<div class="ci" style="{bg}"><span class="cs">{_s(a["source"])}</span></div>'
+            f'<div class="ci" style="{bg}"></div>'
+            f'<span class="cs">{_s(a["source"])}</span>'
             f'<div class="cb"><p class="ct">{_s(a["title"])}</p>'
-            f'<span class="ctime">{_ago(a["date"])}</span></div></a>\n'
+            f'<span class="ctime">{_ago(a["date"])}</span></div>'
+            f'<div class="cv-overlay">'
+            f'<div class="cv-src">{_s(a["source"])}</div>'
+            f'<div class="cv-title">{_s(a["title"])}</div>'
+            f'{snip_html}'
+            f'<div class="cv-footer">'
+            f'<span class="cv-time">{_ago(a["date"])}</span>'
+            f'<span class="cv-read">Read article →</span>'
+            f'</div></div>'
+            f'</a>\n'
         )
+    js = """<script>
+(function(){
+  var cc=[].slice.call(document.querySelectorAll('.snap-culture .card'));
+  cc.forEach(function(card){
+    card.addEventListener('click',function(e){
+      if(card.classList.contains('cv-open')){
+        card.classList.remove('cv-open');
+        /* second click — let <a> navigate */
+        return;
+      }
+      e.preventDefault();
+      cc.forEach(function(c){c.classList.remove('cv-open');});
+      card.classList.add('cv-open');
+    });
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.snap-culture .card'))
+      cc.forEach(function(c){c.classList.remove('cv-open');});
+  });
+})();
+</script>"""
     return _sec("#D42B17","Fashion &amp; Culture",
-                f'<div class="cards">{cards}</div>')
+                f'<div class="cards">{html_cards}</div>{js}')
 
 def build_sports(groups):
     rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:30])
@@ -1372,7 +1778,7 @@ def build_paris(arts):
         rows = '<p style="font-size:11px;color:var(--dim);padding:14px 0">No Paris events fetched — feeds may be unavailable.</p>'
     return _sec("#0C0C0C","Paris — What’s On",
                 f'<div class="paris-list">{rows}</div>')
-def build_calendar(event_news={}):
+def build_calendar_OLD(event_news={}):
     today     = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
 
@@ -1566,7 +1972,174 @@ def build_calendar(event_news={}):
   show(cur);
 }})();
 </script>"""
+    return _sec("#0C0C0C","Competitions &amp; Festivals 2026–27 (OLD)", body)
+
+def build_calendar(event_news={}):
+    today     = datetime.now()
+    today_str = today.strftime("%Y-%m-%d")
+
+    cat_col = {
+        "culture":"#7C3AED","fashion":"#EA580C","football":"#15803D",
+        "f1":"#DC2626","horses":"#B45309","swimming":"#1D4ED8",
+        "rowing":"#0E7490","sailing":"#0F766E","tennis":"#0284C7",
+        "golf":"#166534","cycling":"#D97706","rugby":"#7E22CE",
+        "music":"#DB2777","tech":"#0369A1","finance":"#374151",
+    }
+    cat_lbl = {
+        "culture":"Culture","fashion":"Fashion","football":"Football",
+        "f1":"F1","horses":"Horses","swimming":"Swimming",
+        "rowing":"Rowing","sailing":"Sailing","tennis":"Tennis",
+        "golf":"Golf","cycling":"Cycling","rugby":"Rugby",
+        "music":"Music","tech":"Tech","finance":"Finance",
+    }
+    mon_abbr = ["","Jan","Feb","Mar","Apr","May","Jun",
+                "Jul","Aug","Sep","Oct","Nov","Dec"]
+
+    def fmt_range(s_str, e_str):
+        from datetime import datetime as _dt
+        s = _dt.strptime(s_str, "%Y-%m-%d")
+        e = _dt.strptime(e_str, "%Y-%m-%d")
+        if s_str == e_str:
+            return f"{s.day} {mon_abbr[s.month]}"
+        if s.year == e.year and s.month == e.month:
+            return f"{s.day}–{e.day} {mon_abbr[s.month]}"
+        if s.year != e.year:
+            return f"{s.day} {mon_abbr[s.month]} – {e.day} {mon_abbr[e.month]} {e.year}"
+        span = (e - s).days
+        if span > 60:
+            return f"{mon_abbr[s.month]} – {mon_abbr[e.month]} {s.year}"
+        return f"{s.day} {mon_abbr[s.month]} – {e.day} {mon_abbr[e.month]}"
+
+    # Sort: live first → upcoming → past (chronological within each group)
+    def _ev_sort(e):
+        if e["start"] <= today_str <= e["end"]: return (0, e["start"])
+        if e["end"] >= today_str:               return (1, e["start"])
+        return                                        (2, e["start"])
+    sorted_evs = sorted(CALENDAR_EVENTS, key=_ev_sort)
+
+    # First non-past event (live events now come first, so idx 0 is live or next up)
+    scroll_idx = 0
+    for i, e in enumerate(sorted_evs):
+        if e["end"] >= today_str:
+            scroll_idx = i
+            break
+
+    cards_html = ""
+    for i, e in enumerate(sorted_evs):
+        col     = cat_col.get(e["cat"], "#555")
+        lbl     = cat_lbl.get(e["cat"], e["cat"])
+        rng     = fmt_range(e["start"], e["end"])
+        is_live = e["start"] <= today_str <= e["end"]
+        is_past = e["end"] < today_str
+        cls     = (" ev-live" if is_live else " ev-past" if is_past else "")
+        live_badge = '<span class="cal-live-badge">LIVE</span>' if is_live else ""
+
+        arts = event_news.get(e["name"], [])
+        # Use first article image as card background if available
+        card_img = next((a["img"] for a in arts if a.get("img")), "")
+        arts_html = ""
+        for a in arts:
+            arts_html += (
+                f'<a href="{_s(a.get("link","#"))}" target="_blank" rel="noopener" class="cal-det-art">'
+                f'<span class="cal-det-art-title">{_s(a.get("title",""))}</span>'
+                f'<span class="cal-det-art-meta">{_s(a.get("source",""))}'
+                f'{(" · "+_s(a["ago"])) if a.get("ago") else ""}</span>'
+                f'</a>'
+            )
+        if not arts_html:
+            arts_html = '<p class="cal-det-none">No recent coverage.</p>'
+        search_url = f'https://www.google.com/search?q={_s(e["name"]+" 2026")}'
+        # Background: photo if available, otherwise colour gradient
+        if card_img:
+            bg_style = (f"background-image:url({_s(card_img)});"
+                        f"background-size:cover;background-position:center top")
+        else:
+            bg_style = (f"background:linear-gradient(135deg,{col} 0%,"
+                        f"rgba(8,8,8,.97) 65%)")
+
+        cards_html += (
+            f'<div class="cal-ev-card{cls}" id="cev-{i}" style="--evc:{col}">'
+            f'<div class="cal-ev-bg" style="{bg_style}"></div>'
+            f'<div class="cal-ev-body">'
+            f'<div class="cal-ev-meta">'
+            f'<span class="cal-ev-cat-chip">{_s(lbl)}</span>'
+            f'{live_badge}'
+            f'</div>'
+            f'<div class="cal-ev-name">{_s(e["name"])}</div>'
+            f'<div class="cal-ev-range">{_s(rng)}</div>'
+            f'</div>'
+            f'<div class="cal-ev-panel">'
+            f'<div class="cal-ev-panel-hd">Recent Coverage</div>'
+            f'{arts_html}'
+            f'<a href="{search_url}" target="_blank" rel="noopener" class="cal-search-link">Search Google →</a>'
+            f'</div>'
+            f'</div>\n'
+        )
+
+    body = f"""<div class="cal-band" id="cal-band">{cards_html}</div>
+<script>
+(function(){{
+  var band=document.getElementById('cal-band');
+  var all=[].slice.call(band.querySelectorAll('.cal-ev-card'));
+  var hoverTimer=null; /* single shared timer — cancelled on any mouseleave */
+
+  /* ── helpers ── */
+  function setCenter(card){{
+    all.forEach(function(c){{c.classList.remove('ev-center');}});
+    if(card)card.classList.add('ev-center');
+  }}
+
+  function scrollToCard(card){{
+    var target=card.offsetLeft+card.offsetWidth/2-band.clientWidth/2;
+    band.scrollTo({{left:Math.max(0,target),behavior:'smooth'}});
+  }}
+
+  /* ── hover: only expand+scroll after mouse rests 220ms on a card ── */
+  all.forEach(function(card){{
+    if(card.classList.contains('ev-past'))return;
+
+    card.addEventListener('mouseenter',function(){{
+      clearTimeout(hoverTimer);
+      hoverTimer=setTimeout(function(){{
+        setCenter(card);
+        /* wait for flex expansion to progress, then scroll */
+        setTimeout(function(){{scrollToCard(card);}},80);
+      }},220);
+    }});
+
+    card.addEventListener('mouseleave',function(){{
+      /* cancel any pending expand/scroll immediately */
+      clearTimeout(hoverTimer);
+      if(!card.classList.contains('ev-open')){{
+        setCenter(null);
+      }}
+    }});
+
+    /* ── click: toggle article panel ── */
+    card.addEventListener('click',function(){{
+      var isOpen=card.classList.contains('ev-open');
+      all.forEach(function(c){{c.classList.remove('ev-open');}});
+      if(!isOpen){{
+        card.classList.add('ev-open');
+        setCenter(card);
+        setTimeout(function(){{scrollToCard(card);}},80);
+      }}
+    }});
+  }});
+
+  /* ── on load: scroll to first live / upcoming event ── */
+  var si=document.getElementById('cev-{scroll_idx}');
+  if(si&&!si.classList.contains('ev-past')){{
+    setCenter(si);
+    setTimeout(function(){{
+      var target=si.offsetLeft+si.offsetWidth/2-band.clientWidth/2;
+      band.scrollLeft=Math.max(0,target);
+    }},120);
+  }}
+}})();
+</script>"""
     return _sec("#0C0C0C","Competitions &amp; Festivals 2026–27", body)
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1646,11 +2219,13 @@ def main():
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@400,500,600,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>{CSS}</style>
 </head>
 <body>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 
 <!-- ① HERO -->
 <section class="snap-sec hero-sec">
