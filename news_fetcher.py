@@ -220,10 +220,12 @@ CONFLICT_NEWS_SOURCES = [
     # Note: AFP (Telegram) is fetched separately via _fetch_telegram() and merged in main()
 ]
 PARIS_SOURCES = [
+    # Direct event guides
     ("Sortir à Paris", "https://www.sortiraparis.com/rss/"),
     ("Timeout Paris",  "https://www.timeout.com/paris/rss"),
-    # Télérama: filtered to exhibitions/events only (see _filter_telerama_events)
-    ("Télérama",       "https://news.google.com/rss/search?q=site:telerama.fr+exposition+OR+expo+OR+mus%C3%A9e+OR+galerie+OR+spectacle+OR+concert+OR+th%C3%A9%C3%A2tre&hl=fr&gl=FR&ceid=FR:fr"),
+    # Google News fallbacks — topic-specific so any source can surface
+    ("Expos Paris",    "https://news.google.com/rss/search?q=exposition+paris+mus%C3%A9e+OR+galerie+OR+vernissage&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Sorties Paris",  "https://news.google.com/rss/search?q=agenda+paris+concert+OR+th%C3%A9%C3%A2tre+OR+spectacle+OR+danse+OR+ballet&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 CITIES_SOURCES = [
     # Marseille — local sources
@@ -2414,7 +2416,19 @@ def main():
     conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
     print("  Fetching Paris…")
-    paris_arts = _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))
+    # Paris What's On: fetch then strip TV/radio show listings
+    _PARIS_BLOCKLIST = [re.compile(p, re.IGNORECASE) for p in [
+        r"\bBFM\b", r"\bLCI\b", r"\bTF1\b", r"\bFrance\s*[2345]\b",
+        r"\bM6\b", r"\bC8\b", r"\bCNews\b", r"semaine \d+",
+        r"week.end\s+(tv|radio)", r"direct (tv|bfm|lci)",
+        r"matinale", r"grand rendez.vous", r"politique s.éclair",
+        r"informés de l.europe", r"vérificateurs", r"franchise",
+        r"monacoscope",
+    ]]
+    def _not_tv(a):
+        t = (a.get("title","") or "")
+        return not any(p.search(t) for p in _PARIS_BLOCKLIST)
+    paris_arts = list(filter(_not_tv, _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))))
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (Marseille & Paris)…")
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
