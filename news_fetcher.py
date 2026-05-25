@@ -1076,27 +1076,38 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gm-sonar.gm-tension::after{border-color:#F97316}
 
 .snap-feed{display:flex;flex-direction:column;overflow:hidden}
-.snap-feed>.two-col{flex:1;min-height:0;border-bottom:none}
+.snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
   overflow:hidden;border-bottom:none}
-/* ── Polymarket band ─────────────────────────────────────────── */
-.poly-band{display:flex;align-items:stretch;border-top:1px solid var(--border);
-  background:var(--bg);overflow:hidden;min-height:44px;flex-shrink:0}
+/* ── Polymarket band (1/4 height, card-per-market scroll) ────── */
+.poly-band{flex:1 0 0;min-height:0;
+  display:flex;align-items:stretch;
+  border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
 .poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
-  padding:0 18px;display:flex;align-items:center;flex-shrink:0}
+  padding:0 20px;display:flex;align-items:center;flex-shrink:0}
 .poly-band-track{flex:1;overflow:hidden;position:relative}
-.poly-band-items{display:flex;width:max-content;
-  animation:ticker-scroll 70s linear infinite}
+.poly-band-items{display:flex;height:100%;width:max-content;
+  animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
-.poly-item{font-size:11px;color:var(--muted);text-decoration:none;
-  padding:0 24px;border-right:1px solid var(--border);white-space:nowrap;
-  transition:color .12s;display:flex;align-items:center;gap:8px;
-  height:44px;flex-shrink:0}
-.poly-item:hover{color:var(--text)}
-.poly-prob{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px}
-.poly-prob.yes{color:#16A34A;background:rgba(22,163,74,.12)}
-.poly-prob.no{color:#DC2626;background:rgba(220,38,38,.12)}
+/* card */
+.poly-card{flex:0 0 260px;height:100%;display:flex;flex-direction:column;
+  justify-content:center;gap:6px;
+  padding:14px 20px;border-right:1px solid var(--border);
+  text-decoration:none;transition:background .15s;cursor:pointer}
+.poly-card:hover{background:var(--bg2)}
+.poly-card-q{font-size:12px;font-weight:600;color:var(--text);
+  line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+.poly-card-outcomes{display:flex;flex-direction:column;gap:3px}
+.poly-outcome{display:flex;align-items:center;gap:8px}
+.poly-out-name{font-size:11px;color:var(--muted);
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.poly-out-pct{font-size:10.5px;font-weight:700;
+  padding:2px 7px;border-radius:3px;flex-shrink:0}
+.poly-out-pct.high{color:#16A34A;background:rgba(22,163,74,.12)}
+.poly-out-pct.low{color:#DC2626;background:rgba(220,38,38,.12)}
+.poly-card-vol{font-size:9px;color:var(--dim);letter-spacing:.3px;margin-top:2px}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
   padding:12px 20px 20px;display:flex;flex-direction:column;gap:0}
 /* story rows — transparent baseline, white 3D card rises from bottom on hover */
@@ -1805,7 +1816,7 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
         f'</div>\n'
     )
 
-def _fetch_polymarket(limit=18):
+def _fetch_polymarket(limit=16):
     """Fetch top Polymarket markets by 24h volume."""
     try:
         import urllib.request, json as _json
@@ -1819,14 +1830,29 @@ def _fetch_polymarket(limit=18):
             q = (m.get("question") or "").strip()
             if not q or len(q) < 8:
                 continue
-            prices_raw = m.get("outcomePrices")
+            # outcomes + prices
             try:
-                prices = _json.loads(prices_raw) if isinstance(prices_raw, str) else prices_raw
-                yes_pct = round(float(prices[0]) * 100)
+                outcomes_raw = m.get("outcomes")
+                outcomes = _json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else (outcomes_raw or [])
+                prices_raw = m.get("outcomePrices")
+                prices = _json.loads(prices_raw) if isinstance(prices_raw, str) else (prices_raw or [])
+                pairs = [(outcomes[i], round(float(prices[i]) * 100))
+                         for i in range(min(len(outcomes), len(prices)))]
+                pairs.sort(key=lambda x: -x[1])
+                pairs = pairs[:3]
             except Exception:
-                yes_pct = None
+                pairs = []
+            # volume
+            try:
+                vol = float(m.get("volume") or m.get("volume24hr") or 0)
+                if vol >= 1e9:   vol_str = f"${vol/1e9:.1f}B Vol."
+                elif vol >= 1e6: vol_str = f"${vol/1e6:.0f}M Vol."
+                elif vol >= 1e3: vol_str = f"${vol/1e3:.0f}K Vol."
+                else:            vol_str = f"${vol:.0f} Vol."
+            except Exception:
+                vol_str = ""
             slug = m.get("slug") or ""
-            markets.append({"q": q[:72], "yes": yes_pct, "slug": slug})
+            markets.append({"q": q, "pairs": pairs, "vol": vol_str, "slug": slug})
             if len(markets) >= limit:
                 break
         print(f"    → {len(markets)} Polymarket markets")
@@ -1838,18 +1864,28 @@ def _fetch_polymarket(limit=18):
 def build_polymarket_band(markets):
     if not markets:
         return ""
-    def item_html(m):
-        q = _s(m["q"])
+    def fmt_pct(p):
+        if p < 1:  return "<1%"
+        if p > 99: return ">99%"
+        return f"{p}%"
+    def card_html(m):
         link = (f'https://polymarket.com/event/{_s(m["slug"])}'
                 if m.get("slug") else "https://polymarket.com")
-        if m["yes"] is not None:
-            cls = "yes" if m["yes"] >= 50 else "no"
-            prob = f'<span class="poly-prob {cls}">YES {m["yes"]}%</span>'
-        else:
-            prob = ""
-        return (f'<a href="{link}" target="_blank" rel="noopener" class="poly-item">'
-                f'{q}{prob}</a>')
-    once = "".join(item_html(m) for m in markets)
+        outcomes_html = "".join(
+            f'<div class="poly-outcome">'
+            f'<span class="poly-out-name">{_s(name)}</span>'
+            f'<span class="poly-out-pct {"high" if pct>=50 else "low"}">{fmt_pct(pct)}</span>'
+            f'</div>'
+            for name, pct in m["pairs"]
+        )
+        vol = f'<div class="poly-card-vol">{_s(m["vol"])}</div>' if m.get("vol") else ""
+        return (
+            f'<a href="{link}" target="_blank" rel="noopener" class="poly-card">'
+            f'<div class="poly-card-q">{_s(m["q"])}</div>'
+            f'<div class="poly-card-outcomes">{outcomes_html}</div>'
+            f'{vol}</a>'
+        )
+    once = "".join(card_html(m) for m in markets)
     items = once + once   # duplicate for seamless loop
     return (
         f'<div class="poly-band">'
