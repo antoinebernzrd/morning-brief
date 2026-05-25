@@ -40,9 +40,9 @@ WEEKLY_SOURCES = frozenset([
 SOURCE_CANONICAL = {
     "FT Tech":           "FT",
     "FT Companies Tech": "FT",
-    "Les Echos Start":   "Les Echos",
-    "Les Echos Deals":   "Les Echos",
-    "Les Echos Portraits":"Les Echos",
+    "Les Echos Start":   "Les Echos Start",
+    "Les Echos Deals":   "Les Echos Deals",
+    "Les Echos Portraits":"Les Echos Portraits",
     "Les Echos PACA":    "Les Echos",
     "BBC Sport":         "BBC",
     "BBC World":         "BBC",
@@ -167,10 +167,10 @@ TECH_SOURCES = [
     # FT Companies/Tech: slightly different selection, good overlap coverage
     ("FT Companies Tech",   "https://www.ft.com/companies/technology?format=rss"),
     ("The NBS",             "https://news.google.com/rss/search?q=site:the-nbs.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Les Echos Start",     "https://news.google.com/rss/search?q=site:lesechos.fr/start-up&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Start",     "https://news.google.com/rss/search?q=site:lesechos.fr+startup+OR+start-up&hl=fr&gl=FR&ceid=FR:fr"),
     ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Les Echos Deals",     "https://news.google.com/rss/search?q=site:lesechos.fr/start-up/deals&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Les Echos Portraits", "https://news.google.com/rss/search?q=site:lesechos.fr/start-up/portraits&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Deals",     "https://news.google.com/rss/search?q=site:lesechos.fr+%22lev%C3%A9e+de+fonds%22+OR+financement+OR+rachat&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Portraits", "https://news.google.com/rss/search?q=site:lesechos.fr+fondateur+OR+entrepreneur+OR+portrait&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
     ("TechCrunch",          "https://techcrunch.com/feed/"),
