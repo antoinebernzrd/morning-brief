@@ -1982,15 +1982,17 @@ def build_polymarket_band(markets):
         f'</div></div>\n'
     )
 
-def build_tech(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:50])
+def build_tech(arts):
+    sorted_arts = sorted(arts, key=lambda a: a["ts"] or 0, reverse=True)
+    rows = "".join(_build_group_row([a]) for a in sorted_arts[:50])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Tech — Startups — VC",
                 f'<div class="story-list">{rows}</div>')
 
-def build_macro(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:40])
+def build_macro(arts):
+    sorted_arts = sorted(arts, key=lambda a: a["ts"] or 0, reverse=True)
+    rows = "".join(_build_group_row([a]) for a in sorted_arts[:40])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Macro — Finance — Markets",
@@ -2594,12 +2596,10 @@ def main():
     afp      = _route_afp(tg_arts)
     print("  Fetching Tech/VC…")
     tech_raw = _dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + afp["tech"]))
-    tech_grp = _dedup(tech_raw)
-    print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
+    print(f"    → {len(tech_raw)} articles")
     print("  Fetching Macro…")
-    macro_raw  = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + afp["macro"]))
-    macro_grp  = _dedup(macro_raw)
-    print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
+    macro_raw = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + afp["macro"]))
+    print(f"    → {len(macro_raw)} articles")
     print("  Fetching Culture/Fashion…")
     art_newspaper_arts = _fetch_art_newspaper(5)
     print(f"    → {len(art_newspaper_arts)} Art Newspaper articles (pinned)")
@@ -2640,12 +2640,10 @@ def main():
     print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
     print("  Generating AI headlines…")
-    tech_grp   = _enrich_groups(tech_grp,   ai_client, headline_cache)
-    macro_grp  = _enrich_groups(macro_grp,  ai_client, headline_cache)
     sports_grp = _enrich_groups(sports_grp, ai_client, headline_cache)
     cities_grp = _enrich_groups(cities_grp, ai_client, headline_cache)
     _save_headline_cache(headline_cache)
-    print(f"    → {sum(1 for g in tech_grp+macro_grp+sports_grp+cities_grp if len(g)>1)} groups enriched")
+    print(f"    → {sum(1 for g in sports_grp+cities_grp if len(g)>1)} groups enriched")
     print("  Fetching calendar event news…")
     event_news = _fetch_calendar_event_news()
     print(f"    → {len(event_news)} events with coverage")
@@ -2708,8 +2706,8 @@ def main():
 <!-- ③ TECH + MACRO -->
 <section class="snap-sec snap-feed">
   <div class="two-col">
-{build_tech(tech_grp)}
-{build_macro(macro_grp)}
+{build_tech(tech_raw)}
+{build_macro(macro_raw)}
   </div>
 {build_polymarket_band(poly_markets)}
 </section>
