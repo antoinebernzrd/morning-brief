@@ -7,8 +7,23 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
-_PARIS = ZoneInfo("Europe/Paris")
+try:
+    from zoneinfo import ZoneInfo
+    _PARIS = ZoneInfo("Europe/Paris")
+    # Validate it actually applies DST correctly
+    _test = datetime(2026, 5, 1, tzinfo=_PARIS).utcoffset().seconds // 3600
+    if _test not in (1, 2):
+        raise ValueError("bad offset")
+except Exception:
+    # Fallback: compute Paris offset from UTC (CET=+1 Oct-Mar, CEST=+2 Apr-Sep)
+    from datetime import timedelta as _td
+    class _ParisTZ(timezone):
+        def utcoffset(self, dt):
+            m = dt.month if dt else 5
+            return _td(hours=2 if 3 < m <= 10 else 1)
+        def tzname(self, dt): return "CEST" if (dt and 3 < dt.month <= 10) else "CET"
+        def dst(self, dt): return _td(hours=1) if (dt and 3 < dt.month <= 10) else _td(0)
+    _PARIS = _ParisTZ()
 OUTPUT_DIR          = Path(__file__).parent
 OUTPUT_FILE         = OUTPUT_DIR / "index.html"
 CONFIG_FILE         = OUTPUT_DIR / "telegram_config.json"
@@ -173,12 +188,12 @@ MACRO_SOURCES = [
 ]
 CULTURE_SOURCES = [
     ("NSS Magazine",      "https://www.nssmag.com/en/feeds/rss"),
-    ("The Art Newspaper", "https://www.theartnewspaper.com/rss"),
     ("Hypebeast",         "https://hypebeast.com/feed"),
-    ("Highsnobiety",      "https://www.highsnobiety.com/feed/"),
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
 ]
+# Art Newspaper is fetched separately and always pinned (5 latest guaranteed)
+ART_NEWSPAPER_FEED = "https://www.theartnewspaper.com/rss"
 SPORTS_SOURCES_FR = [
     ("L'Équipe", "https://news.google.com/rss/search?q=site:lequipe.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
@@ -969,36 +984,56 @@ a.sg-title:hover{opacity:1}
 
 /* ── Mobile (≤768px) ─────────────────────────────────────────── */
 @media(max-width:768px){
+  /* header */
   header{padding:0 16px}
-  .hd-inner{padding:12px 0 10px;flex-wrap:wrap;gap:8px}
-  header h1{font-size:20px}
-  .ts{font-size:8.5px}
+  .hd-inner{padding:10px 0 9px;flex-wrap:wrap;gap:6px}
+  header h1{font-size:18px}
+  .ts{font-size:8px;letter-spacing:.6px}
   .btn{padding:6px 12px;font-size:8px;margin-left:0}
+  .hd-tabs{gap:0;overflow-x:auto;scrollbar-width:none}
+  .hd-tabs::-webkit-scrollbar{display:none}
+  .hd-tab{padding:8px 14px;font-size:8px;white-space:nowrap}
 
+  /* section headers */
   .sec-hd{padding:0 16px}
-  .story-list{padding:0 16px 16px}
-  .sg-art-src{width:60px}
-  .paris-list{padding:0 16px 16px}
-  .cards{padding:0 16px 14px}
+  .sec-hd-text{font-size:16px;padding:16px 0 12px}
 
+  /* story lists */
+  .story-list{padding:0 16px 16px}
+  .sg{padding:12px 0}
+  .sg-title{font-size:13px}
+  .sg-art-src{width:56px}
+  .paris-list{padding:0 16px 16px}
+
+  /* culture cards */
+  .cards{padding:8px 16px 12px;gap:8px}
+  .card{flex:0 0 calc(70vw)}
+
+  /* grid overrides */
   .two-col{grid-template-columns:1fr}
   .two-col>.section{border-right:none;border-bottom:1px solid var(--border)}
   .two-col>.section:last-child{border-bottom:none}
-
   .three-col{grid-template-columns:1fr}
   .three-col>.section{height:auto;border-right:none;border-bottom:1px solid var(--border)}
   .three-col>.section:last-child{border-bottom:none}
-  .three-col .story-list,.three-col .paris-list{max-height:280px}
+  .three-col .story-list,.three-col .paris-list{max-height:260px}
 
+  /* map */
   .map-wrap{flex-direction:column;height:auto}
-  #map{flex:none;height:240px;width:100%}
-  .cp{border-left:none;border-top:1px solid var(--border);height:280px}
+  #map{flex:none;height:52vw;min-height:220px;width:100%}
+  .cp{border-left:none;border-top:1px solid var(--border);height:260px;width:100%}
+  .cp-hd{padding:10px 14px 8px;font-size:8px}
+  .cp-item{padding:0}
+  .cp-item-row{padding:8px 14px}
 
+  /* calendar */
   .cal-months{grid-template-columns:1fr;padding:16px 16px 24px;gap:24px 0}
-  .cal-legend{gap:5px 12px}
+  .cal-legend{gap:5px 10px;padding:10px 16px}
   .cal-leg-i{font-size:7.5px}
   .cal-det{padding:20px 20px 32px}
   .cal-det-arts{grid-template-columns:1fr;gap:0}
+  .cal-hd-tabs{overflow-x:auto;scrollbar-width:none;padding:0 16px}
+  .cal-hd-tabs::-webkit-scrollbar{display:none}
 }
 
 /* ── Snap scroll layout ──────────────────────────────────── */
@@ -1448,17 +1483,59 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 @media(max-width:768px){
   html{scroll-snap-type:none}
   .snap-sec{height:auto;overflow:visible}
-  .hero-sec{min-height:100vh;padding:60px 16px}
-  .hero-h1{font-size:clamp(48px,14vw,80px);letter-spacing:-2px}
+
+  /* hero */
+  .hero-sec{min-height:100svh;padding:56px 20px 72px}
+  .hero-h1{font-size:clamp(42px,13vw,68px);letter-spacing:-2px;margin-bottom:20px}
+  .hero-meta{margin-bottom:20px}
   .hero-hint{display:none}
-  .snap-feed>.two-col{height:auto}
+  .hero-sec .ticker{position:relative;bottom:auto;margin-top:24px}
+
+  /* geo map — kill the !important locks so height:auto works */
+  .snap-geo{height:auto!important;overflow:visible!important}
+  .snap-geo>.section{height:auto!important;display:block!important}
+  .snap-geo .map-wrap{flex-direction:column;height:auto!important;min-height:0!important}
+  .snap-geo #map{height:52vw!important;min-height:220px;max-height:320px;width:100%!important}
+  .snap-geo .cp{height:280px;width:100%}
+
+  /* feed: reset flex column so sections just stack */
+  .snap-feed{display:block}
+  .snap-feed>.two-col{flex:none;height:auto}
   .snap-feed .two-col>.section{height:auto}
-  .snap-feed .story-list{max-height:400px}
+  .snap-feed .story-list{max-height:380px}
+  /* polymarket band: fixed height, no flex weirdness */
+  .poly-band{flex:none;height:180px;min-height:0}
+  .poly-card{flex:0 0 200px}
+  .poly-card-q{font-size:11px}
+  .poly-out-name{font-size:10px}
+  .poly-out-pct{font-size:9.5px}
+  .poly-card-vol{font-size:8px}
+
+  /* culture */
+  .snap-culture>.section{height:auto}
+  .snap-culture .culture-body{flex:none;display:block}
+  .snap-culture .cards{
+    flex:none;display:flex;flex-direction:row;
+    grid-template-rows:unset;grid-auto-flow:unset;
+    grid-auto-columns:unset;
+    height:52vw;min-height:180px;
+    overflow-x:auto;overflow-y:hidden;
+    padding:10px 16px 8px;gap:8px}
+  .snap-culture .card{flex:0 0 65vw;height:100%}
+  .snap-culture .culture-cal-band{
+    padding:8px 10% 10px;gap:6px;min-height:160px}
+  .snap-culture .culture-cal-band .cal-ev-card{flex:0 0 55%}
+  .snap-culture .culture-cal-band .cal-ev-card.ev-center{flex:0 0 80%}
+
+  /* bottom */
   .snap-bottom>.three-col{height:auto}
   .snap-bottom .three-col>.section{height:auto!important}
-  .snap-bottom .story-list,.snap-bottom .paris-list{max-height:320px}
+  .snap-bottom .story-list,.snap-bottom .paris-list{max-height:300px}
+
+  /* cal */
   .snap-cal>.section{height:auto;overflow:visible}
-  .snap-cal .cal-band{flex-wrap:nowrap;padding:12px 16px}
+  .snap-cal .cal-band{flex-wrap:nowrap;padding:12px 16px;overflow-x:auto}
+  .snap-cal .cal-ev-name{font-size:clamp(18px,5vw,28px)}
 }
 """
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1815,6 +1892,16 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
         f'<div class="sg-arts">{arts_html}</div>'
         f'</div>\n'
     )
+
+def _fetch_art_newspaper(n=5):
+    """Always return the latest n Art Newspaper articles, ignoring age filter."""
+    try:
+        arts = _fetch([("The Art Newspaper", ART_NEWSPAPER_FEED)])
+        arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
+        return arts[:n]
+    except Exception as ex:
+        print(f"  ⚠  Art Newspaper: {ex}")
+        return []
 
 def _fetch_polymarket(limit=16):
     """Fetch top Polymarket markets by 24h volume."""
@@ -2514,8 +2601,13 @@ def main():
     macro_grp  = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
-    culture_arts = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
-    print(f"    → {len(culture_arts)} articles")
+    art_newspaper_arts = _fetch_art_newspaper(5)
+    print(f"    → {len(art_newspaper_arts)} Art Newspaper articles (pinned)")
+    culture_raw = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
+    # Prepend Art Newspaper articles so they survive dedup and always appear
+    seen_links = {a["link"] for a in art_newspaper_arts if a.get("link")}
+    culture_arts = art_newspaper_arts + [a for a in culture_raw if a.get("link") not in seen_links]
+    print(f"    → {len(culture_arts)} articles total")
     print("  Fetching Sports…")
     sports_raw = _dedup_exact(_filter_recent(
         _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
