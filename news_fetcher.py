@@ -1083,20 +1083,21 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band{flex:1 0 0;min-height:0;
   display:flex;align-items:stretch;
   border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
-.poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
+.poly-band-label{font-size:clamp(9px,1vw,13px);font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
-  padding:0 18px;display:flex;align-items:center;flex-shrink:0;
-  writing-mode:initial}
+  padding:0 28px;display:flex;align-items:center;flex-shrink:0}
 .poly-band-track{flex:1;overflow:hidden;position:relative}
 .poly-band-items{display:flex;height:100%;width:max-content;
   animation:ticker-scroll 70s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
-.poly-item{font-size:11px;color:var(--muted);text-decoration:none;
-  padding:0 28px;border-right:1px solid var(--border);white-space:nowrap;
-  transition:color .12s;display:flex;align-items:center;gap:10px;
-  height:100%;flex-shrink:0}
+.poly-item{font-size:clamp(22px,2.8vw,42px);font-weight:600;
+  color:var(--muted);text-decoration:none;
+  padding:0 48px;border-right:1px solid var(--border);white-space:nowrap;
+  transition:color .12s;display:flex;align-items:center;gap:20px;
+  height:100%;flex-shrink:0;letter-spacing:-.02em}
 .poly-item:hover{color:var(--text)}
-.poly-prob{font-size:11px;font-weight:700;padding:3px 8px;border-radius:3px}
+.poly-prob{font-size:clamp(14px,1.6vw,26px);font-weight:700;
+  padding:6px 14px;border-radius:5px}
 .poly-prob.yes{color:#16A34A;background:rgba(22,163,74,.12)}
 .poly-prob.no{color:#DC2626;background:rgba(220,38,38,.12)}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
