@@ -2691,7 +2691,6 @@ def main():
 
 <!-- ① HERO -->
 <section class="snap-sec hero-sec">
-  <span class="hero-eyebrow">Daily Intelligence</span>
   <h1 class="hero-h1">Morning<br>Brief</h1>
   <div class="hero-meta">
     <span class="hero-count">{new_today_str}</span>
