@@ -167,13 +167,13 @@ TECH_SOURCES = [
     # FT Companies/Tech: slightly different selection, good overlap coverage
     ("FT Companies Tech",   "https://www.ft.com/companies/technology?format=rss"),
     ("The NBS",             "https://news.google.com/rss/search?q=site:the-nbs.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    # Les Echos — 3 tightly scoped queries covering startup deals, ecosystem, and tech/AI
+    # Les Echos — parentheses force site: to scope ALL OR alternatives
     # Query 1: funding events & company milestones
-    ("Les Echos Start",  "https://news.google.com/rss/search?q=site:lesechos.fr+%22lev%C3%A9e+de+fonds%22+OR+%22s%C3%A9rie+A%22+OR+%22s%C3%A9rie+B%22+OR+%22s%C3%A9rie+C%22+OR+%22seed%22+OR+%22amor%C3%A7age%22+OR+%22licorne%22+OR+%22d%C3%A9cacorne%22+OR+%22capital-risque%22+OR+%22venture+capital%22+OR+%22liquidation+judiciaire%22+OR+%22tour+de+table%22+OR+%22valorisation%22&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Start",  "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22lev%C3%A9e+de+fonds%22+OR+%22s%C3%A9rie+A%22+OR+%22s%C3%A9rie+B%22+OR+%22s%C3%A9rie+C%22+OR+%22seed%22+OR+%22amor%C3%A7age%22+OR+%22licorne%22+OR+%22d%C3%A9cacorne%22+OR+%22capital-risque%22+OR+%22venture+capital%22+OR+%22liquidation+judiciaire%22+OR+%22tour+de+table%22+OR+%22valorisation%22%29&hl=fr&gl=FR&ceid=FR:fr"),
     # Query 2: startup ecosystem & company types
-    ("Les Echos Start2", "https://news.google.com/rss/search?q=site:lesechos.fr+%22start-up%22+OR+%22scale-up%22+OR+%22French+Tech%22+OR+%22Bpifrance%22+OR+%22deeptech%22+OR+%22fintech%22+OR+%22biotech%22+OR+%22femtech%22+OR+%22medtech%22+OR+%22cleantech%22+OR+%22Station+F%22+OR+%22jeune+pousse%22+OR+%22incubateur%22+OR+%22acc%C3%A9l%C3%A9rateur%22+OR+%22SaaS%22+OR+%22adtech%22+OR+%22quantique%22&hl=fr&gl=FR&ceid=FR:fr"),
-    # Query 3: tech, AI & digital
-    ("Les Echos Tech",   "https://news.google.com/rss/search?q=site:lesechos.fr+%22intelligence+artificielle%22+OR+%22IA+g%C3%A9n%C3%A9rative%22+OR+%22Mistral%22+OR+%22OpenAI%22+OR+%22Anthropic%22+OR+%22GAFAM%22+OR+%22Nvidia%22+OR+%22LLM%22+OR+%22chatbot%22+OR+%22cybers%C3%A9curit%C3%A9%22+OR+%22cloud%22+OR+%22data+center%22+OR+%22num%C3%A9rique%22+OR+%22souverainet%C3%A9+num%C3%A9rique%22+OR+%22robotique%22+OR+%22semi-conducteurs%22&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Start2", "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22start-up%22+OR+%22scale-up%22+OR+%22French+Tech%22+OR+%22Bpifrance%22+OR+%22deeptech%22+OR+%22fintech%22+OR+%22biotech%22+OR+%22femtech%22+OR+%22medtech%22+OR+%22cleantech%22+OR+%22Station+F%22+OR+%22jeune+pousse%22+OR+%22SaaS%22+OR+%22adtech%22+OR+%22quantique%22%29&hl=fr&gl=FR&ceid=FR:fr"),
+    # Query 3: tech, AI & digital — removed generic terms (numérique, cloud, plateforme)
+    ("Les Echos Tech",   "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22intelligence+artificielle%22+OR+%22IA+g%C3%A9n%C3%A9rative%22+OR+%22Mistral%22+OR+%22OpenAI%22+OR+%22Anthropic%22+OR+%22GAFAM%22+OR+%22Nvidia%22+OR+%22LLM%22+OR+%22chatbot%22+OR+%22cybers%C3%A9curit%C3%A9%22+OR+%22data+center%22+OR+%22souverainet%C3%A9+num%C3%A9rique%22+OR+%22robotique%22+OR+%22semi-conducteurs%22%29&hl=fr&gl=FR&ceid=FR:fr"),
     ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
@@ -186,7 +186,8 @@ MACRO_SOURCES = [
     # GN site:ft.com returns ~100 articles vs homepage RSS's 10
     ("FT",            "https://news.google.com/rss/search?q=site:ft.com&hl=en&gl=US&ceid=US:en"),
     ("The Economist", "https://www.economist.com/the-world-this-week/rss.xml"),
-    ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Les Echos scoped to finance/economy only — no broad query to avoid culture/health/geopolitics bleed
+    ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22bourse%22+OR+%22march%C3%A9s+financiers%22+OR+%22taux+d%27int%C3%A9r%C3%AAt%22+OR+%22BCE%22+OR+%22inflation%22+OR+%22PIB%22+OR+%22r%C3%A9cession%22+OR+%22CAC+40%22+OR+%22banque+centrale%22+OR+%22d%C3%A9ficit+budg%C3%A9taire%22+OR+%22dette+publique%22+OR+%22mati%C3%A8res+premi%C3%A8res%22+OR+%22taux+directeur%22+OR+%22obligataire%22%29&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
