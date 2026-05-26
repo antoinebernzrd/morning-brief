@@ -197,8 +197,8 @@ CULTURE_SOURCES = [
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
 ]
-# Art Newspaper is fetched separately and always pinned (5 latest guaranteed)
-ART_NEWSPAPER_FEED = "https://www.theartnewspaper.com/rss"
+# NYT Arts is fetched separately and always pinned (5 latest guaranteed)
+ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 SPORTS_SOURCES_FR = [
     ("L'Équipe", "https://news.google.com/rss/search?q=site:lequipe.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
@@ -487,7 +487,7 @@ def _snip(entry):
 _TITLE_SUFFIX_RE = re.compile(
     r'\s*[\-–|]\s*(?:Les Echos|Le Monde|Le Parisien|L\'[ÉE]quipe|Télérama|Telerama|'
     r'Financial Times|The Economist|Reuters|BBC(?:\s+\w+)?|Al Jazeera|'
-    r'The New York Times|Defense News|NSS Magazine|The Art Newspaper|'
+    r'The New York Times|Defense News|NSS Magazine|The NYT Arts|'
     r'Timeout(?:\s+\w+)?|The NBS|Silicon(?:Mania|Carne)|TBPN|'
     r'FT(?:\s+\w+)?|AFP|AP News|Politico|Bloomberg)\s*$',
     re.IGNORECASE
@@ -1899,13 +1899,13 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
     )
 
 def _fetch_art_newspaper(n=5):
-    """Always return the latest n Art Newspaper articles, ignoring age filter."""
+    """Always return the latest n NYT Arts articles, ignoring age filter."""
     try:
-        arts = _fetch([("The Art Newspaper", ART_NEWSPAPER_FEED)])
+        arts = _fetch([("The NYT Arts", ART_NEWSPAPER_FEED)])
         arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
         return arts[:n]
     except Exception as ex:
-        print(f"  ⚠  Art Newspaper: {ex}")
+        print(f"  ⚠  NYT Arts: {ex}")
         return []
 
 def _fetch_polymarket(limit=16):
@@ -2611,9 +2611,9 @@ def main():
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
     art_newspaper_arts = _fetch_art_newspaper(5)
-    print(f"    → {len(art_newspaper_arts)} Art Newspaper articles (pinned)")
+    print(f"    → {len(art_newspaper_arts)} NYT Arts articles (pinned)")
     culture_raw = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
-    # Prepend Art Newspaper articles so they survive dedup and always appear
+    # Prepend NYT Arts articles so they survive dedup and always appear
     seen_links = {a["link"] for a in art_newspaper_arts if a.get("link")}
     culture_arts = art_newspaper_arts + [a for a in culture_raw if a.get("link") not in seen_links]
     print(f"    → {len(culture_arts)} articles total")
