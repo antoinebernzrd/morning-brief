@@ -187,7 +187,7 @@ MACRO_SOURCES = [
     ("FT",            "https://news.google.com/rss/search?q=site:ft.com&hl=en&gl=US&ceid=US:en"),
     ("The Economist", "https://www.economist.com/the-world-this-week/rss.xml"),
     # Les Echos scoped to finance/economy only — no broad query to avoid culture/health/geopolitics bleed
-    ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22bourse%22+OR+%22march%C3%A9s+financiers%22+OR+%22taux+d%27int%C3%A9r%C3%AAt%22+OR+%22BCE%22+OR+%22inflation%22+OR+%22PIB%22+OR+%22r%C3%A9cession%22+OR+%22CAC+40%22+OR+%22banque+centrale%22+OR+%22d%C3%A9ficit+budg%C3%A9taire%22+OR+%22dette+publique%22+OR+%22mati%C3%A8res+premi%C3%A8res%22+OR+%22taux+directeur%22+OR+%22obligataire%22%29&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr+-site:investir.lesechos.fr+%28%22bourse%22+OR+%22march%C3%A9s+financiers%22+OR+%22taux+d%27int%C3%A9r%C3%AAt%22+OR+%22BCE%22+OR+%22inflation%22+OR+%22PIB%22+OR+%22r%C3%A9cession%22+OR+%22CAC+40%22+OR+%22banque+centrale%22+OR+%22d%C3%A9ficit+budg%C3%A9taire%22+OR+%22dette+publique%22+OR+%22mati%C3%A8res+premi%C3%A8res%22+OR+%22taux+directeur%22+OR+%22obligataire%22%29&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
@@ -485,7 +485,7 @@ def _snip(entry):
 # Strip source name suffixes that Google News RSS embeds in article titles
 # e.g. "Italy extends tax cuts – Les Echos" → "Italy extends tax cuts"
 _TITLE_SUFFIX_RE = re.compile(
-    r'\s*[\-–|]\s*(?:Les Echos|Le Monde|Le Parisien|L\'[ÉE]quipe|Télérama|Telerama|'
+    r'\s*[\-–|]\s*(?:Investir Les Echos|Les Echos|Le Monde|Le Parisien|L\'[ÉE]quipe|Télérama|Telerama|'
     r'Financial Times|The Economist|Reuters|BBC(?:\s+\w+)?|Al Jazeera|'
     r'The New York Times|Defense News|NSS Magazine|The NYT Arts|'
     r'Timeout(?:\s+\w+)?|The NBS|Silicon(?:Mania|Carne)|TBPN|'
