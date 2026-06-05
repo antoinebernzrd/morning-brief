@@ -1186,7 +1186,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-card{flex:0 0 220px;height:100%;display:flex;flex-direction:column;
   justify-content:center;gap:6px;
   padding:14px 16px;border-right:none;border-radius:var(--r);
-  background:var(--bg2);
+  background:var(--bg);
   text-decoration:none;transition:transform .2s ease;cursor:pointer}
 .poly-card:hover{transform:scale(1.04);z-index:2;position:relative}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
@@ -1324,7 +1324,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   gap:8px;
   /* side padding = 50% − half expanded width (55%÷2=27.5%) so edge cards can reach centre */
   padding:8px 22.5% 10px;
-  border-top:1px solid var(--border);
+  border-top:none;
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
 .snap-culture .culture-cal-band .cal-ev-card{
@@ -1339,35 +1339,33 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.35}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
-  background:linear-gradient(135deg,var(--evc,#555) 0%,rgba(8,8,8,.97) 65%)}
-.snap-culture .culture-cal-band .cal-ev-bg::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,.2) 0%,rgba(0,0,0,.7) 100%)}
-.snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.7)}
+  background:var(--bg2)}
+.snap-culture .culture-cal-band .cal-ev-bg::after{display:none}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
   position:absolute;bottom:0;left:0;right:0;
-  padding:14px 16px 16px;
-  background:linear-gradient(to top,rgba(0,0,0,.78) 0%,transparent 100%);
+  padding:10px 12px 12px;
+  background:none;
   transition:transform .35s ease}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-body{transform:translateY(-6px)}
-.snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px}
 .snap-culture .culture-cal-band .cal-ev-cat-chip{
   font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  color:var(--evc,#fff);background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:2px 7px}
+  color:var(--muted);background:rgba(0,0,0,.07);
+  border:1px solid rgba(0,0,0,.1);border-radius:4px;padding:2px 7px}
 .snap-culture .culture-cal-band .cal-live-badge{
   font-size:8px;font-weight:700;letter-spacing:.5px;
   color:#fff;background:#16A34A;border-radius:4px;padding:2px 6px;
   animation:live-pulse 2s ease-in-out infinite}
 .snap-culture .culture-cal-band .cal-ev-name{
-  font-size:clamp(12px,1.4vw,20px);font-weight:700;
-  color:#fff;line-height:1.2;margin-bottom:3px;
-  text-shadow:0 2px 8px rgba(0,0,0,.5)}
+  font-size:clamp(11px,1.2vw,17px);font-weight:600;
+  color:var(--text);line-height:1.2;margin-bottom:3px;
+  text-shadow:none}
 .snap-culture .culture-cal-band .cal-ev-range{
-  font-size:10px;color:rgba(255,255,255,.5);font-weight:300}
+  font-size:10px;color:var(--muted);font-weight:300}
 .snap-culture .culture-cal-band .cal-ev-panel{
   position:absolute;left:0;right:0;bottom:0;height:65%;
-  background:rgba(4,4,4,.9);
+  background:rgba(242,242,247,.96);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   padding:10px 14px 12px;
   overflow-y:auto;scrollbar-width:none;
@@ -1376,19 +1374,19 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-panel{transform:translateY(0)}
 .snap-culture .culture-cal-band .cal-ev-panel-hd{
   font-size:8px;font-weight:700;letter-spacing:1px;
-  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px}
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .snap-culture .culture-cal-band .cal-det-art{
   display:flex;flex-direction:column;gap:2px;
-  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);text-decoration:none}
+  padding:7px 0;border-bottom:1px solid var(--border);text-decoration:none}
 .snap-culture .culture-cal-band .cal-det-art:last-of-type{border-bottom:none}
-.snap-culture .culture-cal-band .cal-det-art-title{font-size:11px;color:#fff;line-height:1.35;font-weight:400}
-.snap-culture .culture-cal-band .cal-det-art-meta{font-size:9px;color:rgba(255,255,255,.4)}
-.snap-culture .culture-cal-band .cal-det-none{font-size:10px;color:rgba(255,255,255,.4);margin:3px 0}
+.snap-culture .culture-cal-band .cal-det-art-title{font-size:11px;color:var(--text);line-height:1.35;font-weight:400}
+.snap-culture .culture-cal-band .cal-det-art-meta{font-size:9px;color:var(--muted)}
+.snap-culture .culture-cal-band .cal-det-none{font-size:10px;color:var(--muted);margin:3px 0}
 .snap-culture .culture-cal-band .cal-search-link{
   display:inline-block;margin-top:8px;
-  font-size:9px;font-weight:600;color:rgba(255,255,255,.5);
-  text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2)}
-.snap-culture .culture-cal-band .cal-search-link:hover{color:#fff}
+  font-size:9px;font-weight:600;color:var(--muted);
+  text-decoration:none;border-bottom:1px solid var(--border)}
+.snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
 .snap-bottom{background:#00A550}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
