@@ -846,7 +846,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Section ─────────────────────────────────────────────────── */
 .section{border-bottom:none}
-.sec-hd{padding:0 60px;border-bottom:none;background:var(--bg3);
+.sec-hd{padding:0 60px;border-bottom:none;background:var(--bg);
   display:flex;align-items:center;justify-content:space-between}
 .dot{display:none}
 .cp-item .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -906,11 +906,13 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .dark-popup .leaflet-popup-tip{background:#141414}
 
 /* ── Story list (Tech / Sports / Cities) ─────────────────────── */
-.story-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
+.story-list{padding:10px;max-height:560px;overflow-y:auto;
+  margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:5px;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
 /* ── Story rows ──────────────────────────────────────────────── */
-.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
+.sg{padding:12px 14px;border-bottom:none;background:var(--bg);border-radius:var(--r)}
 .sg:not(.sg-multi){display:flex;align-items:baseline;gap:12px}
 .sg-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
@@ -964,11 +966,13 @@ a.sg-title:hover{opacity:1}
 .ctime{font-size:9px;color:var(--dim)}
 
 /* ── Paris / What's On ───────────────────────────────────────── */
-.paris-list{padding:0 40px 30px;max-height:560px;overflow-y:auto;
+.paris-list{padding:10px;max-height:560px;overflow-y:auto;
+  margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:5px;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
 .pi{display:flex;gap:12px;align-items:baseline;
-  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
+  padding:12px 14px;border-bottom:none;background:var(--bg);border-radius:var(--r)}
 .pi-src{font-size:7px;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
@@ -1199,11 +1203,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-out-pct.low{color:#DC2626;background:rgba(220,38,38,.12)}
 .poly-card-vol{font-size:9px;color:var(--dim);letter-spacing:.3px;margin-top:2px}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
-  padding:12px 20px 20px;display:flex;flex-direction:column;gap:5px}
-/* story rows — card baseline, white 3D card rises from bottom on hover */
+  padding:10px;margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:5px}
+/* story rows — white card on grey container */
 .snap-feed .sg{
   border-bottom:none;padding:12px 14px;margin:0;
-  background:var(--bg2);border-radius:var(--r);
+  background:var(--bg);border-radius:var(--r);
   position:relative;overflow:visible}
 .snap-feed .sg::before{
   content:'';position:absolute;inset:0;
@@ -1227,7 +1232,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 .snap-culture>.section{height:100%;display:flex;flex-direction:column;
   background:var(--bg)}
-.snap-culture .sec-hd{background:var(--bg3)!important;border-color:var(--border)!important}
+.snap-culture .sec-hd{background:var(--bg)!important;border-color:var(--border)!important}
 .snap-culture .sec-hd-text{color:var(--text)!important}
 /* culture body: flex column splits grid (3/4) vs event band (1/4) */
 .snap-culture .culture-body{
@@ -1396,10 +1401,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── snap-bottom: sport / cities / paris ─────────────────── */
 .snap-bottom .story-list,.snap-bottom .paris-list{
-  padding:12px 16px 16px;display:flex;flex-direction:column;gap:5px}
+  padding:10px;margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:5px}
 .snap-bottom .sg,.snap-bottom .pi{
   border-bottom:none;padding:12px 14px;margin:0;
-  background:var(--bg2);border-radius:var(--r);
+  background:var(--bg);border-radius:var(--r);
   position:relative;overflow:visible}
 .snap-bottom .sg::before,.snap-bottom .pi::before{
   content:'';position:absolute;inset:0;
