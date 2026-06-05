@@ -856,14 +856,12 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Layouts ─────────────────────────────────────────────────── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:none}
-.two-col>.section{border-bottom:none;border-right:none;
-  box-shadow:4px 0 16px rgba(0,0,0,.07)}
-.two-col>.section:last-child{box-shadow:none}
+.two-col>.section{border-bottom:none;border-right:1px solid var(--border)}
+.two-col>.section:last-child{border-right:none}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:none}
-.three-col>.section{border-bottom:none;border-right:none;
-  height:400px;display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:4px 0 16px rgba(0,0,0,.07)}
-.three-col>.section:last-child{box-shadow:none}
+.three-col>.section{border-bottom:none;border-right:1px solid var(--border);
+  height:400px;display:flex;flex-direction:column;overflow:hidden}
+.three-col>.section:last-child{border-right:none}
 .three-col .story-list,.three-col .paris-list{flex:1;overflow-y:auto;max-height:none}
 
 /* ── Map ─────────────────────────────────────────────────────── */
@@ -1079,11 +1077,11 @@ a.sg-title:hover{opacity:1}
 
   /* grid overrides */
   .two-col{grid-template-columns:1fr}
-  .two-col>.section{border-right:none;border-bottom:none;box-shadow:0 4px 16px rgba(0,0,0,.07)}
-  .two-col>.section:last-child{box-shadow:none}
+  .two-col>.section{border-right:none;border-bottom:1px solid var(--border)}
+  .two-col>.section:last-child{border-bottom:none}
   .three-col{grid-template-columns:1fr}
-  .three-col>.section{height:auto;border-right:none;border-bottom:none;box-shadow:0 4px 16px rgba(0,0,0,.07)}
-  .three-col>.section:last-child{box-shadow:none}
+  .three-col>.section{height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .three-col>.section:last-child{border-bottom:none}
   .three-col .story-list,.three-col .paris-list{max-height:260px}
 
   /* map */
@@ -1177,8 +1175,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Polymarket band (1/4 height, card-per-market scroll) ────── */
 .poly-band{flex:1 0 0;min-height:0;
   display:flex;align-items:stretch;
-  border-top:none;background:var(--bg);overflow:hidden;
-  box-shadow:0 -4px 16px rgba(0,0,0,.07)}
+  border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
 .poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
   padding:0 20px;display:flex;align-items:center;flex-shrink:0}
