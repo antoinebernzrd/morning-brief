@@ -866,10 +866,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .map-wrap{display:flex;height:440px}
 #map{flex:0 0 62%;height:100%}
 .cp{flex:1;display:flex;flex-direction:column;
-  border-left:1px solid var(--border);background:var(--bg2);overflow:hidden}
-.cp-hd{padding:10px 16px;font-size:9px;font-weight:500;letter-spacing:1.4px;
-  text-transform:uppercase;color:var(--muted);
-  border-bottom:1px solid var(--border);flex-shrink:0}
+  border-left:none;background:var(--bg2);overflow:hidden}
+.cp-hd{display:none}
 .cp-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .cp-list::-webkit-scrollbar{width:2px}
 /* accordion item */
@@ -1134,7 +1132,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
 /* ── Map: light theme ─────────────────────────────────────── */
-#map{background:var(--bg2)!important}
+#map{background:var(--bg)!important}
 #map .leaflet-control-zoom a{background:var(--bg)!important;color:var(--muted)!important;
   border-color:var(--border)!important}
 #map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
@@ -1142,8 +1140,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo .sec-hd{background:var(--bg)!important;border-bottom:none;padding:0 16px}
 .snap-geo .sec-hd-text{color:var(--text)}
 .snap-geo .sec-hd-meta{color:var(--muted)}
-.snap-geo .cp{background:var(--bg);border-left-color:var(--border)}
-.snap-geo .cp-hd{color:var(--muted);border-bottom-color:var(--border)}
+.snap-geo .cp{background:var(--bg);border-left:none}
 .snap-geo .cp-item{border-bottom-color:var(--border)}
 .snap-geo .cp-item-name{color:var(--text)}
 .snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:rgba(0,0,0,.04)}
@@ -1636,7 +1633,6 @@ def build_map(conflicts_json, articles_json):
   <div class="map-wrap">
     <div id="map"></div>
     <div class="cp">
-      <div class="cp-hd">Conflicts &amp; Tensions</div>
       <div id="cp-list" class="cp-list"></div>
     </div>
   </div>
@@ -1717,7 +1713,7 @@ def build_map(conflicts_json, articles_json):
     var imgData = tc.getImageData(0, 0, w, h).data;
     var ctx = dotCanvas.getContext('2d');
     var SPACING = GRID_SPACING, R = 2.4;
-    ctx.fillStyle = 'rgba(58,58,58,0.95)';
+    ctx.fillStyle = 'rgba(190,190,190,0.9)';
 
     for (var y = SPACING / 2; y < h; y += SPACING) {{
       for (var x = SPACING / 2; x < w; x += SPACING) {{
@@ -1809,7 +1805,7 @@ def build_map(conflicts_json, articles_json):
         +'<span class="cp-chevron">›</span>'
       +'</div>'
       +'<div class="cp-item-body">'
-        +'<div class="cp-meta">Since '+_esc(c.started)+' &nbsp;·&nbsp; <span style="color:'+(TC[c.type]||'#888')+'">'+c.type+'</span></div>'
+        +'<div class="cp-meta">Since '+_esc(c.started)+'</div>'
         +'<div class="cp-sum">'+_esc(c.summary)+'</div>'
         +(arts.length?'<div class="cp-arts-hd">Recent Coverage</div>'+artsHtml:'')
       +'</div>';
