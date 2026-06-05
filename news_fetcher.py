@@ -1185,16 +1185,17 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
   padding:0 20px;display:flex;align-items:center;flex-shrink:0}
-.poly-band-track{flex:1;overflow:hidden;position:relative}
-.poly-band-items{display:flex;height:100%;width:max-content;
+.poly-band-track{flex:1;overflow:hidden;position:relative;padding:8px 0}
+.poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
 /* card */
-.poly-card{flex:0 0 260px;height:100%;display:flex;flex-direction:column;
+.poly-card{flex:0 0 220px;height:100%;display:flex;flex-direction:column;
   justify-content:center;gap:6px;
-  padding:14px 20px;border-right:1px solid var(--border);
-  text-decoration:none;transition:background .15s;cursor:pointer}
-.poly-card:hover{background:var(--bg2)}
+  padding:14px 16px;border-right:none;border-radius:var(--r);
+  background:var(--bg2);
+  text-decoration:none;transition:transform .2s ease,box-shadow .2s ease;cursor:pointer}
+.poly-card:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:2;position:relative}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
   line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical;overflow:hidden}
