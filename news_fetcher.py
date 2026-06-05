@@ -40,9 +40,8 @@ WEEKLY_SOURCES = frozenset([
 SOURCE_CANONICAL = {
     "FT Tech":           "FT",
     "FT Companies Tech": "FT",
-    "Les Echos Start":   "Les Echos",
-    "Les Echos Start2":  "Les Echos",
-    "Les Echos Tech":    "Les Echos",
+    "Les Echos tech":    "Les Echos",
+    "Les Echos macro":   "Les Echos",
     "Les Echos PACA":    "Les Echos",
     "BBC Sport":         "BBC",
     "BBC World":         "BBC",
@@ -167,13 +166,7 @@ TECH_SOURCES = [
     # FT Companies/Tech: slightly different selection, good overlap coverage
     ("FT Companies Tech",   "https://www.ft.com/companies/technology?format=rss"),
     ("The NBS",             "https://news.google.com/rss/search?q=site:the-nbs.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    # Les Echos — parentheses force site: to scope ALL OR alternatives
-    # Query 1: funding events & company milestones
-    ("Les Echos Start",  "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22lev%C3%A9e+de+fonds%22+OR+%22s%C3%A9rie+A%22+OR+%22s%C3%A9rie+B%22+OR+%22s%C3%A9rie+C%22+OR+%22seed%22+OR+%22amor%C3%A7age%22+OR+%22licorne%22+OR+%22d%C3%A9cacorne%22+OR+%22capital-risque%22+OR+%22venture+capital%22+OR+%22liquidation+judiciaire%22+OR+%22tour+de+table%22+OR+%22valorisation%22%29&hl=fr&gl=FR&ceid=FR:fr"),
-    # Query 2: startup ecosystem & company types
-    ("Les Echos Start2", "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22start-up%22+OR+%22scale-up%22+OR+%22French+Tech%22+OR+%22Bpifrance%22+OR+%22deeptech%22+OR+%22fintech%22+OR+%22biotech%22+OR+%22femtech%22+OR+%22medtech%22+OR+%22cleantech%22+OR+%22Station+F%22+OR+%22jeune+pousse%22+OR+%22SaaS%22+OR+%22adtech%22+OR+%22quantique%22%29&hl=fr&gl=FR&ceid=FR:fr"),
-    # Query 3: tech, AI & digital — removed generic terms (numérique, cloud, plateforme)
-    ("Les Echos Tech",   "https://news.google.com/rss/search?q=site:lesechos.fr+%28%22intelligence+artificielle%22+OR+%22IA+g%C3%A9n%C3%A9rative%22+OR+%22Mistral%22+OR+%22OpenAI%22+OR+%22Anthropic%22+OR+%22GAFAM%22+OR+%22Nvidia%22+OR+%22LLM%22+OR+%22chatbot%22+OR+%22cybers%C3%A9curit%C3%A9%22+OR+%22data+center%22+OR+%22souverainet%C3%A9+num%C3%A9rique%22+OR+%22robotique%22+OR+%22semi-conducteurs%22%29&hl=fr&gl=FR&ceid=FR:fr"),
+    # Les Echos fetched separately via _fetch_les_echos_tech() — Python-side keyword filtering
     ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
@@ -186,8 +179,7 @@ MACRO_SOURCES = [
     # GN site:ft.com returns ~100 articles vs homepage RSS's 10
     ("FT",            "https://news.google.com/rss/search?q=site:ft.com&hl=en&gl=US&ceid=US:en"),
     ("The Economist", "https://www.economist.com/the-world-this-week/rss.xml"),
-    # Les Echos scoped to finance/economy only — no broad query to avoid culture/health/geopolitics bleed
-    ("Les Echos",     "https://news.google.com/rss/search?q=site:lesechos.fr+-site:investir.lesechos.fr+%28%22bourse%22+OR+%22march%C3%A9s+financiers%22+OR+%22taux+d%27int%C3%A9r%C3%AAt%22+OR+%22BCE%22+OR+%22inflation%22+OR+%22PIB%22+OR+%22r%C3%A9cession%22+OR+%22CAC+40%22+OR+%22banque+centrale%22+OR+%22d%C3%A9ficit+budg%C3%A9taire%22+OR+%22dette+publique%22+OR+%22mati%C3%A8res+premi%C3%A8res%22+OR+%22taux+directeur%22+OR+%22obligataire%22%29&hl=fr&gl=FR&ceid=FR:fr"),
+    # Les Echos fetched separately via _fetch_les_echos_macro() — Python-side keyword filtering
     # Added
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
@@ -706,6 +698,74 @@ def _fetch_calendar_event_news():
         if arts:
             out[e["name"]] = arts
     return out
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  LES ECHOS — Python-side keyword filtering (reliable, no URL query parsing issues)
+# ══════════════════════════════════════════════════════════════════════════════
+_LE_FEED = "https://news.google.com/rss/search?q=site:lesechos.fr+-site:investir.lesechos.fr&hl=fr&gl=FR&ceid=FR:fr"
+
+LES_ECHOS_TECH_KW = [
+    "start-up","scale-up","licorne","décacorne","jeune pousse",
+    "deeptech","fintech","biotech","cleantech","greentech","healthtech",
+    "edtech","proptech","insurtech","legaltech","medtech","agritech",
+    "adtech","martech","femtech","crypto","levée de fonds","lève",
+    "série a","série b","série c","seed","amorçage","pré-seed",
+    "tour de table","monte au capital","capital-risque","venture capital",
+    "business angel","valorisation","liquidation judiciaire","acquisition",
+    "incubateur","french tech","station f","bpifrance","atomico","eqt",
+    "partech","kima","eurazeo","astanor","ledger","fondateur","cofondateur",
+    "saas","data center","quantique","semi-conducteurs","souveraineté numérique",
+    "intelligence artificielle","ia générative","ia française","machine learning",
+    "openai","mistral","anthropic","deepmind","gafam","nvidia","llm","chatbot",
+    "cybersécurité","robotique","high tech","elevenlab","lovable",
+]
+
+LES_ECHOS_MACRO_KW = [
+    "bourse","marchés financiers","taux d'intérêt","bce","fed ","inflation",
+    "pib","récession","cac 40","banque centrale","déficit budgétaire",
+    "dette publique","matières premières","taux directeur","obligataire",
+    "wall street","dow jones","s&p 500","euro stoxx","taux de change",
+    "croissance économique","chômage","balance commerciale","politique monétaire",
+    "obligations","spread","rendement","indice boursier","banque de france",
+]
+
+def _fetch_les_echos(keywords, label):
+    """Fetch Les Echos broadly, filter by keywords in Python — 100% reliable."""
+    arts = _fetch([(label, _LE_FEED)])
+    result = []
+    for a in arts:
+        text = (a.get("title","") + " " + a.get("snip","")).lower()
+        if any(kw.lower() in text for kw in keywords):
+            result.append(a)
+    print(f"    → Les Echos {label}: {len(result)}/{len(arts)} articles matched")
+    return result
+
+# Sources capped at 1 article (show only latest)
+SOURCE_CAPS = {
+    "Silicon Carne":     1,
+    "Not Boring":        1,
+    "TBPN":              1,
+    "MTS Newsletter":    1,
+    "Lenny's Newsletter":1,
+    "Pragmatic Engineer":1,
+    "The NBS":           1,
+    "SiliconMania":      1,
+    "First Round Review":1,
+    "NSS Magazine":      1,
+}
+DEFAULT_CAP = 6  # all other sources
+
+def _cap_per_source(arts):
+    """Apply per-source caps — specific sources show only their latest article."""
+    counts = {}
+    result = []
+    for a in arts:
+        src = a["source"]
+        cap = SOURCE_CAPS.get(src, DEFAULT_CAP)
+        if counts.get(src, 0) < cap:
+            result.append(a)
+            counts[src] = counts.get(src, 0) + 1
+    return result
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  CSS
@@ -2602,11 +2662,13 @@ def main():
     tg_arts  = _fetch_telegram()
     afp      = _route_afp(tg_arts)
     print("  Fetching Tech/VC…")
-    tech_raw = _dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + afp["tech"]))
+    les_echos_tech = _fetch_les_echos(LES_ECHOS_TECH_KW, "tech")
+    tech_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + les_echos_tech + afp["tech"])))
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
-    macro_raw = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + afp["macro"]))
+    les_echos_macro = _fetch_les_echos(LES_ECHOS_MACRO_KW, "macro")
+    macro_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + les_echos_macro + afp["macro"])))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
