@@ -1133,28 +1133,28 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .cp-list::after{content:'';position:sticky;bottom:0;display:block;
   height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
-/* ── Map: dark theme — dot world rendered on canvas ──────── */
-#map{background:#060606!important}
-#map .leaflet-control-zoom a{background:#111!important;color:#333!important;
-  border-color:#1a1a1a!important}
+/* ── Map: light theme ─────────────────────────────────────── */
+#map{background:var(--bg2)!important}
+#map .leaflet-control-zoom a{background:var(--bg)!important;color:var(--muted)!important;
+  border-color:var(--border)!important}
 #map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
-.snap-geo>.section{background:#060606}
-.snap-geo .sec-hd{background:#060606!important;border-bottom:1px solid #222;padding:0 16px}
-.snap-geo .sec-hd-text{color:#e0e0e0}
-.snap-geo .sec-hd-meta{color:#666}
-.snap-geo .cp{background:#060606;border-left-color:#222}
-.snap-geo .cp-hd{color:#999;border-bottom-color:#222}
-.snap-geo .cp-item{border-bottom-color:#1c1c1c}
-.snap-geo .cp-item-name{color:#e8e8e8}
-.snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:rgba(255,255,255,.06)}
-.snap-geo .cp-chevron{color:#888}
-.snap-geo .cp-item-body{border-top-color:#1c1c1c}
-.snap-geo .cp-meta{color:#aaa}
-.snap-geo .cp-sum{color:#bbb}
-.snap-geo .cp-arts-hd{color:#999}
-.snap-geo .cp-art{color:#bbb;border-bottom-color:#1c1c1c}
-.snap-geo .cp-art:hover{color:#eee}
-.snap-geo .cp-art small{color:#777}
+.snap-geo>.section{background:var(--bg)}
+.snap-geo .sec-hd{background:var(--bg)!important;border-bottom:none;padding:0 16px}
+.snap-geo .sec-hd-text{color:var(--text)}
+.snap-geo .sec-hd-meta{color:var(--muted)}
+.snap-geo .cp{background:var(--bg);border-left-color:var(--border)}
+.snap-geo .cp-hd{color:var(--muted);border-bottom-color:var(--border)}
+.snap-geo .cp-item{border-bottom-color:var(--border)}
+.snap-geo .cp-item-name{color:var(--text)}
+.snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:rgba(0,0,0,.04)}
+.snap-geo .cp-chevron{color:var(--muted)}
+.snap-geo .cp-item-body{border-top-color:var(--border)}
+.snap-geo .cp-meta{color:var(--muted)}
+.snap-geo .cp-sum{color:var(--text);opacity:.72}
+.snap-geo .cp-arts-hd{color:var(--muted)}
+.snap-geo .cp-art{color:var(--text);opacity:.72;border-bottom-color:var(--border)}
+.snap-geo .cp-art:hover{opacity:1}
+.snap-geo .cp-art small{color:var(--dim)}
 .snap-geo .new-badge{color:#F59E0B}
 .snap-geo .cp-list::after{display:none!important}
 /* ── Conflict markers: match grid dot size (2×R = 5px) ──── */
@@ -1428,16 +1428,17 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-bottom .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
-.snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:5px}
 .snap-geo .cp-item{
   border-bottom:none;
-  background:#2a2a2a;border-radius:var(--r);overflow:hidden}
-.snap-geo .cp-item.has-new{background:rgba(239,68,68,.25)}
+  background:var(--bg);border-radius:var(--r);overflow:hidden}
+.snap-geo .cp-item.has-new{background:rgba(239,68,68,.08)}
 .snap-geo .cp-item-row{
   position:relative;overflow:hidden;border-radius:var(--r)}
 .snap-geo .cp-item-row::before{
   content:'';position:absolute;inset:0;
-  background:rgba(255,255,255,.07);border-radius:var(--r);
+  background:rgba(0,0,0,.04);border-radius:var(--r);
   transform-origin:bottom center;
   transform:perspective(500px) rotateX(45deg);
   opacity:0;
