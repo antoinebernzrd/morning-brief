@@ -773,12 +773,12 @@ def _cap_per_source(arts):
 CSS = """
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#D6E4F7;--bg2:#D6E4F7;--bg3:#C4D8F2;
-  --border:#A8C4E8;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
+  --bg:#ffffff;--bg2:#f2f2f7;--bg3:#D6E4F7;
+  --border:#d1d1d6;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
-  --display:'Clash Grotesk','DM Sans',-apple-system,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif;
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
@@ -795,7 +795,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);
 header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
-  background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
+  background:rgba(255,255,255,.96);backdrop-filter:blur(24px)}
 @media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
@@ -846,7 +846,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Section ─────────────────────────────────────────────────── */
 .section{border-bottom:none}
-.sec-hd{padding:0 60px;border-bottom:none;
+.sec-hd{padding:0 60px;border-bottom:none;background:var(--bg3);
   display:flex;align-items:center;justify-content:space-between}
 .dot{display:none}
 .cp-item .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -2748,7 +2748,6 @@ def main():
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
-<link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@400,500,600,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>{CSS}</style>
 </head>
