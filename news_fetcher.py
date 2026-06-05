@@ -1427,8 +1427,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
 .snap-geo .cp-item{
   border-bottom:none;
-  background:#111;border-radius:var(--r);overflow:hidden}
-.snap-geo .cp-item.has-new{background:rgba(239,68,68,.15)}
+  background:#2a2a2a;border-radius:var(--r);overflow:hidden}
+.snap-geo .cp-item.has-new{background:rgba(239,68,68,.25)}
 .snap-geo .cp-item-row{
   position:relative;overflow:hidden;border-radius:var(--r)}
 .snap-geo .cp-item-row::before{
