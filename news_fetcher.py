@@ -1165,10 +1165,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
-.snap-feed{display:flex;flex-direction:column;overflow:hidden}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#FFB3C8}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
-  overflow:hidden;border-bottom:none}
+  overflow:hidden;border-bottom:none;background:#FFB3C8}
+.snap-feed .sec-hd{background:#FFB3C8!important}
+.snap-feed .poly-band{background:#FFB3C8!important}
 /* ── Polymarket band (1/4 height, card-per-market scroll) ────── */
 .poly-band{flex:1 0 0;min-height:0;
   display:flex;align-items:stretch;
