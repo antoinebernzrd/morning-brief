@@ -1432,11 +1432,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-bottom .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
-.snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:0}
+.snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
 .snap-geo .cp-item{
-  border-bottom:1px solid #1a1a1a;
-  background:transparent}
-.snap-geo .cp-item:last-child{border-bottom:none}
+  border-bottom:none;
+  background:#101010;border-radius:var(--r);overflow:hidden}
+.snap-geo .cp-item.has-new{background:rgba(239,68,68,.1)}
 .snap-geo .cp-item-row{
   position:relative;overflow:hidden;border-radius:var(--r)}
 .snap-geo .cp-item-row::before{
@@ -1786,8 +1786,7 @@ def build_map(conflicts_json, articles_json):
       item.classList.add('open');
       markSeen(id);
       _replacePulse(c);
-      var badge = item.querySelector('.new-badge');
-      if (badge) badge.style.display='none';
+      item.classList.remove('has-new');
       item.scrollIntoView({{behavior:'smooth',block:'nearest'}});
     }}
   }}
@@ -1805,12 +1804,11 @@ def build_map(conflicts_json, articles_json):
       : '<p class="cp-no">No recent articles matched.</p>';
 
     var item = document.createElement('div');
-    item.className='cp-item'; item.dataset.id=c.id;
+    item.className='cp-item'+(hasNew?' has-new':''); item.dataset.id=c.id;
     item.innerHTML=
       '<div class="cp-item-row">'
         +'<span class="dot" style="background:'+col+'"></span>'
         +'<span class="cp-item-name">'+_esc(c.name)+'</span>'
-        +(hasNew?'<span class="new-badge">⚡</span>':'')
         +'<span class="cp-chevron">›</span>'
       +'</div>'
       +'<div class="cp-item-body">'
