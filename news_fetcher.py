@@ -912,9 +912,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
 /* ── Story rows ──────────────────────────────────────────────── */
-.sg{padding:13px 0;border-bottom:1px solid var(--border)}
+.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
 .sg:not(.sg-multi){display:flex;align-items:baseline;gap:12px}
-.sg:last-child{border-bottom:none}
 .sg-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
 a.sg-title:hover{opacity:1}
@@ -971,8 +970,7 @@ a.sg-title:hover{opacity:1}
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
 .pi{display:flex;gap:12px;align-items:baseline;
-  padding:13px 0;border-bottom:1px solid var(--border)}
-.pi:last-child{border-bottom:none}
+  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
 .pi-src{font-size:7px;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
@@ -1210,13 +1208,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-out-pct.low{color:#DC2626;background:rgba(220,38,38,.12)}
 .poly-card-vol{font-size:9px;color:var(--dim);letter-spacing:.3px;margin-top:2px}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
-  padding:12px 20px 20px;display:flex;flex-direction:column;gap:0}
-/* story rows — transparent baseline, white 3D card rises from bottom on hover */
+  padding:12px 20px 20px;display:flex;flex-direction:column;gap:5px}
+/* story rows — card baseline, white 3D card rises from bottom on hover */
 .snap-feed .sg{
-  border-bottom:1px solid var(--border);padding:16px 14px;margin:0;
-  background:transparent;border-radius:0;
+  border-bottom:none;padding:12px 14px;margin:0;
+  background:var(--bg2);border-radius:var(--r);
   position:relative;overflow:visible}
-.snap-feed .sg:last-child{border-bottom:none}
 .snap-feed .sg::before{
   content:'';position:absolute;inset:0;
   background:#fff;border-radius:var(--r);
@@ -1408,12 +1405,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── snap-bottom: sport / cities / paris ─────────────────── */
 .snap-bottom .story-list,.snap-bottom .paris-list{
-  padding:12px 16px 16px;display:flex;flex-direction:column;gap:0}
+  padding:12px 16px 16px;display:flex;flex-direction:column;gap:5px}
 .snap-bottom .sg,.snap-bottom .pi{
-  border-bottom:1px solid var(--border);padding:16px 14px;margin:0;
-  background:transparent;border-radius:0;
+  border-bottom:none;padding:12px 14px;margin:0;
+  background:var(--bg2);border-radius:var(--r);
   position:relative;overflow:visible}
-.snap-bottom .sg:last-child,.snap-bottom .pi:last-child{border-bottom:none}
 .snap-bottom .sg::before,.snap-bottom .pi::before{
   content:'';position:absolute;inset:0;
   background:#fff;border-radius:var(--r);
