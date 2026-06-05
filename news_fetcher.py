@@ -1162,7 +1162,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* blink: dot flashes when there's new coverage */
 @keyframes dot-blink{
   0%,100%{opacity:1}
-  50%{opacity:.15}
+  50%{opacity:.4}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
