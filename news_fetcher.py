@@ -1137,22 +1137,22 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-color:#1a1a1a!important}
 #map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
 .snap-geo>.section{background:#080808}
-.snap-geo .sec-hd{background:#080808!important;border-bottom:1px solid #1a1a1a;padding:0 16px}
-.snap-geo .sec-hd-text{color:#666}
-.snap-geo .sec-hd-meta{color:#2a2a2a}
-.snap-geo .cp{background:#080808;border-left-color:#1a1a1a}
-.snap-geo .cp-hd{color:#444;border-bottom-color:#1a1a1a}
-.snap-geo .cp-item{border-bottom-color:#111}
-.snap-geo .cp-item-name{color:#666}
-.snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:#0f0f0f}
-.snap-geo .cp-chevron{color:#333}
-.snap-geo .cp-item-body{border-top-color:#111}
-.snap-geo .cp-meta{color:#555}
-.snap-geo .cp-sum{color:#444}
-.snap-geo .cp-arts-hd{color:#444}
-.snap-geo .cp-art{color:#555;border-bottom-color:#111}
-.snap-geo .cp-art:hover{color:#888}
-.snap-geo .cp-art small{color:#333}
+.snap-geo .sec-hd{background:#080808!important;border-bottom:1px solid #222;padding:0 16px}
+.snap-geo .sec-hd-text{color:#999}
+.snap-geo .sec-hd-meta{color:#555}
+.snap-geo .cp{background:#080808;border-left-color:#222}
+.snap-geo .cp-hd{color:#666;border-bottom-color:#222}
+.snap-geo .cp-item{border-bottom-color:#1a1a1a}
+.snap-geo .cp-item-name{color:#c0c0c0}
+.snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:rgba(255,255,255,.04)}
+.snap-geo .cp-chevron{color:#666}
+.snap-geo .cp-item-body{border-top-color:#1a1a1a}
+.snap-geo .cp-meta{color:#777}
+.snap-geo .cp-sum{color:#888}
+.snap-geo .cp-arts-hd{color:#666}
+.snap-geo .cp-art{color:#888;border-bottom-color:#1a1a1a}
+.snap-geo .cp-art:hover{color:#bbb}
+.snap-geo .cp-art small{color:#555}
 .snap-geo .new-badge{color:#F59E0B}
 .snap-geo .cp-list::after{display:none!important}
 /* ── Conflict markers: match grid dot size (2×R = 5px) ──── */
@@ -1434,8 +1434,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo .cp-list{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
 .snap-geo .cp-item{
   border-bottom:none;
-  background:#101010;border-radius:var(--r);overflow:hidden}
-.snap-geo .cp-item.has-new{background:rgba(239,68,68,.1)}
+  background:#161616;border-radius:var(--r);overflow:hidden}
+.snap-geo .cp-item.has-new{background:rgba(239,68,68,.12)}
 .snap-geo .cp-item-row{
   position:relative;overflow:hidden;border-radius:var(--r)}
 .snap-geo .cp-item-row::before{
