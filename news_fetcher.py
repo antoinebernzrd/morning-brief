@@ -2252,12 +2252,7 @@ def build_cities(groups):
         rows += _build_group_row(g, extra_cls="city-item", data_attrs=f'data-city="{city}"')
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
-    body = f"""<div style="padding:0 40px 10px;display:flex;gap:6px;flex-shrink:0">
-  <button class="fb on" id="city-all" onclick="filterCity('all')">All</button>
-  <button class="fb" id="city-marseille" onclick="filterCity('marseille')">Marseille</button>
-  <button class="fb" id="city-paris" onclick="filterCity('paris')">Paris</button>
-</div>
-<div class="story-list" id="city-list">{rows}</div>
+    body = f"""<div class="story-list" id="city-list">{rows}</div>
 <script>
 function filterCity(v){{
   document.querySelectorAll('.fb[id^="city-"]').forEach(function(b){{
@@ -2268,7 +2263,21 @@ function filterCity(v){{
   }});
 }}
 </script>"""
-    return _sec("#0C0C0C","Marseille &amp; Paris", body)
+    hd_buttons = (
+        '<div style="display:flex;gap:6px">'
+        '<button class="fb on" id="city-all" onclick="filterCity(\'all\')">All</button>'
+        '<button class="fb" id="city-marseille" onclick="filterCity(\'marseille\')">Marseille</button>'
+        '<button class="fb" id="city-paris" onclick="filterCity(\'paris\')">Paris</button>'
+        '</div>'
+    )
+    return (
+        f'<div class="section">'
+        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
+        f'<span class="sec-hd-text">Marseille &amp; Paris</span>'
+        f'{hd_buttons}'
+        f'</div>'
+        f'{body}</div>\n'
+    )
 def build_paris(arts):
     rows = ""
     for a in arts[:20]:
