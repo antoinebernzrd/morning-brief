@@ -1171,14 +1171,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   overflow:hidden;border-bottom:none;background:#FFB3C8}
 .snap-feed .sec-hd{background:#FFB3C8!important}
 .snap-feed .poly-band{background:#FFB3C8!important}
-/* ── Polymarket band (1/4 height, card-per-market scroll) ────── */
+/* ── Polymarket band ─────────────────────────────────────────── */
 .poly-band{flex:1 0 0;min-height:0;
-  display:flex;align-items:stretch;
-  border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
-.poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;color:#fff;background:#0066FF;
-  padding:0 20px;display:flex;align-items:center;flex-shrink:0}
-.poly-band-track{flex:1;overflow:hidden;position:relative;padding:8px 0}
+  display:flex;flex-direction:column;
+  border-top:none;background:#FFB3C8;overflow:hidden}
+.poly-band .sec-hd{background:#FFB3C8!important;flex-shrink:0}
+.poly-band-label{display:none}
+.poly-band-track{flex:1;overflow:hidden;position:relative;
+  margin:0 16px 8px;border-radius:20px;background:var(--bg2);padding:8px 0}
 .poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
@@ -1390,8 +1390,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2)}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:#fff}
 
+.snap-bottom{background:#00A550}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
-.snap-bottom .three-col>.section{height:100%!important}
+.snap-bottom .three-col>.section{height:100%!important;background:#00A550}
+.snap-bottom .sec-hd{background:#00A550!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
 /* ── shared card token (used below) ─────────────────────────
@@ -2032,7 +2034,7 @@ def build_polymarket_band(markets):
     items = once + once   # duplicate for seamless loop
     return (
         f'<div class="poly-band">'
-        f'<span class="poly-band-label">POLYMARKET</span>'
+        f'<div class="sec-hd"><span class="sec-hd-text">Polymarket</span></div>'
         f'<div class="poly-band-track">'
         f'<div class="poly-band-items">{items}</div>'
         f'</div></div>\n'
