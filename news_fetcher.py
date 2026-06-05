@@ -773,7 +773,7 @@ def _cap_per_source(arts):
 CSS = """
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#D6E4F7;--bg2:#E8F1FB;--bg3:#C4D8F2;
+  --bg:#E8F1FB;--bg2:#D6E4F7;--bg3:#C4D8F2;
   --border:#A8C4E8;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
@@ -795,7 +795,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);
 header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
-  background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
+  background:rgba(232,241,251,.96);backdrop-filter:blur(24px)}
 @media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
