@@ -1159,19 +1159,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gm-dot{width:5px;height:5px;border-radius:50%;position:relative}
 .gm-conflict{background:#EF4444}
 .gm-tension{background:#EF4444}
-/* sonar ring: expands outward when there's new coverage */
-@keyframes sonar-ring{
-  0%  {transform:translate(-50%,-50%) scale(1);opacity:.7}
-  100%{transform:translate(-50%,-50%) scale(7);opacity:0}
+/* blink: dot flashes when there's new coverage */
+@keyframes dot-blink{
+  0%,100%{opacity:1}
+  50%{opacity:.15}
 }
-.gm-sonar::after{
-  content:'';position:absolute;top:50%;left:50%;
-  width:5px;height:5px;border-radius:50%;
-  border:1px solid #EF4444;
-  transform:translate(-50%,-50%);
-  animation:sonar-ring 2.4s ease-out infinite;
-  pointer-events:none
-}
+.gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
 .snap-feed{display:flex;flex-direction:column;overflow:hidden}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
