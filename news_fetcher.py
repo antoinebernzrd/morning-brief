@@ -1158,7 +1158,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Conflict markers: match grid dot size (2×R = 5px) ──── */
 .gm-dot{width:5px;height:5px;border-radius:50%;position:relative}
 .gm-conflict{background:#EF4444}
-.gm-tension{background:#F97316}
+.gm-tension{background:#EF4444}
 /* sonar ring: expands outward when there's new coverage */
 @keyframes sonar-ring{
   0%  {transform:translate(-50%,-50%) scale(1);opacity:.7}
@@ -1172,7 +1172,6 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   animation:sonar-ring 2.4s ease-out infinite;
   pointer-events:none
 }
-.gm-sonar.gm-tension::after{border-color:#F97316}
 
 .snap-feed{display:flex;flex-direction:column;overflow:hidden}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
@@ -1634,7 +1633,7 @@ def build_map(conflicts_json, articles_json):
 <div class="section">
   <div class="sec-hd" style="border-top:2px solid #D42B17">
     <span class="sec-hd-text">Geopolitical Flashpoints</span>
-    <span class="sec-hd-meta">● conflict &nbsp;● tension &nbsp;⚡ new</span>
+    <span class="sec-hd-meta">● conflict / tension</span>
   </div>
   <div class="map-wrap">
     <div id="map"></div>
@@ -1648,7 +1647,7 @@ def build_map(conflicts_json, articles_json):
 (function(){{
   var C = {conflicts_json};
   var A = {articles_json};
-  var TC = {{ conflict:'#EF4444', tension:'#F97316' }};
+  var TC = {{ conflict:'#EF4444', tension:'#EF4444' }};
   var listEl = document.getElementById('cp-list');
   var markers = {{}};
   var GRID_SPACING = 8; /* must match canvas SPACING below */
