@@ -845,8 +845,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .t-item:hover{color:var(--text)}
 
 /* ── Section ─────────────────────────────────────────────────── */
-.section{border-bottom:1px solid var(--border)}
-.sec-hd{padding:0 60px;border-bottom:1px solid var(--border);
+.section{border-bottom:none}
+.sec-hd{padding:0 60px;border-bottom:none;
   display:flex;align-items:center;justify-content:space-between}
 .dot{display:none}
 .cp-item .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -855,13 +855,15 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .sec-hd-meta{font-size:9px;color:var(--dim);letter-spacing:.3px}
 
 /* ── Layouts ─────────────────────────────────────────────────── */
-.two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border)}
-.two-col>.section{border-bottom:none;border-right:1px solid var(--border)}
-.two-col>.section:last-child{border-right:none}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)}
-.three-col>.section{border-bottom:none;border-right:1px solid var(--border);
-  height:400px;display:flex;flex-direction:column;overflow:hidden}
-.three-col>.section:last-child{border-right:none}
+.two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:none}
+.two-col>.section{border-bottom:none;border-right:none;
+  box-shadow:4px 0 16px rgba(0,0,0,.07)}
+.two-col>.section:last-child{box-shadow:none}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:none}
+.three-col>.section{border-bottom:none;border-right:none;
+  height:400px;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:4px 0 16px rgba(0,0,0,.07)}
+.three-col>.section:last-child{box-shadow:none}
 .three-col .story-list,.three-col .paris-list{flex:1;overflow-y:auto;max-height:none}
 
 /* ── Map ─────────────────────────────────────────────────────── */
@@ -1077,11 +1079,11 @@ a.sg-title:hover{opacity:1}
 
   /* grid overrides */
   .two-col{grid-template-columns:1fr}
-  .two-col>.section{border-right:none;border-bottom:1px solid var(--border)}
-  .two-col>.section:last-child{border-bottom:none}
+  .two-col>.section{border-right:none;border-bottom:none;box-shadow:0 4px 16px rgba(0,0,0,.07)}
+  .two-col>.section:last-child{box-shadow:none}
   .three-col{grid-template-columns:1fr}
-  .three-col>.section{height:auto;border-right:none;border-bottom:1px solid var(--border)}
-  .three-col>.section:last-child{border-bottom:none}
+  .three-col>.section{height:auto;border-right:none;border-bottom:none;box-shadow:0 4px 16px rgba(0,0,0,.07)}
+  .three-col>.section:last-child{box-shadow:none}
   .three-col .story-list,.three-col .paris-list{max-height:260px}
 
   /* map */
@@ -1175,7 +1177,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Polymarket band (1/4 height, card-per-market scroll) ────── */
 .poly-band{flex:1 0 0;min-height:0;
   display:flex;align-items:stretch;
-  border-top:1px solid var(--border);background:var(--bg);overflow:hidden}
+  border-top:none;background:var(--bg);overflow:hidden;
+  box-shadow:0 -4px 16px rgba(0,0,0,.07)}
 .poly-band-label{font-size:8.5px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:#fff;background:#0066FF;
   padding:0 20px;display:flex;align-items:center;flex-shrink:0}
@@ -1188,6 +1191,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   justify-content:center;gap:6px;
   padding:14px 16px;border-right:none;border-radius:var(--r);
   background:var(--bg2);
+  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08);
   text-decoration:none;transition:transform .2s ease,box-shadow .2s ease;cursor:pointer}
 .poly-card:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:2;position:relative}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
