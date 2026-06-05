@@ -184,7 +184,7 @@ MACRO_SOURCES = [
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
 ]
 CULTURE_SOURCES = [
-    ("NSS Magazine",      "https://www.nssmag.com/en/feeds/rss"),
+    ("NSS Magazine",      "https://news.google.com/rss/search?q=site:nssmag.com&hl=en&gl=US&ceid=US:en"),
     ("Hypebeast",         "https://hypebeast.com/feed"),
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
@@ -773,7 +773,7 @@ def _cap_per_source(arts):
 CSS = """
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#E8F1FB;--bg2:#D6E4F7;--bg3:#C4D8F2;
+  --bg:#D6E4F7;--bg2:#D6E4F7;--bg3:#C4D8F2;
   --border:#A8C4E8;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;
   --serif:'Cormorant Garamond',Georgia,serif;
@@ -795,7 +795,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);
 header{display:flex;flex-direction:column;padding:0 60px;
   border-top:3px solid var(--text);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:200;
-  background:rgba(232,241,251,.96);backdrop-filter:blur(24px)}
+  background:rgba(214,228,247,.96);backdrop-filter:blur(24px)}
 @media(prefers-color-scheme:dark){header{background:rgba(6,6,6,.96)}}
 .hd-inner{display:flex;justify-content:space-between;align-items:center;
   padding:16px 0 14px}
@@ -912,7 +912,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
 /* ── Story rows ──────────────────────────────────────────────── */
-.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
+.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r);
+  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08)}
 .sg:not(.sg-multi){display:flex;align-items:baseline;gap:12px}
 .sg-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
@@ -970,7 +971,8 @@ a.sg-title:hover{opacity:1}
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
 .pi{display:flex;gap:12px;align-items:baseline;
-  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
+  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r);
+  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08)}
 .pi-src{font-size:7px;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
