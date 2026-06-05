@@ -856,12 +856,10 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Layouts ─────────────────────────────────────────────────── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:none}
-.two-col>.section{border-bottom:none;border-right:1px solid var(--border)}
-.two-col>.section:last-child{border-right:none}
+.two-col>.section{border-bottom:none;border-right:none}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:none}
-.three-col>.section{border-bottom:none;border-right:1px solid var(--border);
+.three-col>.section{border-bottom:none;border-right:none;
   height:400px;display:flex;flex-direction:column;overflow:hidden}
-.three-col>.section:last-child{border-right:none}
 .three-col .story-list,.three-col .paris-list{flex:1;overflow-y:auto;max-height:none}
 
 /* ── Map ─────────────────────────────────────────────────────── */
@@ -912,8 +910,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
 /* ── Story rows ──────────────────────────────────────────────── */
-.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r);
-  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08)}
+.sg{padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
 .sg:not(.sg-multi){display:flex;align-items:baseline;gap:12px}
 .sg-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
@@ -971,8 +968,7 @@ a.sg-title:hover{opacity:1}
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
 .pi{display:flex;gap:12px;align-items:baseline;
-  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r);
-  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08)}
+  padding:12px 14px;border-bottom:none;background:var(--bg2);border-radius:var(--r)}
 .pi-src{font-size:7px;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
@@ -1188,9 +1184,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   justify-content:center;gap:6px;
   padding:14px 16px;border-right:none;border-radius:var(--r);
   background:var(--bg2);
-  box-shadow:0 2px 8px rgba(0,0,0,.13),0 1px 2px rgba(0,0,0,.08);
-  text-decoration:none;transition:transform .2s ease,box-shadow .2s ease;cursor:pointer}
-.poly-card:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:2;position:relative}
+  text-decoration:none;transition:transform .2s ease;cursor:pointer}
+.poly-card:hover{transform:scale(1.04);z-index:2;position:relative}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
   line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical;overflow:hidden}
@@ -1231,9 +1226,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
 .snap-culture>.section{height:100%;display:flex;flex-direction:column;
-  background:#060606}
-.snap-culture .sec-hd{background:#060606!important;border-color:#1c1c1c!important}
-.snap-culture .sec-hd-text{color:#d4d4d4!important}
+  background:var(--bg)}
+.snap-culture .sec-hd{background:var(--bg3)!important;border-color:var(--border)!important}
+.snap-culture .sec-hd-text{color:var(--text)!important}
 /* culture body: flex column splits grid (3/4) vs event band (1/4) */
 .snap-culture .culture-body{
   flex:1;min-height:0;
@@ -1325,7 +1320,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   gap:8px;
   /* side padding = 50% − half expanded width (55%÷2=27.5%) so edge cards can reach centre */
   padding:8px 22.5% 10px;
-  border-top:1px solid #1c1c1c;
+  border-top:1px solid var(--border);
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
 .snap-culture .culture-cal-band .cal-ev-card{
