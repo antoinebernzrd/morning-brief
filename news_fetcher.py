@@ -918,7 +918,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .sg-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
 a.sg-title:hover{opacity:1}
-.badge{font-size:13px;font-weight:600;color:var(--muted);flex-shrink:0;
+.badge{font-size:13px;font-weight:400;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 7px}
 .sg-time{font-size:9px;color:var(--dim);flex-shrink:0}
@@ -974,7 +974,7 @@ a.sg-title:hover{opacity:1}
   padding:13px 0;border-bottom:1px solid var(--border)}
 .pi:last-child{border-bottom:none}
 .pi-src{font-size:13px;color:var(--muted);flex-shrink:0;
-  white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;font-weight:600;
+  white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;font-weight:400;
   background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
 .pi-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
