@@ -864,7 +864,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Map ─────────────────────────────────────────────────────── */
 .map-wrap{display:flex;height:440px}
-#map{flex:0 0 62%;height:100%}
+#map{flex:0 0 62%;height:100%;overflow:hidden}
 .cp{flex:1;display:flex;flex-direction:column;
   border-left:none;background:var(--bg2);overflow:hidden}
 .cp-hd{display:none}
@@ -1102,7 +1102,7 @@ a.sg-title:hover{opacity:1}
 
 /* ── Snap scroll layout ──────────────────────────────────── */
 html{scroll-snap-type:y mandatory;overflow-y:scroll}
-.snap-sec{height:100vh;scroll-snap-align:start;overflow:hidden;position:relative}
+.snap-sec{height:100vh;scroll-snap-align:start;overflow:hidden;position:relative;clip-path:inset(0)}
 
 /* ── Hero section ────────────────────────────────────────── */
 .hero-sec{display:flex;flex-direction:column;justify-content:center;
