@@ -1181,14 +1181,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
   background:#FFB3C8;overflow:hidden}
-.snap-feed-bottom .poly-band{flex:1;min-width:0;
-  border-right:1px solid rgba(0,0,0,.07)}
+.snap-feed-bottom .poly-band{flex:1;min-width:0}
 .snap-feed-bottom .price-band{flex:1;min-width:0}
 .price-band{display:flex;flex-direction:column;
   border-top:none;background:#FFB3C8;overflow:hidden}
 .price-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0;min-height:0}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
-  margin:0 16px 8px;border-radius:20px;background:var(--bg2);
+  margin:0 16px 16px 8px;border-radius:20px;background:var(--bg2);
   display:flex;flex-direction:row;align-items:stretch;
   gap:6px;padding:6px;scrollbar-width:none}
 .price-band-track::-webkit-scrollbar{display:none}
@@ -1208,7 +1207,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
-  margin:0 16px 8px;border-radius:20px;background:var(--bg2);padding:8px 0}
+  margin:0 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
 .poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
