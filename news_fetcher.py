@@ -68,6 +68,9 @@ MACRO_KEYWORDS = [
     "market", "stock", "bond ", "currency", "euro ", "dollar", "oil ", "commodities",
     "bce ", "taux ", "économie", "bourse", "croissance", "banque centrale",
     "trade", "tariff", "budget", "fiscal", "deficit", "debt ",
+    # crypto
+    "bitcoin", "ethereum", "crypto", "blockchain", "defi", "stablecoin",
+    "coindesk", "the block", "web3", "token ", "altcoin", "btc ", "eth ",
 ]
 # ══════════════════════════════════════════════════════════════════════════════
 #  CONFLICTS
@@ -182,6 +185,9 @@ MACRO_SOURCES = [
     # Les Echos fetched separately via _fetch_les_echos_macro() — Python-side keyword filtering
     # Added
     ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
+    # Crypto
+    ("CoinDesk",      "https://www.coindesk.com/arc/outboundfeeds/rss/"),
+    ("The Block",     "https://www.theblock.co/rss.xml"),
 ]
 CULTURE_SOURCES = [
     ("NSS Magazine",      "https://news.google.com/rss/search?q=site:nssmag.com&hl=en&gl=US&ceid=US:en"),
