@@ -1177,11 +1177,30 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   overflow:hidden;border-bottom:none;background:#FFB3C8}
 .snap-feed .sec-hd{background:#FFB3C8!important}
 .snap-feed .poly-band{background:#FFB3C8!important}
+/* ── Markets price band ──────────────────────────────────────── */
+.price-band{flex:0 0 100px;display:flex;flex-direction:column;
+  border-top:none;background:#FFB3C8;overflow:hidden}
+.price-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0}
+.price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
+  margin:0 16px 8px;border-radius:20px;background:var(--bg2);
+  display:flex;flex-direction:row;align-items:stretch;
+  gap:6px;padding:6px;scrollbar-width:none}
+.price-band-track::-webkit-scrollbar{display:none}
+.price-tile{flex:0 0 auto;min-width:90px;display:flex;flex-direction:column;
+  justify-content:center;gap:3px;padding:6px 12px;
+  border-radius:var(--r);background:var(--bg);cursor:default}
+.price-tile-name{font-size:7.5px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted)}
+.price-tile-val{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.price-tile-chg{font-size:9px;font-weight:600;font-variant-numeric:tabular-nums}
+.price-tile-chg.up{color:#16A34A}
+.price-tile-chg.dn{color:#DC2626}
+.price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
-.poly-band{flex:1 0 0;min-height:0;
+.poly-band{flex:0 0 115px;
   display:flex;flex-direction:column;
   border-top:none;background:#FFB3C8;overflow:hidden}
-.poly-band .sec-hd{background:#FFB3C8!important;flex-shrink:0}
+.poly-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
   margin:0 16px 8px;border-radius:20px;background:var(--bg2);padding:8px 0}
@@ -2044,6 +2063,96 @@ def build_polymarket_band(markets):
         f'</div></div>\n'
     )
 
+def build_price_band():
+    tickers = [
+        ("^GSPC",    "S&P 500"),
+        ("^IXIC",    "NASDAQ"),
+        ("^DJI",     "Dow Jones"),
+        ("BTC-USD",  "Bitcoin"),
+        ("ETH-USD",  "Ethereum"),
+        ("GC=F",     "Gold"),
+        ("CL=F",     "WTI Oil"),
+        ("EURUSD=X", "EUR/USD"),
+        ("^VIX",     "VIX"),
+        ("^TNX",     "10Y UST"),
+    ]
+    tickers_js = "[" + ",".join(
+        f'{{sym:{repr(s)},name:{repr(n)}}}'
+        for s, n in tickers
+    ) + "]"
+    return f"""<div class="price-band">
+  <div class="sec-hd"><span class="sec-hd-text">Markets</span></div>
+  <div class="price-band-track" id="price-band-track">
+    <span class="price-tile-loading">Loading prices…</span>
+  </div>
+</div>
+<script>
+(function(){{
+  var TICKERS = {tickers_js};
+  function fmt(v, sym) {{
+    if (v == null) return '—';
+    if (sym === 'EURUSD=X') return v.toFixed(4);
+    if (sym === '^TNX') return v.toFixed(2) + '%';
+    if (v >= 10000) return v.toLocaleString('en-US', {{maximumFractionDigits:0}});
+    if (v >= 1000)  return v.toLocaleString('en-US', {{maximumFractionDigits:1}});
+    if (v >= 100)   return v.toFixed(2);
+    return v.toFixed(2);
+  }}
+  function load() {{
+    var syms = TICKERS.map(function(t){{return t.sym;}}).join(',');
+    fetch('https://query1.finance.yahoo.com/v8/finance/spark?symbols='+syms+'&range=1d&interval=1d')
+      .then(function(r){{return r.json();}})
+      .then(function(){{
+        return fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+syms);
+      }})
+      .then(function(r){{return r.json();}})
+      .then(function(data){{
+        var quotes = {{}};
+        ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{
+          quotes[q.symbol] = q;
+        }});
+        render(quotes);
+      }})
+      .catch(function(){{
+        fetch('https://query2.finance.yahoo.com/v7/finance/quote?symbols='+syms)
+          .then(function(r){{return r.json();}})
+          .then(function(data){{
+            var quotes = {{}};
+            ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{quotes[q.symbol]=q;}});
+            render(quotes);
+          }})
+          .catch(function(e){{console.warn('price fetch failed',e);}});
+      }});
+  }}
+  function render(quotes) {{
+    var track = document.getElementById('price-band-track');
+    if (!track) return;
+    track.innerHTML = '';
+    TICKERS.forEach(function(t) {{
+      var q = quotes[t.sym] || {{}};
+      var price = q.regularMarketPrice;
+      var pct   = q.regularMarketChangePercent;
+      var tile  = document.createElement('div');
+      tile.className = 'price-tile';
+      var chgHtml = '';
+      if (pct != null) {{
+        var cls  = pct >= 0 ? 'up' : 'dn';
+        var sign = pct >= 0 ? '+' : '';
+        chgHtml = '<div class="price-tile-chg '+cls+'">'+sign+pct.toFixed(2)+'%</div>';
+      }}
+      tile.innerHTML =
+        '<div class="price-tile-name">'+t.name+'</div>'+
+        '<div class="price-tile-val">'+(price!=null ? fmt(price,t.sym) : '—')+'</div>'+
+        chgHtml;
+      track.appendChild(tile);
+    }});
+  }}
+  load();
+  setInterval(load, 60000);
+}})();
+</script>
+"""
+
 def _sort_by_time(groups):
     """Sort groups purely by recency of their most recent article."""
     return sorted(groups, key=lambda g: max(a["ts"] or 0 for a in g), reverse=True)
@@ -2767,10 +2876,25 @@ def main():
   <div class="hero-meta">
     <span class="hero-count">{new_today_str}</span>
     <span class="hero-sep">·</span>
-    <span class="hero-date-str">{now_str}</span>
+    <span class="hero-date-str" id="hero-time">{now_str}</span>
     <button class="btn" onclick="location.reload()" style="margin-left:8px">↻</button>
   </div>
   <span class="hero-hint">Scroll to explore ↓</span>
+  <script>
+  (function(){{
+    function _updateTime(){{
+      var el = document.getElementById('hero-time');
+      if (!el) return;
+      var now = new Date();
+      var opts = {{timeZone:'Europe/Paris',weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}};
+      var parts = new Intl.DateTimeFormat('en-GB', opts).formatToParts(now);
+      var get = function(t){{ return (parts.find(function(p){{return p.type===t;}})||{{}}).value||''; }};
+      el.textContent = get('weekday')+' '+get('day')+' '+get('month')+' '+get('year')+' — '+get('hour')+':'+get('minute');
+    }}
+    _updateTime();
+    setInterval(_updateTime, 30000);
+  }})();
+  </script>
   {build_ticker(afp["ticker"])}
 </section>
 
@@ -2786,6 +2910,7 @@ def main():
 {build_tech(tech_grp)}
 {build_macro(macro_grp)}
   </div>
+{build_price_band()}
 {build_polymarket_band(poly_markets)}
 </section>
 
