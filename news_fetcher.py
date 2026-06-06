@@ -1178,7 +1178,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .sec-hd{background:#FFB3C8!important}
 .snap-feed .poly-band{background:#FFB3C8!important}
 /* ── Markets price band ──────────────────────────────────────── */
-.price-band{flex:0 0 145px;display:flex;flex-direction:column;
+/* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
+.snap-feed-bottom{flex:0 0 155px;display:flex;flex-direction:row;
+  background:#FFB3C8;overflow:hidden}
+.snap-feed-bottom .poly-band{flex:1;min-width:0;
+  border-right:1px solid rgba(0,0,0,.07)}
+.snap-feed-bottom .price-band{flex:1;min-width:0}
+.price-band{display:flex;flex-direction:column;
   border-top:none;background:#FFB3C8;overflow:hidden}
 .price-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0;min-height:0}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
@@ -1197,8 +1203,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-tile-chg.dn{color:#DC2626}
 .price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
-.poly-band{flex:0 0 115px;
-  display:flex;flex-direction:column;
+.poly-band{display:flex;flex-direction:column;
   border-top:none;background:#FFB3C8;overflow:hidden}
 .poly-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0}
 .poly-band-label{display:none}
@@ -2064,21 +2069,22 @@ def build_polymarket_band(markets):
     )
 
 def build_price_band():
+    # (sym, display_name, coingecko_id or None)
     tickers = [
-        ("^GSPC",    "S&P 500"),
-        ("^IXIC",    "NASDAQ"),
-        ("^DJI",     "Dow Jones"),
-        ("BTC-USD",  "Bitcoin"),
-        ("ETH-USD",  "Ethereum"),
-        ("GC=F",     "Gold"),
-        ("CL=F",     "WTI Oil"),
-        ("EURUSD=X", "EUR/USD"),
-        ("^VIX",     "VIX"),
-        ("^TNX",     "10Y UST"),
+        ("BTC-USD",  "Bitcoin",   "bitcoin"),
+        ("ETH-USD",  "Ethereum",  "ethereum"),
+        ("^GSPC",    "S&P 500",   None),
+        ("^IXIC",    "NASDAQ",    None),
+        ("^DJI",     "Dow Jones", None),
+        ("GC=F",     "Gold",      None),
+        ("CL=F",     "WTI Oil",   None),
+        ("EURUSD=X", "EUR/USD",   None),
+        ("^VIX",     "VIX",       None),
+        ("^TNX",     "10Y UST",   None),
     ]
     tickers_js = "[" + ",".join(
-        f'{{sym:{repr(s)},name:{repr(n)}}}'
-        for s, n in tickers
+        f'{{sym:{repr(s)},name:{repr(n)},cg:{repr(cg) if cg else "null"}}}'
+        for s, n, cg in tickers
     ) + "]"
     return f"""<div class="price-band">
   <div class="sec-hd"><span class="sec-hd-text">Markets</span></div>
@@ -2099,25 +2105,38 @@ def build_price_band():
     return v.toFixed(2);
   }}
   function load() {{
-    var syms = TICKERS.map(function(t){{return t.sym;}}).join(',');
-    var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(syms)+'&fields=regularMarketPrice,regularMarketChangePercent';
-    fetch(url, {{headers:{{'Accept':'application/json'}}}})
-      .then(function(r){{
-        if (!r.ok) throw new Error(r.status);
-        return r.json();
-      }})
+    var yahooSyms = TICKERS.filter(function(t){{return t.cg==null;}}).map(function(t){{return t.sym;}});
+    var cgIds     = TICKERS.filter(function(t){{return t.cg!=null;}}).map(function(t){{return t.cg;}});
+    var quotes    = {{}};
+    var pending   = 2;
+    function done(){{ if(--pending===0) render(quotes); }}
+
+    /* CoinGecko — crypto, always 24/7 */
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cgIds.join(',')+'&vs_currencies=usd&include_24hr_change=true')
+      .then(function(r){{return r.json();}})
       .then(function(data){{
-        var quotes = {{}};
+        TICKERS.forEach(function(t){{
+          if (t.cg && data[t.cg]) {{
+            quotes[t.sym] = {{
+              regularMarketPrice: data[t.cg].usd,
+              regularMarketChangePercent: data[t.cg].usd_24h_change
+            }};
+          }}
+        }});
+      }})
+      .catch(function(){{}})
+      .finally(done);
+
+    /* Yahoo Finance — indices, forex, commodities */
+    fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(yahooSyms.join(','))+'&fields=regularMarketPrice,regularMarketChangePercent')
+      .then(function(r){{return r.json();}})
+      .then(function(data){{
         ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{
           quotes[q.symbol] = q;
         }});
-        render(quotes);
       }})
-      .catch(function(e){{
-        console.warn('price fetch failed', e);
-        var track = document.getElementById('price-band-track');
-        if (track) track.innerHTML = '<span class="price-tile-loading">Prices unavailable — market may be closed</span>';
-      }});
+      .catch(function(){{}})
+      .finally(done);
   }}
   function render(quotes) {{
     var track = document.getElementById('price-band-track');
@@ -2905,8 +2924,10 @@ def main():
 {build_tech(tech_grp)}
 {build_macro(macro_grp)}
   </div>
-{build_price_band()}
+<div class="snap-feed-bottom">
 {build_polymarket_band(poly_markets)}
+{build_price_band()}
+</div>
 </section>
 
 <!-- ④ CULTURE + EVENTS -->
