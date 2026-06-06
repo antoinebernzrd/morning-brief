@@ -1179,7 +1179,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .poly-band{background:#FFB3C8!important}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
-.snap-feed-bottom{flex:0 0 155px;display:flex;flex-direction:row;
+.snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
   background:#FFB3C8;overflow:hidden}
 .snap-feed-bottom .poly-band{flex:1;min-width:0;
   border-right:1px solid rgba(0,0,0,.07)}
