@@ -1178,9 +1178,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .sec-hd{background:#FFB3C8!important}
 .snap-feed .poly-band{background:#FFB3C8!important}
 /* ── Markets price band ──────────────────────────────────────── */
-.price-band{flex:0 0 100px;display:flex;flex-direction:column;
+.price-band{flex:0 0 145px;display:flex;flex-direction:column;
   border-top:none;background:#FFB3C8;overflow:hidden}
-.price-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0}
+.price-band .sec-hd{background:#FFB3C8!important;flex-shrink:0;padding-bottom:0;min-height:0}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
   margin:0 16px 8px;border-radius:20px;background:var(--bg2);
   display:flex;flex-direction:row;align-items:stretch;
@@ -2100,12 +2100,12 @@ def build_price_band():
   }}
   function load() {{
     var syms = TICKERS.map(function(t){{return t.sym;}}).join(',');
-    fetch('https://query1.finance.yahoo.com/v8/finance/spark?symbols='+syms+'&range=1d&interval=1d')
-      .then(function(r){{return r.json();}})
-      .then(function(){{
-        return fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+syms);
+    var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(syms)+'&fields=regularMarketPrice,regularMarketChangePercent';
+    fetch(url, {{headers:{{'Accept':'application/json'}}}})
+      .then(function(r){{
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
       }})
-      .then(function(r){{return r.json();}})
       .then(function(data){{
         var quotes = {{}};
         ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{
@@ -2113,15 +2113,10 @@ def build_price_band():
         }});
         render(quotes);
       }})
-      .catch(function(){{
-        fetch('https://query2.finance.yahoo.com/v7/finance/quote?symbols='+syms)
-          .then(function(r){{return r.json();}})
-          .then(function(data){{
-            var quotes = {{}};
-            ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{quotes[q.symbol]=q;}});
-            render(quotes);
-          }})
-          .catch(function(e){{console.warn('price fetch failed',e);}});
+      .catch(function(e){{
+        console.warn('price fetch failed', e);
+        var track = document.getElementById('price-band-track');
+        if (track) track.innerHTML = '<span class="price-tile-loading">Prices unavailable — market may be closed</span>';
       }});
   }}
   function render(quotes) {{
