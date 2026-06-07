@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Morning Brief v4"""
+import base64
 import calendar as _cal
 import feedparser
 import html as html_lib
 import json
 import re
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 try:
@@ -35,6 +38,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
     "Le Monde Marseille", "Marsactu", "Le Monde Paris",
+    "NSS Magazine",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -494,6 +498,40 @@ _TITLE_SUFFIX_RE = re.compile(
 def _clean_title(t):
     return _TITLE_SUFFIX_RE.sub('', (t or '—').strip()).strip()
 
+def _resolve_gnews(url):
+    """Decode a Google News redirect URL (CBMi…) to the real publisher URL.
+    Falls back to a network HEAD request if base64 decoding yields nothing clean."""
+    if "news.google.com" not in url:
+        return url
+    m = re.search(r'/articles/([A-Za-z0-9_-]+)', url)
+    if not m:
+        return url
+    b64 = m.group(1)
+    pad = (-len(b64)) % 4
+    try:
+        raw = base64.urlsafe_b64decode(b64 + "=" * pad)
+        idx = raw.find(b"http")
+        if idx >= 0:
+            end = idx
+            while end < len(raw) and 0x20 <= raw[end] < 0x7f:
+                end += 1
+            candidate = raw[idx:end].decode("ascii", errors="replace")
+            if candidate.startswith("http") and "." in candidate:
+                return candidate
+    except Exception:
+        pass
+    # Network fallback: follow redirect
+    try:
+        req = urllib.request.Request(
+            url, method="HEAD",
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.url
+    except Exception:
+        pass
+    return url
+
 def _fetch(sources):
     arts = []
     for name, url in sources:
@@ -506,7 +544,7 @@ def _fetch(sources):
                 arts.append({
                     "source":  name,
                     "title":   _clean_title(e.get("title","—")),
-                    "link":    e.get("link","#"),
+                    "link":    _resolve_gnews(e.get("link","#")),
                     "date":    _parse_date(e),
                     "ts":      _ts(_parse_date(e)),
                     "img":     _img(e),
@@ -672,7 +710,7 @@ def _fetch_event_news(name, max_items=8):
         def _make(e):
             dt  = _parse_date(e)
             src = getattr(getattr(e, "source", None), "title", "") or ""
-            return {"title": e.get("title", "—"), "link": e.get("link", "#"),
+            return {"title": e.get("title", "—"), "link": _resolve_gnews(e.get("link", "#")),
                     "source": src, "ago": _ago(dt), "img": _img(e)}
         # First pass: trusted publishers only
         arts = []
@@ -758,7 +796,7 @@ SOURCE_CAPS = {
     "The NBS":           1,
     "SiliconMania":      1,
     "First Round Review":1,
-    "NSS Magazine":      1,
+    "NSS Magazine":      100,  # show all — 7-day window via WEEKLY_SOURCES
 }
 DEFAULT_CAP = 6  # all other sources
 
@@ -1113,20 +1151,23 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── Hero section ────────────────────────────────────────── */
 .hero-sec{display:flex;flex-direction:column;justify-content:center;
-  padding:0 60px;border-top:3px solid var(--text);background:var(--bg)}
+  padding:0 60px;border-top:3px solid #002FA7;background:#002FA7}
 .hero-eyebrow{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
-  color:var(--muted);font-family:var(--sans);margin-bottom:16px;display:block}
+  color:rgba(255,255,255,.55);font-family:var(--sans);margin-bottom:16px;display:block}
 .hero-h1{font-family:var(--display);font-size:clamp(60px,8.5vw,118px);
-  font-style:normal;font-weight:700;color:var(--text);
+  font-style:normal;font-weight:700;color:#ffffff;
   letter-spacing:-3px;line-height:.93;margin-bottom:36px}
 .hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:36px}
-.hero-count{font-size:9px;color:var(--accent);letter-spacing:.9px;
+.hero-count{font-size:9px;color:rgba(255,255,255,.9);letter-spacing:.9px;
   font-weight:600;text-transform:uppercase}
-.hero-date-str{font-size:9px;color:var(--muted);letter-spacing:.9px;text-transform:uppercase}
-.hero-sep{color:var(--dim);font-size:12px}
+.hero-date-str{font-size:9px;color:rgba(255,255,255,.55);letter-spacing:.9px;text-transform:uppercase}
+.hero-sep{color:rgba(255,255,255,.25);font-size:12px}
 .hero-hint{position:absolute;bottom:90px;left:60px;font-size:7.5px;
-  letter-spacing:2.5px;text-transform:uppercase;color:var(--dim)}
-.hero-sec .ticker{position:absolute;bottom:0;left:0;right:0}
+  letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.hero-sec .ticker{position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.18);border-bottom:none;border-top:1px solid rgba(255,255,255,.12)}
+.hero-sec .t-item{color:rgba(255,255,255,.5);border-right-color:rgba(255,255,255,.12)}
+.hero-sec .t-item:hover{color:#fff}
 
 /* ── Snap section inner layouts ──────────────────────────── */
 .snap-geo{height:100vh!important;overflow:hidden!important}
