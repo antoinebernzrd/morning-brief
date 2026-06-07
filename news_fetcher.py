@@ -1195,7 +1195,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-top:none;background:#FFB3C8;overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
-  margin:0 16px 16px 8px;border-radius:20px;background:var(--bg2);
+  margin:16px 16px 16px 8px;border-radius:20px;background:var(--bg2);
   display:flex;flex-direction:row;align-items:stretch;
   gap:6px;padding:6px;scrollbar-width:none}
 .price-band-track::-webkit-scrollbar{display:none}
@@ -1215,7 +1215,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
-  margin:0 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
+  margin:16px 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
 .poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
@@ -1439,6 +1439,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-bottom .story-list,.snap-bottom .paris-list{
   padding:10px;margin:0 16px 16px;border-radius:20px;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px}
+/* inner gaps: 8px each side where columns face each other = 16px total gap */
+.snap-bottom .three-col>.section:nth-child(1) .story-list,
+.snap-bottom .three-col>.section:nth-child(1) .paris-list{margin-right:8px}
+.snap-bottom .three-col>.section:nth-child(2) .story-list,
+.snap-bottom .three-col>.section:nth-child(2) .paris-list{margin-left:8px;margin-right:8px}
+.snap-bottom .three-col>.section:nth-child(3) .story-list,
+.snap-bottom .three-col>.section:nth-child(3) .paris-list{margin-left:8px}
 .snap-bottom .sg,.snap-bottom .pi{
   border-bottom:none;padding:12px 14px;margin:0;
   background:var(--bg);border-radius:var(--r);
@@ -2071,7 +2078,6 @@ def build_polymarket_band(markets):
         inner = '<div style="padding:0 16px;font-size:11px;color:var(--muted);align-self:center">No data</div>'
     return (
         f'<div class="poly-band">'
-        f'<div class="band-label">Polymarket</div>'
         f'<div class="poly-band-track">'
         f'{inner}'
         f'</div></div>\n'
@@ -2096,7 +2102,6 @@ def build_price_band():
         for s, n, cg in tickers
     ) + "]"
     return f"""<div class="price-band">
-  <div class="band-label">Markets</div>
   <div class="price-band-track" id="price-band-track">
     <span class="price-tile-loading">Loading prices…</span>
   </div>
