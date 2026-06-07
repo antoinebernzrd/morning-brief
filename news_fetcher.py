@@ -38,7 +38,6 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
     "Le Monde Marseille", "Marsactu", "Le Monde Paris",
-    "NSS Magazine",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -194,7 +193,6 @@ MACRO_SOURCES = [
     ("The Block",     "https://www.theblock.co/rss.xml"),
 ]
 CULTURE_SOURCES = [
-    ("NSS Magazine",      "https://news.google.com/rss/search?q=site:nssmag.com&hl=en&gl=US&ceid=US:en"),
     ("Hypebeast",         "https://hypebeast.com/feed"),
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
@@ -499,37 +497,9 @@ def _clean_title(t):
     return _TITLE_SUFFIX_RE.sub('', (t or '—').strip()).strip()
 
 def _resolve_gnews(url):
-    """Decode a Google News redirect URL (CBMi…) to the real publisher URL.
-    Falls back to a network HEAD request if base64 decoding yields nothing clean."""
-    if "news.google.com" not in url:
-        return url
-    m = re.search(r'/articles/([A-Za-z0-9_-]+)', url)
-    if not m:
-        return url
-    b64 = m.group(1)
-    pad = (-len(b64)) % 4
-    try:
-        raw = base64.urlsafe_b64decode(b64 + "=" * pad)
-        idx = raw.find(b"http")
-        if idx >= 0:
-            end = idx
-            while end < len(raw) and 0x20 <= raw[end] < 0x7f:
-                end += 1
-            candidate = raw[idx:end].decode("ascii", errors="replace")
-            if candidate.startswith("http") and "." in candidate:
-                return candidate
-    except Exception:
-        pass
-    # Network fallback: follow redirect
-    try:
-        req = urllib.request.Request(
-            url, method="HEAD",
-            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            return resp.url
-    except Exception:
-        pass
+    """No-op: modern Google News links (CBMi… protobuf) can't be decoded offline,
+    and resolving them via network costs ~5s each → 10min runs. Links stay wrapped
+    (they still work when clicked, just redirect through Google)."""
     return url
 
 def _fetch(sources):
@@ -796,7 +766,6 @@ SOURCE_CAPS = {
     "The NBS":           1,
     "SiliconMania":      1,
     "First Round Review":1,
-    "NSS Magazine":      100,  # show all — 7-day window via WEEKLY_SOURCES
 }
 DEFAULT_CAP = 6  # all other sources
 
@@ -2047,6 +2016,19 @@ def _fetch_art_newspaper(n=5):
         print(f"  ⚠  NYT Arts: {ex}")
         return []
 
+NSS_FEED = "https://news.google.com/rss/search?q=site:nssmag.com+when:90d&hl=en&gl=US&ceid=US:en"
+
+def _fetch_nss(n=5):
+    """Always return the latest n NSS Magazine articles, ignoring age filter.
+    when:90d strips ancient relevance-ranked results so the date sort surfaces fresh ones."""
+    try:
+        arts = _fetch([("NSS Magazine", NSS_FEED)])
+        arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
+        return arts[:n]
+    except Exception as ex:
+        print(f"  ⚠  NSS: {ex}")
+        return []
+
 def _fetch_polymarket(limit=16):
     """Fetch top Polymarket markets by 24h volume."""
     try:
@@ -2860,11 +2842,13 @@ def main():
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
     art_newspaper_arts = _fetch_art_newspaper(5)
-    print(f"    → {len(art_newspaper_arts)} NYT Arts articles (pinned)")
+    nss_arts = _fetch_nss(5)
+    print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
     culture_raw = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
-    # Prepend NYT Arts articles so they survive dedup and always appear
-    seen_links = {a["link"] for a in art_newspaper_arts if a.get("link")}
-    culture_arts = art_newspaper_arts + [a for a in culture_raw if a.get("link") not in seen_links]
+    # Prepend pinned articles (NYT Arts + NSS) so they survive dedup and always appear
+    pinned = art_newspaper_arts + nss_arts
+    seen_links = {a["link"] for a in pinned if a.get("link")}
+    culture_arts = pinned + [a for a in culture_raw if a.get("link") not in seen_links]
     print(f"    → {len(culture_arts)} articles total")
     print("  Fetching Sports…")
     sports_raw = _dedup_exact(_filter_recent(
