@@ -1185,12 +1185,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
-.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#FFB3C8}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#89C4E1}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
-  overflow:hidden;border-bottom:none;background:#FFB3C8}
-.snap-feed .sec-hd{background:#FFB3C8!important}
-.snap-feed .poly-band{background:#FFB3C8!important}
+  overflow:hidden;border-bottom:none;background:#89C4E1}
+.snap-feed .sec-hd{background:#89C4E1!important}
+.snap-feed .poly-band{background:#89C4E1!important}
 /* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
 .snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
 .snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
@@ -1203,11 +1203,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
-  background:#FFB3C8;overflow:hidden}
+  background:#89C4E1;overflow:hidden}
 .snap-feed-bottom .poly-band{flex:1;min-width:0}
 .snap-feed-bottom .price-band{flex:1;min-width:0}
 .price-band{display:flex;flex-direction:column;
-  border-top:none;background:#FFB3C8;overflow:hidden}
+  border-top:none;background:#89C4E1;overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
   margin:16px 16px 16px 8px;border-radius:20px;background:var(--bg2);
@@ -1226,7 +1226,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
 .poly-band{display:flex;flex-direction:column;
-  border-top:none;background:#FFB3C8;overflow:hidden}
+  border-top:none;background:#89C4E1;overflow:hidden}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
@@ -1500,13 +1500,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   text-decoration:none;border-bottom:1px solid var(--border)}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
-.snap-bottom{background:#00A550}
+.snap-bottom{background:#89C4E1}
 .snap-bottom .fb{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:#fff}
-.snap-bottom .fb.on{background:#fff;color:#00A550;border-color:#fff}
+.snap-bottom .fb.on{background:#fff;color:#89C4E1;border-color:#fff}
 .snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.28);border-color:#fff;color:#fff}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
-.snap-bottom .three-col>.section{height:100%!important;background:#00A550}
-.snap-bottom .sec-hd{background:#00A550!important}
+.snap-bottom .three-col>.section{height:100%!important;background:#89C4E1}
+.snap-bottom .sec-hd{background:#89C4E1!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
 /* ── shared card token (used below) ─────────────────────────
