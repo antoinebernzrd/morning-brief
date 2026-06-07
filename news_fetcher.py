@@ -39,6 +39,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
     "Le Monde Marseille", "Marsactu", "Le Monde Paris",
+    "Dezeen", "W Magazine",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -1321,7 +1322,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   position:absolute!important;inset:0!important;
   height:100%!important;width:100%!important;flex-shrink:0}
 .snap-culture .ci::after{
-  background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.65) 42%,rgba(0,0,0,.15) 68%,transparent 85%)}
+  background:linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,.1) 40%,transparent 70%)}
 /* source label — dark pill so it reads on any image */
 .snap-culture .cs{
   top:9px;bottom:auto;z-index:3;
@@ -1382,12 +1383,26 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   flex:0 0 12%;
   position:relative;border-radius:10px;overflow:hidden;
   cursor:pointer;opacity:.4;
-  will-change:flex-basis,opacity;
-  transition:flex-basis .38s cubic-bezier(.25,0,.1,1),opacity .3s ease,box-shadow .25s ease}
-.snap-culture .culture-cal-band .cal-ev-card.ev-center{
-  flex:0 0 55%;opacity:1;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+  will-change:opacity;
+  transition:opacity .3s ease,box-shadow .25s ease}
+.snap-culture .culture-cal-band .cal-ev-card.ev-center{opacity:.85}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past{opacity:.2;cursor:default}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.35}
+/* overlay when open */
+.ccv-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:199;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.ccv-backdrop.active{display:block}
+.snap-culture .culture-cal-band .cal-ev-card.ev-open{
+  position:fixed!important;
+  left:50%!important;top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(65vw,860px)!important;
+  height:min(72vh,680px)!important;
+  flex:none!important;z-index:200;
+  border-radius:16px!important;overflow:hidden!important;
+  box-shadow:0 32px 100px rgba(0,0,0,.85)!important;
+  opacity:1!important;cursor:default}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
   background:var(--bg2)}
@@ -1415,11 +1430,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-range{
   font-size:10px;color:var(--muted);font-weight:300}
 .snap-culture .culture-cal-band .cal-ev-panel{
-  position:absolute;left:0;right:0;bottom:0;height:65%;
-  background:rgba(242,242,247,.96);
+  position:absolute;left:0;right:0;bottom:0;height:55%;
+  background:rgba(242,242,247,.97);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  padding:10px 14px 12px;
-  overflow-y:auto;scrollbar-width:none;
+  padding:16px 20px 18px;
+  overflow-y:auto;scrollbar-width:thin;
   transform:translateY(100%);transition:transform .38s ease}
 .snap-culture .culture-cal-band .cal-ev-panel::-webkit-scrollbar{display:none}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-panel{transform:translateY(0)}
@@ -1490,7 +1505,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   position:relative;z-index:1;pointer-events:auto}
 .snap-geo .cp-item{
   border-bottom:none;
-  background:var(--bg);border-radius:var(--r);overflow:hidden}
+  background:var(--bg);border-radius:var(--r);overflow:hidden;
+  flex-shrink:0}
 .snap-geo .cp-item.has-new{background:rgba(239,68,68,.08)}
 .snap-geo .cp-item-row{
   position:relative;overflow:hidden;border-radius:var(--r)}
@@ -2349,6 +2365,16 @@ def _build_cal_band_html(event_news={}):
 (function(){{
   var band=document.getElementById('culture-cal-band');
   var all=[].slice.call(band.querySelectorAll('.cal-ev-card'));
+  /* backdrop */
+  var bd=document.createElement('div');
+  bd.className='ccv-backdrop';
+  document.body.appendChild(bd);
+  function closeAll(){{
+    all.forEach(function(c){{c.classList.remove('ev-open');}});
+    bd.classList.remove('active');
+  }}
+  bd.addEventListener('click',closeAll);
+  document.addEventListener('keydown',function(e){{if(e.key==='Escape')closeAll();}});
   function setCenter(card){{
     all.forEach(function(c){{c.classList.remove('ev-center');}});
     if(card)card.classList.add('ev-center');
@@ -2360,13 +2386,10 @@ def _build_cal_band_html(event_news={}):
   all.forEach(function(card){{
     if(card.classList.contains('ev-past'))return;
     card.addEventListener('click',function(){{
-      var isOpen=card.classList.contains('ev-open');
-      all.forEach(function(c){{c.classList.remove('ev-open');c.classList.remove('ev-center');}});
-      if(!isOpen){{
-        card.classList.add('ev-open');
-        card.classList.add('ev-center');
-        setTimeout(function(){{scrollToCard(card);}},80);
-      }}
+      if(card.classList.contains('ev-open'))return;
+      closeAll();
+      card.classList.add('ev-open');
+      bd.classList.add('active');
     }});
   }});
   var si=document.getElementById('ccv-{scroll_idx}');
@@ -2430,7 +2453,7 @@ def build_culture(arts, event_news={}):
             f'<div class="cards">{html_cards}</div>'
             f'{cal_band}'
             f'</div>{js_culture}')
-    return _sec("#D42B17","Fashion &amp; Culture", body)
+    return _sec("#D42B17","Pop Culture", body)
 
 def build_sports(groups):
     rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:30])
@@ -2871,11 +2894,11 @@ def main():
     macro_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + les_echos_macro + afp["macro"])))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
-    print("  Fetching Culture/Fashion…")
+    print("  Fetching Pop Culture…")
     art_newspaper_arts = _fetch_art_newspaper(5)
     nss_arts = _fetch_nss(10)
     print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
-    culture_raw = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
+    culture_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES))))
     # Prepend pinned articles (NYT Arts + NSS) so they survive dedup and always appear
     pinned = art_newspaper_arts + nss_arts
     seen_links = {a["link"] for a in pinned if a.get("link")}
