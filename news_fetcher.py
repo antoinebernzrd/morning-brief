@@ -1224,7 +1224,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-band-track::-webkit-scrollbar{display:none}
 .price-tile{flex:0 0 auto;min-width:90px;display:flex;flex-direction:column;
   justify-content:center;gap:3px;padding:6px 12px;
-  border-radius:var(--r);background:var(--bg);cursor:default}
+  border-radius:var(--r);background:var(--bg);cursor:default;
+  transition:background .2s ease}
+.price-tile:hover{background:#89C4E1}
 .price-tile-name{font-size:7.5px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--muted)}
 .price-tile-val{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
@@ -1248,7 +1250,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   padding:14px 16px;border-right:none;border-radius:var(--r);
   background:var(--bg);
   text-decoration:none;transition:transform .2s ease;cursor:pointer}
-.poly-card:hover{transform:scale(1.04);z-index:2;position:relative}
+.poly-card:hover{transform:scale(1.04);z-index:2;position:relative;background:#89C4E1}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
   line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical;overflow:hidden}
