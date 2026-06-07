@@ -194,7 +194,6 @@ MACRO_SOURCES = [
     ("The Block",     "https://www.theblock.co/rss.xml"),
 ]
 CULTURE_SOURCES = [
-    ("Hypebeast",         "https://hypebeast.com/feed"),
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
 ]
@@ -767,6 +766,8 @@ SOURCE_CAPS = {
     "The NBS":           1,
     "SiliconMania":      1,
     "First Round Review":1,
+    "Dezeen":            10,
+    "W Magazine":        10,
 }
 DEFAULT_CAP = 6  # all other sources
 
@@ -2872,7 +2873,7 @@ def main():
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture/Fashion…")
     art_newspaper_arts = _fetch_art_newspaper(5)
-    nss_arts = _fetch_nss(5)
+    nss_arts = _fetch_nss(10)
     print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
     culture_raw = _dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES)))
     # Prepend pinned articles (NYT Arts + NSS) so they survive dedup and always appear
