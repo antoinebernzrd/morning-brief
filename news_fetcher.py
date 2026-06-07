@@ -1374,7 +1374,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   display:flex;flex-direction:row;align-items:stretch;
   overflow-x:auto;overflow-y:hidden;
   gap:8px;
-  padding:8px 0 10px;
+  padding:8px 12px 10px;
   border-top:none;
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
@@ -1416,18 +1416,18 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px}
 .snap-culture .culture-cal-band .cal-ev-cat-chip{
   font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  color:var(--muted);background:rgba(0,0,0,.07);
-  border:1px solid rgba(0,0,0,.1);border-radius:4px;padding:2px 7px}
+  color:rgba(255,255,255,.75);background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:2px 7px}
 .snap-culture .culture-cal-band .cal-live-badge{
   font-size:8px;font-weight:700;letter-spacing:.5px;
   color:#fff;background:#16A34A;border-radius:4px;padding:2px 6px;
   animation:live-pulse 2s ease-in-out infinite}
 .snap-culture .culture-cal-band .cal-ev-name{
   font-size:clamp(11px,1.2vw,17px);font-weight:600;
-  color:var(--text);line-height:1.2;margin-bottom:3px;
-  text-shadow:none}
+  color:#fff;line-height:1.2;margin-bottom:3px;
+  text-shadow:0 1px 6px rgba(0,0,0,.7)}
 .snap-culture .culture-cal-band .cal-ev-range{
-  font-size:10px;color:var(--muted);font-weight:300}
+  font-size:10px;color:rgba(255,255,255,.6);font-weight:300}
 .snap-culture .culture-cal-band .cal-ev-panel{
   position:absolute;left:0;right:0;bottom:0;height:55%;
   background:rgba(242,242,247,.97);
