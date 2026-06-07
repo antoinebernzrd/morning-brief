@@ -8,6 +8,7 @@ import json
 import re
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 try:
@@ -2016,18 +2017,47 @@ def _fetch_art_newspaper(n=5):
         print(f"  ⚠  NYT Arts: {ex}")
         return []
 
-NSS_FEED = "https://news.google.com/rss/search?q=site:nssmag.com+when:90d&hl=en&gl=US&ceid=US:en"
+_NSS_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+# English articles only: /en/<section>/<numeric-id>/<slug>, excluding author/tag/search pages
+_NSS_ARTICLE = re.compile(r'nssmag\.com/en/(?!author/|tag/|search/)[a-z0-9-]+/\d+/', re.IGNORECASE)
 
 def _fetch_nss(n=5):
-    """Always return the latest n NSS Magazine articles, ignoring age filter.
-    when:90d strips ancient relevance-ranked results so the date sort surfaces fresh ones."""
-    try:
-        arts = _fetch([("NSS Magazine", NSS_FEED)])
-        arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
-        return arts[:n]
-    except Exception as ex:
-        print(f"  ⚠  NSS: {ex}")
-        return []
+    """Latest n NSS articles from their monthly sitemap — real URLs, real dates, no Google News."""
+    now = datetime.now()
+    months = [(now.year, now.month)]
+    months.append((now.year, now.month - 1) if now.month > 1 else (now.year - 1, 12))
+    arts, seen = [], set()
+    for y, m in months:
+        try:
+            url = f"https://www.nssmag.com/sitemap.xml?year={y}&month={m}"
+            req = urllib.request.Request(url, headers={"User-Agent": _NSS_UA})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                root = ET.fromstring(r.read())
+            ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+            for u in root.findall("s:url", ns):
+                loc = (u.findtext("s:loc", default="", namespaces=ns) or "").strip()
+                mod = (u.findtext("s:lastmod", default="", namespaces=ns) or "").strip()
+                if not _NSS_ARTICLE.search(loc) or loc in seen:
+                    continue
+                seen.add(loc)
+                try:
+                    dt = datetime.fromisoformat(mod.replace("Z", "+00:00"))
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                except Exception:
+                    dt = None
+                slug  = loc.rstrip("/").split("/")[-1].replace("-", " ")
+                title = slug.title()
+                arts.append({"source": "NSS Magazine", "title": title, "link": loc,
+                             "date": dt, "ts": _ts(dt), "img": "", "snip": ""})
+        except Exception as ex:
+            print(f"  ⚠  NSS sitemap {y}-{m}: {ex}")
+        if len(arts) >= n:
+            break
+    arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
+    print(f"    → {len(arts)} NSS articles (sitemap)")
+    return arts[:n]
 
 def _fetch_polymarket(limit=16):
     """Fetch top Polymarket markets by 24h volume."""
