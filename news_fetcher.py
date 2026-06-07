@@ -1299,7 +1299,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   /* column width ≈ row height → squares
      row height ≈ (100vh - 66px)*3/4 / 3 - gaps ≈ (100vh-66px)/4 - 15px */
   grid-auto-columns:calc((100vh - 66px) / 4 - 15px);
-  gap:12px;padding:14px 20px 8px;
+  gap:12px;padding:14px 0 8px;
   overflow-x:auto;overflow-y:hidden;
   border-top:none!important;
   scrollbar-width:none}
@@ -1374,8 +1374,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   display:flex;flex-direction:row;align-items:stretch;
   overflow-x:auto;overflow-y:hidden;
   gap:8px;
-  /* side padding = 50% − half expanded width (55%÷2=27.5%) so edge cards can reach centre */
-  padding:8px 22.5% 10px;
+  padding:8px 0 10px;
   border-top:none;
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
@@ -1455,6 +1454,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
 .snap-bottom{background:#00A550}
+.snap-bottom .fb{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:#fff}
+.snap-bottom .fb.on{background:#fff;color:#00A550;border-color:#fff}
+.snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.28);border-color:#fff;color:#fff}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
 .snap-bottom .three-col>.section{height:100%!important;background:#00A550}
 .snap-bottom .sec-hd{background:#00A550!important}
@@ -2259,14 +2261,14 @@ def _sort_by_time(groups):
     return sorted(groups, key=lambda g: max(a["ts"] or 0 for a in g), reverse=True)
 
 def build_tech(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups)[:50])
+    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups))
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Tech — Startups — VC",
                 f'<div class="story-list">{rows}</div>')
 
 def build_macro(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups)[:40])
+    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups))
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Macro — Finance — Markets",
@@ -2277,7 +2279,7 @@ def _build_cal_band_html(event_news={}):
     today     = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
     cat_col = {
-        "culture":"#7C3AED","fashion":"#EA580C","football":"#15803D",
+        "culture":"#3a3a3c","fashion":"#EA580C","football":"#15803D",
         "f1":"#DC2626","horses":"#B45309","swimming":"#1D4ED8",
         "rowing":"#0E7490","sailing":"#0F766E","tennis":"#0284C7",
         "golf":"#166534","cycling":"#D97706","rugby":"#7E22CE",
@@ -2369,8 +2371,17 @@ def _build_cal_band_html(event_news={}):
   var bd=document.createElement('div');
   bd.className='ccv-backdrop';
   document.body.appendChild(bd);
+  /* portal: active card moved to body so it escapes band stacking context */
+  var activeCard=null, placeholder=null;
   function closeAll(){{
-    all.forEach(function(c){{c.classList.remove('ev-open');}});
+    if(activeCard){{
+      activeCard.classList.remove('ev-open');
+      if(placeholder&&placeholder.parentNode){{
+        placeholder.parentNode.insertBefore(activeCard,placeholder);
+        placeholder.remove();
+      }}
+      activeCard=null;placeholder=null;
+    }}
     bd.classList.remove('active');
   }}
   bd.addEventListener('click',closeAll);
@@ -2386,10 +2397,16 @@ def _build_cal_band_html(event_news={}):
   all.forEach(function(card){{
     if(card.classList.contains('ev-past'))return;
     card.addEventListener('click',function(){{
-      if(card.classList.contains('ev-open'))return;
+      if(activeCard===card)return;
       closeAll();
+      /* portal: insert placeholder, move card to body */
+      placeholder=document.createElement('div');
+      placeholder.style.cssText='flex:0 0 12%;opacity:.4;pointer-events:none';
+      card.parentNode.insertBefore(placeholder,card);
+      document.body.appendChild(card);
       card.classList.add('ev-open');
       bd.classList.add('active');
+      activeCard=card;
     }});
   }});
   var si=document.getElementById('ccv-{scroll_idx}');
@@ -2410,7 +2427,7 @@ def build_culture(arts, event_news={}):
         img  = a.get("img","")
         snip = _s(a.get("snip","") or "")
         bg   = (f"background-image:url({_s(img)});background-size:cover;background-position:center;"
-                if img else "background:linear-gradient(135deg,#4a1040,#1a0a2e);")
+                if img else "background:linear-gradient(135deg,#3a3a3c,#1c1c1e);")
         snip_html = f'<div class="cv-snip">{snip}</div>' if snip else ""
         html_cards += (
             f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="card">'
@@ -2514,7 +2531,7 @@ def build_calendar_OLD(event_news={}):
     today_str = today.strftime("%Y-%m-%d")
 
     cat_col = {
-        "culture":"#7C3AED","fashion":"#EA580C","football":"#15803D",
+        "culture":"#3a3a3c","fashion":"#EA580C","football":"#15803D",
         "f1":"#DC2626","horses":"#B45309","swimming":"#1D4ED8",
         "rowing":"#0E7490","sailing":"#0F766E","tennis":"#0284C7",
         "golf":"#166534","cycling":"#D97706","rugby":"#7E22CE",
@@ -2710,7 +2727,7 @@ def build_calendar(event_news={}):
     today_str = today.strftime("%Y-%m-%d")
 
     cat_col = {
-        "culture":"#7C3AED","fashion":"#EA580C","football":"#15803D",
+        "culture":"#3a3a3c","fashion":"#EA580C","football":"#15803D",
         "f1":"#DC2626","horses":"#B45309","swimming":"#1D4ED8",
         "rowing":"#0E7490","sailing":"#0F766E","tennis":"#0284C7",
         "golf":"#166534","cycling":"#D97706","rugby":"#7E22CE",
@@ -2886,12 +2903,12 @@ def main():
     afp      = _route_afp(tg_arts)
     print("  Fetching Tech/VC…")
     les_echos_tech = _fetch_les_echos(LES_ECHOS_TECH_KW, "tech")
-    tech_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + les_echos_tech + afp["tech"])))
+    tech_raw = _dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + les_echos_tech + afp["tech"]))
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
     les_echos_macro = _fetch_les_echos(LES_ECHOS_MACRO_KW, "macro")
-    macro_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + les_echos_macro + afp["macro"])))
+    macro_raw = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + les_echos_macro + afp["macro"]))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Pop Culture…")
