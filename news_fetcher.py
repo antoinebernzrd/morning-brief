@@ -1299,7 +1299,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   /* column width ≈ row height → squares
      row height ≈ (100vh - 66px)*3/4 / 3 - gaps ≈ (100vh-66px)/4 - 15px */
   grid-auto-columns:calc((100vh - 66px) / 4 - 15px);
-  gap:12px;padding:14px 0 8px;
+  gap:12px;padding:14px 12px 8px;
   overflow-x:auto;overflow-y:hidden;
   border-top:none!important;
   scrollbar-width:none}
@@ -1390,7 +1390,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* overlay when open */
 .ccv-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
-  z-index:199;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  z-index:9998;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .ccv-backdrop.active{display:block}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open{
   position:fixed!important;
@@ -1398,7 +1398,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   transform:translate(-50%,-50%)!important;
   width:min(65vw,860px)!important;
   height:min(72vh,680px)!important;
-  flex:none!important;z-index:200;
+  flex:none!important;z-index:9999;
   border-radius:16px!important;overflow:hidden!important;
   box-shadow:0 32px 100px rgba(0,0,0,.85)!important;
   opacity:1!important;cursor:default}
@@ -1409,8 +1409,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
   position:absolute;bottom:0;left:0;right:0;
-  padding:10px 12px 12px;
-  background:none;
+  padding:28px 12px 12px;
+  background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 100%);
   transition:transform .35s ease}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-body{transform:translateY(-6px)}
 .snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px}
