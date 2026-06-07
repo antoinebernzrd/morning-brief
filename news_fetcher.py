@@ -669,7 +669,7 @@ _TRUSTED_PUBS = frozenset([
 def _fetch_event_news(name, max_items=8):
     """Fetch latest news for a calendar event, filtered to trusted sources."""
     q = name.replace(" ", "+").replace("'", "").replace("&", "and")
-    url = (f"https://news.google.com/rss/search?q=%22{q}%22"
+    url = (f"https://news.google.com/rss/search?q=%22{q}%22+when:14d"
            f"&hl=en&gl=US&ceid=US:en")
     try:
         feed = feedparser.parse(
@@ -1381,12 +1381,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-card{
   flex:0 0 12%;
   position:relative;border-radius:10px;overflow:hidden;
-  cursor:pointer;opacity:.4;
-  will-change:opacity;
+  cursor:pointer;opacity:.75;
   transition:opacity .3s ease,box-shadow .25s ease}
-.snap-culture .culture-cal-band .cal-ev-card.ev-center{opacity:.85}
-.snap-culture .culture-cal-band .cal-ev-card.ev-past{opacity:.2;cursor:default}
-.snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.35}
+.snap-culture .culture-cal-band .cal-ev-card.ev-center{opacity:1}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past{
+  opacity:.4;cursor:default;filter:grayscale(.6)}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.55;filter:grayscale(.4)}
+.snap-culture .culture-cal-band .cal-ev-card.ev-live{
+  opacity:1;box-shadow:0 0 0 2px #16A34A,0 4px 20px rgba(0,0,0,.3)}
 /* overlay backdrop */
 .ccv-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -1448,7 +1450,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
   background:var(--bg2)}
-.snap-culture .culture-cal-band .cal-ev-bg::after{display:none}
+.snap-culture .culture-cal-band .cal-ev-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 45%,transparent 72%)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
   position:absolute;bottom:0;left:0;right:0;
@@ -2386,8 +2390,7 @@ def _build_cal_band_html(event_news={}):
             bg_style = (f"background-image:url({_s(card_img)});"
                         f"background-size:cover;background-position:center top")
         else:
-            bg_style = (f"background:linear-gradient(135deg,{col} 0%,"
-                        f"rgba(8,8,8,.97) 65%)")
+            bg_style = "background:linear-gradient(135deg,#3a3a3c,#1c1c1e)"
         cards_html += (
             f'<div class="cal-ev-card{cls}" id="ccv-{i}" style="--evc:{col}">'
             f'<div class="cal-ev-bg" style="{bg_style}"></div>'
@@ -2426,6 +2429,7 @@ def _build_cal_band_html(event_news={}):
       activeCard=null;placeholder=null;
     }}
     bd.classList.remove('active');
+    document.body.style.overflow='';
   }}
   bd.addEventListener('click',closeAll);
   document.addEventListener('keydown',function(e){{if(e.key==='Escape')closeAll();}});
@@ -2449,6 +2453,7 @@ def _build_cal_band_html(event_news={}):
       document.body.appendChild(card);
       card.classList.add('cal-ev-portal-open');
       bd.classList.add('active');
+      document.body.style.overflow='hidden';
       activeCard=card;
     }});
   }});
