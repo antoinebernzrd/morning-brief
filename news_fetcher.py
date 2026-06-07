@@ -250,12 +250,13 @@ CITIES_SOURCES = [
     # Marseille — curated city section + local investigative
     ("Le Monde Marseille", "https://www.lemonde.fr/marseille/rss_full.xml"),
     ("Marsactu",           "https://marsactu.fr/feed/"),
+    ("BFM Marseille",      "https://www.bfmtv.com/marseille/rss/une.xml"),
     # Paris — curated city section + regional daily
     ("Le Monde Paris",     "https://www.lemonde.fr/paris/rss_full.xml"),
     ("Le Parisien",        "https://news.google.com/rss/search?q=%22Paris%22+%22arrondissement%22+OR+%22Seine%22+OR+%22Île-de-France%22+site:leparisien.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 # For build_cities: identify which sources are Marseille vs Paris
-MARSEILLE_SOURCE_NAMES = {"Le Monde Marseille", "Marsactu"}
+MARSEILLE_SOURCE_NAMES = {"Le Monde Marseille", "Marsactu", "BFM Marseille"}
 # ══════════════════════════════════════════════════════════════════════════════
 #  CALENDAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -453,7 +454,7 @@ def _filter_city_local(arts):
     Other sources require the city name in the title.
     """
     # These sources are editorially scoped — trust them entirely
-    TRUSTED_LOCAL = {"Marsactu", "Le Monde Marseille", "Le Monde Paris"}
+    TRUSTED_LOCAL = {"Marsactu", "Le Monde Marseille", "Le Monde Paris", "BFM Marseille"}
     MARSEILLE_PATS = [re.compile(t, re.IGNORECASE) for t in [
         r"marseille", r"marseillais", r"bouches.du.rh",
     ]]
@@ -1177,6 +1178,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   overflow:hidden;border-bottom:none;background:#FFB3C8}
 .snap-feed .sec-hd{background:#FFB3C8!important}
 .snap-feed .poly-band{background:#FFB3C8!important}
+/* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
+.snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
+.snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
+/* ── Compact band label (replaces sec-hd in poly/price bands) ── */
+.band-label{font-size:9px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);
+  padding:5px 16px 0;flex-shrink:0}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
@@ -1187,7 +1195,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-top:none;background:#FFB3C8;overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
-  margin:16px 16px 16px 8px;border-radius:20px;background:var(--bg2);
+  margin:0 16px 16px 8px;border-radius:20px;background:var(--bg2);
   display:flex;flex-direction:row;align-items:stretch;
   gap:6px;padding:6px;scrollbar-width:none}
 .price-band-track::-webkit-scrollbar{display:none}
@@ -1207,7 +1215,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
-  margin:16px 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
+  margin:0 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
 .poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
@@ -2034,8 +2042,6 @@ def _fetch_polymarket(limit=16):
         return []
 
 def build_polymarket_band(markets):
-    if not markets:
-        return ""
     def fmt_pct(p):
         if p < 1:  return "<1%"
         if p > 99: return ">99%"
@@ -2057,13 +2063,17 @@ def build_polymarket_band(markets):
             f'<div class="poly-card-outcomes">{outcomes_html}</div>'
             f'{vol}</a>'
         )
-    once = "".join(card_html(m) for m in markets)
-    items = once + once   # duplicate for seamless loop
+    if markets:
+        once  = "".join(card_html(m) for m in markets)
+        items = once + once   # duplicate for seamless loop
+        inner = f'<div class="poly-band-items">{items}</div>'
+    else:
+        inner = '<div style="padding:0 16px;font-size:11px;color:var(--muted);align-self:center">No data</div>'
     return (
         f'<div class="poly-band">'
-        f'<div class="sec-hd"><span class="sec-hd-text">Polymarket</span></div>'
+        f'<div class="band-label">Polymarket</div>'
         f'<div class="poly-band-track">'
-        f'<div class="poly-band-items">{items}</div>'
+        f'{inner}'
         f'</div></div>\n'
     )
 
@@ -2086,7 +2096,7 @@ def build_price_band():
         for s, n, cg in tickers
     ) + "]"
     return f"""<div class="price-band">
-  <div class="sec-hd"><span class="sec-hd-text">Markets</span></div>
+  <div class="band-label">Markets</div>
   <div class="price-band-track" id="price-band-track">
     <span class="price-tile-loading">Loading prices…</span>
   </div>
