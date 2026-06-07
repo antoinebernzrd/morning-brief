@@ -1147,7 +1147,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo .sec-hd{background:var(--bg)!important;border-bottom:none;padding:0 16px}
 .snap-geo .sec-hd-text{color:var(--text)}
 .snap-geo .sec-hd-meta{color:var(--muted)}
-.snap-geo .cp{background:var(--bg);border-left:none}
+.snap-geo .cp{background:var(--bg);border-left:none;position:relative;z-index:1}
 .snap-geo .cp-item{border-bottom-color:var(--border)}
 .snap-geo .cp-item-name{color:var(--text)}
 .snap-geo .cp-item-row:hover,.snap-geo .cp-item.open .cp-item-row{background:rgba(0,0,0,.04)}
@@ -1181,6 +1181,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
 .snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
 .snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
+/* ── Zero bottom margin on story-list so gap to bottom panels = only track's 16px top ── */
+.snap-feed .two-col>.section .story-list{margin-bottom:0}
 /* ── Compact band label (replaces sec-hd in poly/price bands) ── */
 .band-label{font-size:9px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--muted);
@@ -1472,7 +1474,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
 .snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:20px;background:var(--bg2);
-  display:flex;flex-direction:column;gap:5px}
+  display:flex;flex-direction:column;gap:5px;overflow-y:auto;
+  position:relative;z-index:1;pointer-events:auto}
 .snap-geo .cp-item{
   border-bottom:none;
   background:var(--bg);border-radius:var(--r);overflow:hidden}
