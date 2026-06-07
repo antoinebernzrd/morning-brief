@@ -1387,21 +1387,64 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-card.ev-center{opacity:.85}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past{opacity:.2;cursor:default}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.35}
-/* overlay when open */
+/* overlay backdrop */
 .ccv-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
   z-index:9998;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .ccv-backdrop.active{display:block}
-.snap-culture .culture-cal-band .cal-ev-card.ev-open{
+/* portal overlay — card is moved to document.body so all styles are self-contained */
+.cal-ev-portal-open{
   position:fixed!important;
   left:50%!important;top:50%!important;
   transform:translate(-50%,-50%)!important;
   width:min(65vw,860px)!important;
   height:min(72vh,680px)!important;
-  flex:none!important;z-index:9999;
+  z-index:9999!important;
   border-radius:16px!important;overflow:hidden!important;
   box-shadow:0 32px 100px rgba(0,0,0,.85)!important;
-  opacity:1!important;cursor:default}
+  opacity:1!important;cursor:default;display:block!important}
+.cal-ev-portal-open .cal-ev-bg{
+  position:absolute;inset:0;
+  background-size:cover!important;background-position:center top!important}
+.cal-ev-portal-open .cal-ev-body{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:40px 20px 16px;
+  background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 100%);
+  transform:none}
+.cal-ev-portal-open .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cal-ev-portal-open .cal-ev-cat-chip{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,.8);background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 8px}
+.cal-ev-portal-open .cal-live-badge{
+  font-size:9px;font-weight:700;color:#fff;background:#16A34A;
+  border-radius:4px;padding:3px 7px}
+.cal-ev-portal-open .cal-ev-name{
+  font-size:clamp(18px,2.2vw,32px);font-weight:700;
+  color:#fff;line-height:1.15;margin-bottom:5px;
+  text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.cal-ev-portal-open .cal-ev-range{
+  font-size:13px;color:rgba(255,255,255,.6);font-weight:300}
+.cal-ev-portal-open .cal-ev-panel{
+  position:absolute;left:0;right:0;bottom:0;height:52%;
+  background:rgba(248,248,248,.98);
+  padding:18px 22px 20px;
+  overflow-y:auto;scrollbar-width:thin;
+  transform:translateY(0)!important;transition:none}
+.cal-ev-portal-open .cal-ev-panel-hd{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#888;margin-bottom:10px}
+.cal-ev-portal-open .cal-det-art{
+  display:flex;flex-direction:column;gap:2px;
+  padding:9px 0;border-bottom:1px solid #e5e5e5;text-decoration:none}
+.cal-ev-portal-open .cal-det-art:last-of-type{border-bottom:none}
+.cal-ev-portal-open .cal-det-art-title{font-size:13px;color:#111;line-height:1.4;font-weight:400}
+.cal-ev-portal-open .cal-det-art-meta{font-size:10px;color:#888;margin-top:2px}
+.cal-ev-portal-open .cal-det-none{font-size:11px;color:#888;margin:4px 0}
+.cal-ev-portal-open .cal-search-link{
+  display:inline-block;margin-top:12px;font-size:10px;font-weight:600;
+  color:#555;text-decoration:none;border-bottom:1px solid #ccc}
+.cal-ev-portal-open .cal-search-link:hover{color:#111}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
   background:var(--bg2)}
@@ -2375,7 +2418,7 @@ def _build_cal_band_html(event_news={}):
   var activeCard=null, placeholder=null;
   function closeAll(){{
     if(activeCard){{
-      activeCard.classList.remove('ev-open');
+      activeCard.classList.remove('cal-ev-portal-open');
       if(placeholder&&placeholder.parentNode){{
         placeholder.parentNode.insertBefore(activeCard,placeholder);
         placeholder.remove();
@@ -2399,12 +2442,12 @@ def _build_cal_band_html(event_news={}):
     card.addEventListener('click',function(){{
       if(activeCard===card)return;
       closeAll();
-      /* portal: insert placeholder, move card to body */
+      /* portal: move card to body so it escapes band stacking context */
       placeholder=document.createElement('div');
       placeholder.style.cssText='flex:0 0 12%;opacity:.4;pointer-events:none';
       card.parentNode.insertBefore(placeholder,card);
       document.body.appendChild(card);
-      card.classList.add('ev-open');
+      card.classList.add('cal-ev-portal-open');
       bd.classList.add('active');
       activeCard=card;
     }});
