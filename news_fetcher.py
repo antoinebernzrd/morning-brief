@@ -201,10 +201,18 @@ CULTURE_SOURCES = [
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
 ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 SPORTS_SOURCES_FR = [
-    ("L'Équipe", "https://news.google.com/rss/search?q=site:lequipe.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # Direct L'Équipe RSS feeds — much faster than Google News indexing
+    ("L'Équipe",        "https://www.lequipe.fr/rss/actu_rss.xml"),
+    ("L'Équipe Tennis", "https://www.lequipe.fr/rss/actu_rss_Tennis.xml"),
+    ("L'Équipe Foot",   "https://www.lequipe.fr/rss/actu_rss_Football.xml"),
+    ("L'Équipe F1",     "https://www.lequipe.fr/rss/actu_rss_Formule1.xml"),
+    # Google News as backup for broader coverage
+    ("L'Équipe GN",     "https://news.google.com/rss/search?q=site:lequipe.fr+when:2d&hl=fr&gl=FR&ceid=FR:fr"),
+    ("RMC Sport",       "https://rmcsport.bfmtv.com/rss/infos.xml"),
 ]
 SPORTS_SOURCES_INT = [
     ("BBC Sport", "https://feeds.bbci.co.uk/sport/rss.xml"),
+    ("Eurosport", "https://news.google.com/rss/search?q=site:eurosport.com+when:2d&hl=en&gl=US&ceid=US:en"),
 ]
 CONFLICT_NEWS_SOURCES = [
     # ── Broad wire / world feeds ──────────────────────────────────────────────
@@ -2554,7 +2562,7 @@ function filterCity(v){{
     return (
         f'<div class="section">'
         f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
-        f'<span class="sec-hd-text">Marseille &amp; Paris</span>'
+        f'<span class="sec-hd-text">City Focus</span>'
         f'{hd_buttons}'
         f'</div>'
         f'{body}</div>\n'
@@ -2994,7 +3002,7 @@ def main():
         return not any(p.search(t) for p in _PARIS_BLOCKLIST)
     paris_arts = list(filter(_not_tv, _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))))
     print(f"    → {len(paris_arts)} Paris articles")
-    print("  Fetching Cities (Marseille & Paris)…")
+    print("  Fetching Cities (City Focus)…")
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     cities_grp = _dedup(cities_raw)
     print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
