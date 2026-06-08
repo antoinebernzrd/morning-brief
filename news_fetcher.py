@@ -1466,9 +1466,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 45%,transparent 72%)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:28px 12px 12px;
+  position:absolute;bottom:12%;left:8%;right:8%;
+  padding:20px 8px 8px;
   background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 100%);
+  border-radius:0 0 50% 50%;
   transition:transform .35s ease}
 .snap-culture .culture-cal-band .cal-ev-card.ev-open .cal-ev-body{transform:translateY(-6px)}
 .snap-culture .culture-cal-band .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px}
