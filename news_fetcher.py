@@ -2530,17 +2530,17 @@ def build_culture(arts, event_news={}):
             f'</div>{js_culture}')
     return _sec("#D42B17","Pop Culture", body)
 
-def build_sports(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_groups(groups)[:30])
+def build_sports(arts):
+    rows = "".join(_build_group_row([a]) for a in arts[:60])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
     return _sec("#0C0C0C","Sports", f'<div class="story-list">{rows}</div>')
 
-def build_cities(groups):
+def build_cities(arts):
     rows = ""
-    for g in _sort_groups(groups)[:40]:
-        city = "marseille" if g[0]["source"] in MARSEILLE_SOURCE_NAMES else "paris"
-        rows += _build_group_row(g, extra_cls="city-item", data_attrs=f'data-city="{city}"')
+    for a in arts[:60]:
+        city = "marseille" if a["source"] in MARSEILLE_SOURCE_NAMES else "paris"
+        rows += _build_group_row([a], extra_cls="city-item", data_attrs=f'data-city="{city}"')
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
     body = f"""<div class="story-list" id="city-list">{rows}</div>
@@ -2984,8 +2984,7 @@ def main():
         _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
     ))
     sports_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    sports_grp = _dedup(sports_raw)
-    print(f"    → {len(sports_raw)} articles → {len(sports_grp)} stories")
+    print(f"    → {len(sports_raw)} articles (no grouping)")
     print("  Fetching conflict news…")
     conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
@@ -3006,17 +3005,14 @@ def main():
     print(f"    → {len(paris_arts)} Paris articles")
     print("  Fetching Cities (City Focus)…")
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
-    cities_grp = _dedup(cities_raw)
-    print(f"    → {len(cities_raw)} articles → {len(cities_grp)} stories")
+    print(f"    → {len(cities_raw)} articles (no grouping)")
     print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
     print("  Generating AI headlines…")
-    tech_grp   = _enrich_groups(tech_grp,   ai_client, headline_cache)
-    macro_grp  = _enrich_groups(macro_grp,  ai_client, headline_cache)
-    sports_grp = _enrich_groups(sports_grp, ai_client, headline_cache)
-    cities_grp = _enrich_groups(cities_grp, ai_client, headline_cache)
+    tech_grp  = _enrich_groups(tech_grp,  ai_client, headline_cache)
+    macro_grp = _enrich_groups(macro_grp, ai_client, headline_cache)
     _save_headline_cache(headline_cache)
-    print(f"    → {sum(1 for g in tech_grp+macro_grp+sports_grp+cities_grp if len(g)>1)} groups enriched")
+    print(f"    → {sum(1 for g in tech_grp+macro_grp if len(g)>1)} groups enriched")
     print("  Fetching calendar event news…")
     event_news = _fetch_calendar_event_news()
     print(f"    → {len(event_news)} events with coverage")
@@ -3109,8 +3105,8 @@ def main():
 <!-- ⑤ SPORTS + CITIES + PARIS -->
 <section class="snap-sec snap-bottom">
   <div class="three-col">
-{build_sports(sports_grp)}
-{build_cities(cities_grp)}
+{build_sports(sports_raw)}
+{build_cities(cities_raw)}
 {build_paris(paris_arts)}
   </div>
 </section>
