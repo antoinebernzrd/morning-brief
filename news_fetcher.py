@@ -1390,7 +1390,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
 .snap-culture .culture-cal-band .cal-ev-card{
   flex:0 0 12%;
-  position:relative;border-radius:10px;overflow:hidden;
+  aspect-ratio:1/1;
+  position:relative;border-radius:50%;overflow:hidden;
   cursor:pointer;opacity:.75;
   transition:opacity .3s ease,box-shadow .25s ease}
 .snap-culture .culture-cal-band .cal-ev-card.ev-center{opacity:1}
