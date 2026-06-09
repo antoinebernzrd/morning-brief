@@ -202,28 +202,38 @@ CULTURE_SOURCES = [
 ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 
 # ── Gossip page sources ───────────────────────────────────────────────────────
-# Google News site: queries — best approach for these paywalled/weekly publications
-GOSSIP_SOURCES = [
-    ("Le Monde Diplo",
-     "https://news.google.com/rss/search?q=site:monde-diplomatique.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Les Echos Idées",
-     "https://news.google.com/rss/search?q=site:lesechos.fr+politique-societe+idees+OR+politique&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Le 1 Hebdo",
-     "https://news.google.com/rss/search?q=site:le1hebdo.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Franc-Tireur",
-     "https://news.google.com/rss/search?q=site:franc-tireur.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("Le Canard",
-     "https://news.google.com/rss/search?q=site:lecanardenchaine.fr&hl=fr&gl=FR&ceid=FR:fr"),
-    ("The Free Press",
-     "https://www.thefp.com/feed"),  # direct RSS
+# Les Echos Politique/Idées handled via _fetch_les_echos keyword filter (see main())
+# Other sources: direct RSS where available, Google News with when:14d as fallback
+GOSSIP_SOURCES_OTHER = [
+    # Le Monde Diplo — direct RSS (monthly publication)
+    ("Le Monde Diplo",  "https://www.monde-diplomatique.fr/rss/"),
+    # Le 1 Hebdo — try direct then GN with 14d window
+    ("Le 1 Hebdo",      "https://le1hebdo.fr/rss"),
+    ("Le 1 Hebdo",      "https://news.google.com/rss/search?q=site:le1hebdo.fr+when:14d&hl=fr&gl=FR&ceid=FR:fr"),
+    # Franc-Tireur Venezuela Connexion
+    ("Franc-Tireur",    "https://www.franc-tireur.fr/feed"),
+    ("Franc-Tireur",    "https://news.google.com/rss/search?q=site:franc-tireur.fr+when:14d&hl=fr&gl=FR&ceid=FR:fr"),
+    # Le Canard Enchaîné — mostly offline, GN is best we can do
+    ("Le Canard",       "https://news.google.com/rss/search?q=site:lecanardenchaine.fr+when:7d&hl=fr&gl=FR&ceid=FR:fr"),
+    # The Free Press — direct RSS (daily)
+    ("The Free Press",  "https://www.thefp.com/feed"),
 ]
+# Per-source time window in days
+GOSSIP_WINDOW_DAYS = {
+    "Le Monde Diplo":   30,   # monthly
+    "Les Echos Idées":   7,   # opinion/politique pieces, keep 7 days
+    "Le 1 Hebdo":        7,   # weekly
+    "Franc-Tireur":      7,   # weekly column
+    "Le Canard":         7,   # weekly
+    "The Free Press":    2,   # daily
+}
 # Colour for each source's badge chip
 GOSSIP_SOURCE_COLORS = {
     "Le Monde Diplo":   "#7B1E1E",   # deep red
     "Les Echos Idées":  "#C84B00",   # burnt orange
     "Le 1 Hebdo":       "#4A235A",   # deep purple
     "Franc-Tireur":     "#1A3A5C",   # navy
-    "Le Canard":        "#7D6608",   # dark gold (canard jaune)
+    "Le Canard":        "#7D6608",   # dark gold
     "The Free Press":   "#1D4E3F",   # dark green
 }
 SPORTS_SOURCES_FR = [
@@ -777,6 +787,17 @@ LES_ECHOS_MACRO_KW = [
     "wall street","dow jones","s&p 500","euro stoxx","taux de change",
     "croissance économique","chômage","balance commerciale","politique monétaire",
     "obligations","spread","rendement","indice boursier","banque de france",
+]
+
+LES_ECHOS_POLITIQUE_KW = [
+    "politique","gouvernement","parlement","assemblée nationale","sénat",
+    "macron","premier ministre","ministre","élection","parti","coalition",
+    "réforme","loi","justice","syndicat","grève","manifestation","mobilisation",
+    "idées","débat","essai","intellectuel","philosophie","démocratie",
+    "immigration","laïcité","identité","liberté","droits","censure",
+    "gauche","droite","extrême","rassemblement national","nfp","ps","lr",
+    "opinion","éditorial","tribune","chronique","analyse","point de vue",
+    "société","inégalités","fracture","populisme","souveraineté",
 ]
 
 def _fetch_les_echos(keywords, label):
@@ -2647,7 +2668,7 @@ def build_paris(arts):
                 f'<div class="paris-list">{rows}</div>')
 def build_gossip(arts):
     tiles = ""
-    for a in arts[:40]:
+    for a in arts:
         col      = GOSSIP_SOURCE_COLORS.get(a["source"], "#444")
         time_str = _ago(a["date"])
         tiles += (
@@ -3091,7 +3112,18 @@ def main():
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     print(f"    → {len(cities_raw)} articles (no grouping)")
     print("  Fetching Gossip…")
-    gossip_raw = _dedup_exact(_filter_recent(_fetch(GOSSIP_SOURCES), days=14, weekly_days=14))
+    _le_politique = _fetch_les_echos(LES_ECHOS_POLITIQUE_KW, "Les Echos Idées")
+    for a in _le_politique:
+        a["source"] = "Les Echos Idées"
+    _gossip_other = _dedup_exact(_fetch(GOSSIP_SOURCES_OTHER))
+    _gossip_all   = _dedup_exact(_le_politique + _gossip_other)
+    # Per-source time window filtering
+    _now_ts = datetime.now(timezone.utc).timestamp()
+    gossip_raw = [
+        a for a in _gossip_all
+        if not a.get("ts") or
+           a["ts"] >= _now_ts - GOSSIP_WINDOW_DAYS.get(a["source"], 7) * 86400
+    ]
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     print(f"    → {len(gossip_raw)} gossip articles")
     print("  Fetching Polymarket…")
