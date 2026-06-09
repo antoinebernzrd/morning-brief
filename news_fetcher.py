@@ -200,6 +200,32 @@ CULTURE_SOURCES = [
 ]
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
 ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
+
+# ── Gossip page sources ───────────────────────────────────────────────────────
+# Google News site: queries — best approach for these paywalled/weekly publications
+GOSSIP_SOURCES = [
+    ("Le Monde Diplo",
+     "https://news.google.com/rss/search?q=site:monde-diplomatique.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Les Echos Idées",
+     "https://news.google.com/rss/search?q=site:lesechos.fr+politique-societe+idees+OR+politique&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Le 1 Hebdo",
+     "https://news.google.com/rss/search?q=site:le1hebdo.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Franc-Tireur",
+     "https://news.google.com/rss/search?q=site:franc-tireur.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    ("Le Canard",
+     "https://news.google.com/rss/search?q=site:lecanardenchaine.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    ("The Free Press",
+     "https://www.thefp.com/feed"),  # direct RSS
+]
+# Colour for each source's badge chip
+GOSSIP_SOURCE_COLORS = {
+    "Le Monde Diplo":   "#7B1E1E",   # deep red
+    "Les Echos Idées":  "#C84B00",   # burnt orange
+    "Le 1 Hebdo":       "#4A235A",   # deep purple
+    "Franc-Tireur":     "#1A3A5C",   # navy
+    "Le Canard":        "#7D6608",   # dark gold (canard jaune)
+    "The Free Press":   "#1D4E3F",   # dark green
+}
 SPORTS_SOURCES_FR = [
     # Direct L'Équipe RSS feeds — much faster than Google News indexing
     ("L'Équipe",        "https://www.lequipe.fr/rss/actu_rss.xml"),
@@ -1399,7 +1425,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   opacity:.4;cursor:default;filter:grayscale(.6)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.55;filter:grayscale(.4)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-live{
-  opacity:1;box-shadow:0 0 0 2px #16A34A,0 4px 20px rgba(0,0,0,.3)}
+  opacity:1;box-shadow:0 0 0 3px #fff,0 4px 20px rgba(0,0,0,.3)}
 /* overlay backdrop */
 .ccv-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -1460,10 +1486,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .cal-ev-portal-open .cal-search-link:hover{color:#111}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
-  background:var(--bg2)}
-.snap-culture .culture-cal-band .cal-ev-bg::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,.1) 45%,transparent 72%)}
+  background:#002FA7!important}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
   position:absolute;top:50%;left:10%;right:10%;
@@ -1559,6 +1582,42 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-bottom .pi:hover .pi-t{color:rgba(0,0,0,.4)}
 .snap-bottom .sg-arts{border-top:1px solid rgba(0,0,0,.1);margin-top:8px;padding-top:0}
 .snap-bottom .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
+
+/* ── snap-gossip ─────────────────────────────────────────── */
+.snap-gossip{background:var(--bg)}
+.snap-gossip>.gos-section{height:100%;display:flex;flex-direction:column;background:var(--bg)}
+.snap-gossip .sec-hd{background:var(--bg)!important}
+.gos-grid{
+  flex:1;min-height:0;
+  display:grid;
+  grid-template-rows:repeat(4,1fr);
+  grid-auto-flow:column;
+  /* column width = row height → perfect squares */
+  grid-auto-columns:calc((100vh - 66px - 3*10px - 56px) / 4);
+  gap:10px;padding:8px 16px 14px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none}
+.gos-grid::-webkit-scrollbar{display:none}
+.gos-card{
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:12px;
+  background:linear-gradient(135deg,#3a3a3c,#1c1c1e);
+  border-radius:var(--r);
+  text-decoration:none;
+  overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease}
+.gos-card:hover{
+  transform:scale(1.04);z-index:2;
+  box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.gos-src{
+  display:inline-block;align-self:flex-start;flex-shrink:0;
+  font-size:7px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:#fff;padding:3px 8px;border-radius:3px}
+.gos-title{
+  flex:1;padding:8px 0 4px;
+  font-size:12px;font-weight:600;line-height:1.35;color:#fff;
+  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.gos-time{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.3px;flex-shrink:0}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
 .snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:20px;background:var(--bg2);
@@ -2586,6 +2645,29 @@ def build_paris(arts):
         rows = '<p style="font-size:11px;color:var(--dim);padding:14px 0">No Paris events fetched — feeds may be unavailable.</p>'
     return _sec("#0C0C0C","Paris — What’s On",
                 f'<div class="paris-list">{rows}</div>')
+def build_gossip(arts):
+    tiles = ""
+    for a in arts[:40]:
+        col      = GOSSIP_SOURCE_COLORS.get(a["source"], "#444")
+        time_str = _ago(a["date"])
+        tiles += (
+            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="gos-card">'
+            f'<span class="gos-src" style="background:{col}">{_s(a["source"])}</span>'
+            f'<span class="gos-title">{_s(a["title"])}</span>'
+            f'<span class="gos-time">{time_str}</span>'
+            f'</a>\n'
+        )
+    if not tiles:
+        tiles = '<p style="font-size:11px;color:var(--dim);padding:20px">No articles fetched.</p>'
+    return (
+        f'<div class="section gos-section">'
+        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
+        f'<span class="sec-hd-text">Gossip</span>'
+        f'</div>'
+        f'<div class="gos-grid">{tiles}</div>'
+        f'</div>'
+    )
+
 def build_calendar_OLD(event_news={}):
     today     = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
@@ -3008,6 +3090,10 @@ def main():
     print("  Fetching Cities (City Focus)…")
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     print(f"    → {len(cities_raw)} articles (no grouping)")
+    print("  Fetching Gossip…")
+    gossip_raw = _dedup_exact(_filter_recent(_fetch(GOSSIP_SOURCES), days=14, weekly_days=14))
+    gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    print(f"    → {len(gossip_raw)} gossip articles")
     print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
     print("  Generating AI headlines…")
@@ -3111,6 +3197,11 @@ def main():
 {build_cities(cities_raw)}
 {build_paris(paris_arts)}
   </div>
+</section>
+
+<!-- ⑥ GOSSIP -->
+<section class="snap-sec snap-gossip">
+{build_gossip(gossip_raw)}
 </section>
 
 </body>
