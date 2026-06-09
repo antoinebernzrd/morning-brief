@@ -1240,12 +1240,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
-.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#002FA7}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
-  overflow:hidden;border-bottom:none;background:#fff}
-.snap-feed .sec-hd{background:#fff!important}
-.snap-feed .poly-band{background:#fff!important}
+  overflow:hidden;border-bottom:none;background:#002FA7}
+.snap-feed .sec-hd{background:#002FA7!important}
+.snap-feed .sec-hd-text{color:#fff!important}
+.snap-feed .poly-band{background:#002FA7!important}
 /* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
 .snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
 .snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
@@ -1258,11 +1259,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
-  background:#fff;overflow:hidden}
+  background:#002FA7;overflow:hidden}
 .snap-feed-bottom .poly-band{flex:1;min-width:0}
 .snap-feed-bottom .price-band{flex:1;min-width:0}
 .price-band{display:flex;flex-direction:column;
-  border-top:none;background:#fff;overflow:hidden}
+  border-top:none;background:#002FA7;overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
   margin:16px 16px 16px 8px;border-radius:20px;background:var(--bg2);
@@ -1273,7 +1274,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   justify-content:center;gap:3px;padding:6px 12px;
   border-radius:var(--r);background:var(--bg);cursor:default;
   transition:background .2s ease}
-.price-tile:hover{background:#89C4E1}
+.price-tile:hover{background:#3a3a3c}
 .price-tile-name{font-size:7.5px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--muted)}
 .price-tile-val{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
@@ -1283,7 +1284,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
 .poly-band{display:flex;flex-direction:column;
-  border-top:none;background:#fff;overflow:hidden}
+  border-top:none;background:#002FA7;overflow:hidden}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
@@ -1297,7 +1298,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   padding:14px 16px;border-right:none;border-radius:var(--r);
   background:var(--bg);
   text-decoration:none;transition:transform .2s ease;cursor:pointer}
-.poly-card:hover{transform:scale(1.04);z-index:2;position:relative;background:#89C4E1}
+.poly-card:hover{transform:scale(1.04);z-index:2;position:relative;background:#3a3a3c}
+.poly-card:hover .poly-card-q{color:#fff}
+.poly-card:hover .poly-out-name{color:rgba(255,255,255,.6)}
 .poly-card-q{font-size:12px;font-weight:600;color:var(--text);
   line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
   -webkit-box-orient:vertical;overflow:hidden}
@@ -1320,7 +1323,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   position:relative;overflow:visible}
 .snap-feed .sg::before{
   content:'';position:absolute;inset:0;
-  background:#89C4E1;border-radius:var(--r);
+  background:#3a3a3c;border-radius:var(--r);
   transform-origin:bottom center;
   transform:perspective(500px) rotateX(45deg);
   opacity:0;
@@ -1331,10 +1334,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   transform:perspective(500px) rotateX(0deg);opacity:1}
 .snap-feed .sg>*,.snap-feed .sg .sg-hd{position:relative;z-index:1}
 .snap-feed .sg:hover .sg-title,
-.snap-feed .sg-multi.open .sg-title{color:#111!important;opacity:1}
+.snap-feed .sg-multi.open .sg-title{color:#fff!important;opacity:1}
 .snap-feed .sg:hover .sg-time,
 .snap-feed .sg:hover .sg-cnt,
-.snap-feed .sg-multi.open .sg-time,.snap-feed .sg-multi.open .sg-cnt{color:rgba(0,0,0,.4)}
+.snap-feed .sg-multi.open .sg-time,.snap-feed .sg-multi.open .sg-cnt{color:rgba(255,255,255,.5)}
 .snap-feed .sg-arts{border-top:1px solid rgba(0,0,0,.1);margin-top:8px;padding-top:0}
 .snap-feed .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
@@ -1556,13 +1559,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   text-decoration:none;border-bottom:1px solid var(--border)}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
-.snap-bottom{background:#fff}
-.snap-bottom .fb{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.12);color:var(--text)}
-.snap-bottom .fb.on{background:#89C4E1;color:#fff;border-color:#89C4E1}
-.snap-bottom .fb:hover:not(.on){background:rgba(137,196,225,.25);border-color:#89C4E1;color:var(--text)}
+.snap-bottom{background:#002FA7}
+.snap-bottom .fb{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.snap-bottom .fb.on{background:#fff;color:#002FA7;border-color:#fff}
+.snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.25);border-color:#fff;color:#fff}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
-.snap-bottom .three-col>.section{height:100%!important;background:#fff}
-.snap-bottom .sec-hd{background:#fff!important}
+.snap-bottom .three-col>.section{height:100%!important;background:#002FA7}
+.snap-bottom .sec-hd{background:#002FA7!important}
+.snap-bottom .sec-hd-text{color:#fff!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
 /* ── shared card token (used below) ─────────────────────────
@@ -1586,7 +1590,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   position:relative;overflow:visible}
 .snap-bottom .sg::before,.snap-bottom .pi::before{
   content:'';position:absolute;inset:0;
-  background:#89C4E1;border-radius:var(--r);
+  background:#3a3a3c;border-radius:var(--r);
   transform-origin:bottom center;
   transform:perspective(500px) rotateX(45deg);
   opacity:0;
@@ -1597,10 +1601,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   transform:perspective(500px) rotateX(0deg);opacity:1}
 .snap-bottom .sg>*,.snap-bottom .pi>*,.snap-bottom .sg .sg-hd{position:relative;z-index:1}
 .snap-bottom .sg:hover .sg-title,.snap-bottom .sg-multi.open .sg-title,
-.snap-bottom .pi:hover .pi-title{color:#111!important;opacity:1}
+.snap-bottom .pi:hover .pi-title{color:#fff!important;opacity:1}
 .snap-bottom .sg:hover .sg-time,
 .snap-bottom .sg:hover .sg-cnt,
-.snap-bottom .pi:hover .pi-t{color:rgba(0,0,0,.4)}
+.snap-bottom .pi:hover .pi-t{color:rgba(255,255,255,.5)}
 .snap-bottom .sg-arts{border-top:1px solid rgba(0,0,0,.1);margin-top:8px;padding-top:0}
 .snap-bottom .sg-art-link{border-bottom:1px solid rgba(0,0,0,.07)}
 
@@ -1813,6 +1817,17 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   .snap-cal .cal-band{flex-wrap:nowrap;padding:12px 16px;overflow-x:auto}
   .snap-cal .cal-ev-name{font-size:clamp(18px,5vw,28px)}
 }
+
+/* ── Unread indicator dot ─────────────────────────────────── */
+.unread-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#22C55E;flex-shrink:0;vertical-align:middle;
+  margin-right:6px;position:relative;top:-1px}
+/* Card-style tiles: absolute top-right corner */
+.card .unread-dot,.gos-card .unread-dot{
+  position:absolute;top:10px;right:10px;margin:0;
+  width:8px;height:8px;z-index:10;
+  box-shadow:0 1px 5px rgba(0,0,0,.5)}
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  HTML BUILDERS
@@ -3237,6 +3252,31 @@ def main():
 {build_gossip(gossip_raw)}
 </section>
 
+<!-- Unread dot tracker -->
+<script>
+(function(){{
+  var KEY='mb_read';
+  var read;
+  try{{read=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));}}
+  catch(e){{read=new Set();}}
+  function save(){{
+    try{{localStorage.setItem(KEY,JSON.stringify([...read].slice(-8000)));}}catch(e){{}}
+  }}
+  function addDot(a,isCard){{
+    var url=a.getAttribute('href');
+    if(!url||url==='#'||read.has(url)) return;
+    var dot=document.createElement('span');
+    dot.className='unread-dot';
+    if(isCard){{a.appendChild(dot);}}
+    else{{a.insertBefore(dot,a.firstChild);}}
+    a.addEventListener('click',function(){{read.add(url);save();dot.remove();}},{{once:true}});
+  }}
+  // List-style article links
+  document.querySelectorAll('.sg-title[target="_blank"],.pi-title[target="_blank"]').forEach(function(a){{addDot(a,false);}});
+  // Card-style tiles
+  document.querySelectorAll('.card[target="_blank"],.gos-card[target="_blank"]').forEach(function(a){{addDot(a,true);}});
+}})();
+</script>
 </body>
 </html>"""
     OUTPUT_FILE.write_text(page, encoding="utf-8")
