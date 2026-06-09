@@ -1636,8 +1636,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   color:#fff;padding:3px 8px;border-radius:3px}
 .gos-title{
   flex:1;padding:8px 0 4px;
-  font-size:12px;font-weight:600;line-height:1.35;color:#fff;
-  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+  font-size:18px;font-weight:500;line-height:1.3;color:#fff;
+  text-shadow:0 1px 6px rgba(0,0,0,.8);
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .gos-time{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.3px;flex-shrink:0}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
