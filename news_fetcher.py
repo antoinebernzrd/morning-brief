@@ -1630,6 +1630,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-radius:var(--r);
   text-decoration:none;
   overflow:hidden;
+  position:relative;
   transition:transform .2s ease,box-shadow .2s ease}
 .gos-card:hover{
   transform:scale(1.04);z-index:2;
