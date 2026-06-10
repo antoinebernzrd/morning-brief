@@ -3095,7 +3095,7 @@ def main():
     art_newspaper_arts = _fetch_art_newspaper(5)
     nss_arts = _fetch_nss(10)
     print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
-    culture_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES), days=2, weekly_days=2)))
+    culture_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES))))
     # Prepend pinned articles (NYT Arts + NSS) so they survive dedup and always appear
     pinned = art_newspaper_arts + nss_arts
     seen_links = {a["link"] for a in pinned if a.get("link")}
