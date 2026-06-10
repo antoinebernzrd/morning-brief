@@ -826,6 +826,51 @@ SOURCE_CAPS = {
 }
 DEFAULT_CAP = 6  # all other sources
 
+def _dedup_smart(arts, cap_per_source=5):
+    """Collapse near-duplicate articles (same topic / word overlap) keeping the most
+    recent from each cluster. Then cap to `cap_per_source` per source.
+    Used for the gossip section to reduce clutter without losing variety."""
+    STOP = {"the","a","an","in","of","to","and","for","on","at","is","are","was",
+            "with","by","that","this","as","it","its","from","be","or","has","have",
+            "had","will","than","after","but","not","about","new","de","la","le",
+            "les","du","un","une","en","et","des","sur","pour","par","dans","est"}
+    def words(t):
+        return {w for w in re.sub(r"[^a-z0-9àâéèêëîïôùûü ]","",t.lower()).split()
+                if w not in STOP and len(w)>2}
+    used = set()
+    result = []
+    for i, a in enumerate(arts):
+        if i in used: continue
+        wi = words(a["title"])
+        ei = _entities(a["title"])
+        cluster = [a]
+        for j, b in enumerate(arts):
+            if j <= i or j in used: continue
+            wj = words(b["title"])
+            ej = _entities(b["title"])
+            u  = wi | wj
+            word_match  = bool(u) and len(wi & wj)/len(u) >= 0.30
+            shared_ent  = ei & ej
+            entity_match = (
+                len(shared_ent) >= 2
+                or any(len(e) >= 8 for e in shared_ent)
+            )
+            if word_match or entity_match:
+                cluster.append(b); used.add(j)
+        used.add(i)
+        # Keep most recent from the cluster
+        best = max(cluster, key=lambda x: x["ts"] or 0)
+        result.append(best)
+    # Per-source cap
+    counts = {}
+    capped = []
+    for a in result:
+        src = a["source"]
+        if counts.get(src, 0) < cap_per_source:
+            capped.append(a)
+            counts[src] = counts.get(src, 0) + 1
+    return capped
+
 def _cap_per_source(arts):
     """Apply per-source caps — specific sources show only their latest article."""
     counts = {}
@@ -3141,7 +3186,9 @@ def main():
            a["ts"] >= _now_ts - GOSSIP_WINDOW_DAYS.get(a["source"], 7) * 86400
     ]
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    print(f"    → {len(gossip_raw)} gossip articles")
+    gossip_raw = _dedup_smart(gossip_raw, cap_per_source=5)
+    gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    print(f"    → {len(gossip_raw)} gossip articles (after dedup)")
     print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
     print("  Generating AI headlines…")
