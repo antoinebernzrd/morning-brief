@@ -220,7 +220,7 @@ GOSSIP_SOURCES_OTHER = [
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
-    "Le Monde Diplo":   30,   # monthly
+    "Le Monde Diplo":    7,   # show last 7 days
     "Les Echos Idées":   7,   # opinion/politique pieces, keep 7 days
     "Le 1 Hebdo":        7,   # weekly
     "Franc-Tireur":      7,   # weekly column
@@ -3095,7 +3095,7 @@ def main():
     art_newspaper_arts = _fetch_art_newspaper(5)
     nss_arts = _fetch_nss(10)
     print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
-    culture_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES))))
+    culture_raw = _cap_per_source(_dedup_exact(_filter_recent(_fetch(CULTURE_SOURCES), days=2, weekly_days=2)))
     # Prepend pinned articles (NYT Arts + NSS) so they survive dedup and always appear
     pinned = art_newspaper_arts + nss_arts
     seen_links = {a["link"] for a in pinned if a.get("link")}
