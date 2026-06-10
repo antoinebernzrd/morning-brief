@@ -220,12 +220,12 @@ GOSSIP_SOURCES_OTHER = [
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
-    "Le Monde Diplo":    7,   # show last 7 days
-    "Les Echos Idées":   7,   # opinion/politique pieces, keep 7 days
-    "Le 1 Hebdo":        7,   # weekly
-    "Franc-Tireur":      7,   # weekly column
-    "Le Canard":         7,   # weekly
-    "The Free Press":    2,   # daily
+    "Le Monde Diplo":    7,   # weekly → 7 days
+    "Franc-Tireur":      7,   # weekly column → 7 days
+    "Les Echos Idées":   2,   # daily → 48h
+    "Le 1 Hebdo":        2,   # 48h
+    "Le Canard":         2,   # 48h
+    "The Free Press":    2,   # daily → 48h
 }
 # Colour for each source's badge chip
 GOSSIP_SOURCE_COLORS = {
