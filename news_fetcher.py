@@ -882,7 +882,7 @@ CSS = """
 :root{
   --bg:#ffffff;--bg2:#f2f2f7;--bg3:#D6E4F7;
   --border:#d1d1d6;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
-  --accent:#D42B17;--r:8px;
+  --accent:#D42B17;--r:0px;
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif;
@@ -925,7 +925,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 /* ── Filter buttons (city tab bar) ──────────────────────────────── */
 .fb{background:none;border:1px solid var(--border);color:var(--muted);
   font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  padding:4px 12px;border-radius:20px;cursor:pointer;
+  padding:4px 12px;border-radius:0;cursor:pointer;
   font-family:var(--sans);transition:all .15s;flex-shrink:0}
 .fb.on{background:var(--text);color:var(--bg2);border-color:var(--text)}
 .fb:hover:not(.on){color:var(--text);border-color:var(--text)}
@@ -1007,12 +1007,12 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 }
 .pulse-icon div{animation:pulse-ring 1.8s infinite;border-radius:50%}
 .dark-popup .leaflet-popup-content-wrapper{
-  background:#141414;color:#ddd;border:1px solid #252525;border-radius:10px}
+  background:#141414;color:#ddd;border:1px solid #252525;border-radius:0}
 .dark-popup .leaflet-popup-tip{background:#141414}
 
 /* ── Story list (Tech / Sports / Cities) ─────────────────────── */
 .story-list{padding:10px;max-height:560px;overflow-y:auto;
-  margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  margin:0 16px 16px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .story-list::-webkit-scrollbar{width:2px}
@@ -1024,7 +1024,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 a.sg-title:hover{opacity:1}
 .badge{font-size:7.5px;font-weight:600;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.9px;text-transform:uppercase;
-  background:rgba(128,128,128,.15);border-radius:4px;padding:2px 7px}
+  background:rgba(128,128,128,.15);border-radius:0;padding:2px 7px}
 .sg-time{font-size:9px;color:var(--dim);flex-shrink:0}
 /* ── Multi-source expandable groups ─────────────────────────── */
 .sg-multi{cursor:pointer}
@@ -1072,7 +1072,7 @@ a.sg-title:hover{opacity:1}
 
 /* ── Paris / What's On ───────────────────────────────────────── */
 .paris-list{padding:10px;max-height:560px;overflow-y:auto;
-  margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  margin:0 16px 16px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .paris-list::-webkit-scrollbar{width:2px}
@@ -1080,7 +1080,7 @@ a.sg-title:hover{opacity:1}
   padding:12px 14px;border-bottom:none;background:var(--bg);border-radius:var(--r)}
 .pi-src{font-size:7px;color:var(--muted);flex-shrink:0;
   white-space:nowrap;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
-  background:rgba(128,128,128,.15);border-radius:4px;padding:2px 6px}
+  background:rgba(128,128,128,.15);border-radius:0;padding:2px 6px}
 .pi-title{font-size:13px;color:var(--text);text-decoration:none;
   flex:1;line-height:1.45;transition:opacity .12s;font-weight:500;opacity:.72}
 .pi-title:hover{opacity:1}
@@ -1111,7 +1111,7 @@ a.sg-title:hover{opacity:1}
   align-items:start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
 .cal-erow:last-child{border-bottom:none}
 .cal-erow.ev-past{opacity:.33}
-.cal-erow.ev-live{background:var(--bg3);border-radius:3px;
+.cal-erow.ev-live{background:var(--bg3);border-radius:0;
   padding:5px 7px;margin:0 -7px 1px -7px;border-bottom:none}
 .cal-edot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
 .cal-ename{font-size:11.5px;color:var(--text);font-weight:300;line-height:1.4}
@@ -1145,7 +1145,7 @@ a.sg-title:hover{opacity:1}
 .cal-erow[data-ev]{cursor:pointer}
 .cal-erow[data-ev]:hover .cal-ename{color:var(--accent)}
 .cal-erow.ev-sel .cal-ename{color:var(--accent)}
-.cal-erow.ev-sel{background:var(--bg3);border-radius:3px;
+.cal-erow.ev-sel{background:var(--bg3);border-radius:0;
   padding:5px 7px;margin:0 -7px 1px -7px;border-bottom:none}
 
 /* ── Tablet (≤1100px) ────────────────────────────────────────── */
@@ -1301,7 +1301,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-top:none;background:#002FA7;overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
-  margin:16px 16px 16px 8px;border-radius:20px;background:var(--bg2);
+  margin:16px 16px 16px 8px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:row;align-items:stretch;
   gap:6px;padding:6px;scrollbar-width:none}
 .price-band-track::-webkit-scrollbar{display:none}
@@ -1323,7 +1323,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
-  margin:16px 8px 16px 16px;border-radius:20px;background:var(--bg2);padding:8px 0}
+  margin:16px 8px 16px 16px;border-radius:0;background:var(--bg2);padding:8px 0}
 .poly-band-items{display:flex;height:100%;width:max-content;gap:8px;padding:0 8px;
   animation:ticker-scroll 60s linear infinite}
 .poly-band:hover .poly-band-items{animation-play-state:paused}
@@ -1344,12 +1344,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .poly-out-name{font-size:11px;color:var(--muted);
   flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .poly-out-pct{font-size:10.5px;font-weight:700;
-  padding:2px 7px;border-radius:3px;flex-shrink:0}
+  padding:2px 7px;border-radius:0;flex-shrink:0}
 .poly-out-pct.high{color:#16A34A;background:rgba(22,163,74,.12)}
 .poly-out-pct.low{color:#DC2626;background:rgba(220,38,38,.12)}
 .poly-card-vol{font-size:9px;color:var(--dim);letter-spacing:.3px;margin-top:2px}
 .snap-feed .story-list{flex:1;max-height:none;overflow-y:auto;
-  padding:10px;margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  padding:10px;margin:0 16px 16px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px}
 /* story rows — white card on grey container */
 .snap-feed .sg{
@@ -1423,7 +1423,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   top:9px;bottom:auto;z-index:3;
   background:rgba(0,0,0,.62);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  border-radius:4px;padding:3px 7px;
+  border-radius:0;padding:3px 7px;
   color:#fff!important;font-size:8px;letter-spacing:1.2px}
 /* normal text bottom */
 .snap-culture .cb{
@@ -1460,7 +1460,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   font-size:10px;font-weight:600;color:#fff;
   background:rgba(255,255,255,.13);
   border:1px solid rgba(255,255,255,.2);
-  border-radius:4px;padding:3px 9px;text-decoration:none;
+  border-radius:0;padding:3px 9px;text-decoration:none;
   transition:background .15s}
 .snap-culture .cv-read:hover{background:rgba(255,255,255,.25)}
 /* ── culture event band (bottom 1/4 of culture section) ──── */
@@ -1498,7 +1498,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   width:min(65vw,860px)!important;
   height:min(72vh,680px)!important;
   z-index:9999!important;
-  border-radius:16px!important;overflow:hidden!important;
+  border-radius:0!important;overflow:hidden!important;
   box-shadow:0 32px 100px rgba(0,0,0,.85)!important;
   opacity:1!important;cursor:default;display:block!important}
 .cal-ev-portal-open .cal-ev-bg{
@@ -1513,10 +1513,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .cal-ev-portal-open .cal-ev-cat-chip{
   font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
   color:rgba(255,255,255,.8);background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 8px}
+  border:1px solid rgba(255,255,255,.3);border-radius:0;padding:3px 8px}
 .cal-ev-portal-open .cal-live-badge{
   font-size:9px;font-weight:700;color:#fff;background:#16A34A;
-  border-radius:4px;padding:3px 7px}
+  border-radius:0;padding:3px 7px}
 .cal-ev-portal-open .cal-ev-name{
   font-size:clamp(18px,2.2vw,32px);font-weight:700;
   color:#fff;line-height:1.15;margin-bottom:5px;
@@ -1558,10 +1558,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-culture .culture-cal-band .cal-ev-cat-chip{
   font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
   color:rgba(255,255,255,.75);background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:2px 7px}
+  border:1px solid rgba(255,255,255,.25);border-radius:0;padding:2px 7px}
 .snap-culture .culture-cal-band .cal-live-badge{
   font-size:8px;font-weight:700;letter-spacing:.5px;
-  color:#fff;background:#16A34A;border-radius:4px;padding:2px 6px;
+  color:#fff;background:#16A34A;border-radius:0;padding:2px 6px;
   animation:live-pulse 2s ease-in-out infinite}
 .snap-culture .culture-cal-band .cal-ev-name{
   font-size:clamp(11px,1.2vw,17px);font-weight:600;
@@ -1610,7 +1610,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── snap-bottom: sport / cities / paris ─────────────────── */
 .snap-bottom .story-list,.snap-bottom .paris-list{
-  padding:10px;margin:0 16px 16px;border-radius:20px;background:var(--bg2);
+  padding:10px;margin:0 16px 16px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px}
 /* inner gaps: 8px each side where columns face each other = 16px total gap */
 .snap-bottom .three-col>.section:nth-child(1) .story-list,
@@ -1673,7 +1673,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gos-src{
   display:inline-block;align-self:flex-start;flex-shrink:0;
   font-size:7px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  color:#fff;padding:3px 8px;border-radius:3px}
+  color:#fff;padding:3px 8px;border-radius:0}
 .gos-title{
   flex:1;padding:8px 0 4px;
   font-size:18px;font-weight:500;line-height:1.3;color:#fff;
@@ -1682,7 +1682,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gos-time{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.3px;flex-shrink:0}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
-.snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:20px;background:var(--bg2);
+.snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:0;background:var(--bg2);
   display:flex;flex-direction:column;gap:5px;overflow-y:auto;
   position:relative;z-index:1;pointer-events:auto}
 .snap-geo .cp-item{
@@ -1754,11 +1754,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-cal .cal-ev-cat-chip{
   font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
   color:var(--evc,#fff);background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:3px 9px}
+  border:1px solid rgba(255,255,255,.18);border-radius:0;padding:3px 9px}
 .snap-cal .cal-live-badge{
   font-size:9px;font-weight:700;letter-spacing:.6px;
   color:#fff;background:#16A34A;
-  border-radius:4px;padding:3px 8px;
+  border-radius:0;padding:3px 8px;
   animation:live-pulse 2s ease-in-out infinite}
 @keyframes live-pulse{0%,100%{opacity:1}50%{opacity:.65}}
 .snap-cal .cal-ev-name{
