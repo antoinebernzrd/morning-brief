@@ -1,0 +1,8 @@
+.git
+.git/**
+*.py
+*.session
+requirements.txt
+.github
+.DS_Store
+dashboard.log
