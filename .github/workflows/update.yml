@@ -29,10 +29,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python news_fetcher.py
 
-      - name: Commit and push fresh index.html
+     - name: Commit and push fresh index.html
         run: |
           git config --global user.name  "Morning Brief Bot"
           git config --global user.email "bot@morning-brief.com"
           git add index.html
           git diff --cached --quiet || git commit -m "brief: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --no-rebase --strategy-option=ours origin main
           git push
