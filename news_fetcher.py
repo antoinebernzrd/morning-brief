@@ -2231,7 +2231,7 @@ _NSS_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 # English articles only: /en/<section>/<numeric-id>/<slug>, excluding author/tag/search pages
 _NSS_ARTICLE = re.compile(r'nssmag\.com/en/(?!author/|tag/|search/)[a-z0-9-]+/\d+/', re.IGNORECASE)
-
+ 
 def _fetch_nss(n=5):
     """Latest n NSS articles from their monthly sitemap — real URLs, real dates, no Google News."""
     now = datetime.now()
@@ -2241,21 +2241,18 @@ def _fetch_nss(n=5):
     for y, m in months:
         try:
             url = f"https://www.nssmag.com/sitemap.xml?year={y}&month={m}"
-           
-req = urllib.request.Request(url, headers={"User-Agent": _NSS_UA})
+            req = urllib.request.Request(url, headers={"User-Agent": _NSS_UA})
             root = None
             for attempt in range(3):
                 try:
                     with urllib.request.urlopen(req, timeout=30) as r:
                         root = ET.fromstring(r.read())
                     break
-                except Exception as e:
+                except Exception:
                     if attempt == 2:
                         raise
-                    import time as _t; _t.sleep(2)
-            if root is None:
-                continue
-            
+                    import time as _t
+                    _t.sleep(2)
             ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
             for u in root.findall("s:url", ns):
                 loc = (u.findtext("s:loc", default="", namespaces=ns) or "").strip()
