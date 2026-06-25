@@ -2241,9 +2241,21 @@ def _fetch_nss(n=5):
     for y, m in months:
         try:
             url = f"https://www.nssmag.com/sitemap.xml?year={y}&month={m}"
-            req = urllib.request.Request(url, headers={"User-Agent": _NSS_UA})
-            with urllib.request.urlopen(req, timeout=10) as r:
-                root = ET.fromstring(r.read())
+           
+req = urllib.request.Request(url, headers={"User-Agent": _NSS_UA})
+            root = None
+            for attempt in range(3):
+                try:
+                    with urllib.request.urlopen(req, timeout=30) as r:
+                        root = ET.fromstring(r.read())
+                    break
+                except Exception as e:
+                    if attempt == 2:
+                        raise
+                    import time as _t; _t.sleep(2)
+            if root is None:
+                continue
+            
             ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
             for u in root.findall("s:url", ns):
                 loc = (u.findtext("s:loc", default="", namespaces=ns) or "").strip()
