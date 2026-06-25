@@ -2269,6 +2269,51 @@ def _fetch_nss(n=5):
     print(f"    → {len(arts)} NSS articles (sitemap)")
     return arts[:n]
 
+def _fetch_prices():
+    """Fetch index/commodity/forex prices via Yahoo v8 at build time. Crypto via CoinGecko."""
+    import urllib.parse, time as _time
+    tickers = [
+        ("^GSPC","S&P 500"), ("^IXIC","NASDAQ"), ("^DJI","Dow Jones"),
+        ("GC=F","Gold"), ("CL=F","WTI Oil"), ("EURUSD=X","EUR/USD"),
+        ("^VIX","VIX"), ("^TNX","10Y UST"),
+    ]
+    UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+    out = []
+    try:
+        cg_url = ("https://api.coingecko.com/api/v3/simple/price"
+                  "?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true")
+        req = urllib.request.Request(cg_url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            cg = json.loads(r.read())
+        for cid, name, sym in [("bitcoin","Bitcoin","BTC-USD"),
+                               ("ethereum","Ethereum","ETH-USD")]:
+            if cid in cg:
+                out.append({"name": name, "sym": sym,
+                            "price": cg[cid].get("usd"),
+                            "pct": cg[cid].get("usd_24h_change")})
+    except Exception as ex:
+        print(f"  ⚠  CoinGecko: {ex}")
+    for sym, name in tickers:
+        try:
+            s = urllib.parse.quote(sym)
+            url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{s}"
+                   f"?interval=1d&range=2d")
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                d = json.loads(r.read())
+            meta  = d["chart"]["result"][0]["meta"]
+            price = meta.get("regularMarketPrice")
+            prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
+            pct   = ((price - prev) / prev * 100) if (price and prev) else None
+            out.append({"name": name, "sym": sym, "price": price, "pct": pct})
+        except Exception as ex:
+            print(f"  ⚠  price {name}: {ex}")
+            out.append({"name": name, "sym": sym, "price": None, "pct": None})
+        _time.sleep(0.4)
+    print(f"    → {sum(1 for p in out if p['price'] is not None)}/{len(out)} prices fetched")
+    return out
+
 def _fetch_polymarket(limit=16):
     """Fetch top Polymarket markets by 24h volume."""
     try:
@@ -2349,103 +2394,32 @@ def build_polymarket_band(markets):
         f'</div></div>\n'
     )
 
-def build_price_band():
-    # (sym, display_name, coingecko_id or None)
-    tickers = [
-        ("BTC-USD",  "Bitcoin",   "bitcoin"),
-        ("ETH-USD",  "Ethereum",  "ethereum"),
-        ("^GSPC",    "S&P 500",   None),
-        ("^IXIC",    "NASDAQ",    None),
-        ("^DJI",     "Dow Jones", None),
-        ("GC=F",     "Gold",      None),
-        ("CL=F",     "WTI Oil",   None),
-        ("EURUSD=X", "EUR/USD",   None),
-        ("^VIX",     "VIX",       None),
-        ("^TNX",     "10Y UST",   None),
-    ]
-    tickers_js = "[" + ",".join(
-        f'{{sym:{repr(s)},name:{repr(n)},cg:{repr(cg) if cg else "null"}}}'
-        for s, n, cg in tickers
-    ) + "]"
-    return f"""<div class="price-band">
-  <div class="price-band-track" id="price-band-track">
-    <span class="price-tile-loading">Loading prices…</span>
-  </div>
-</div>
-<script>
-(function(){{
-  var TICKERS = {tickers_js};
-  function fmt(v, sym) {{
-    if (v == null) return '—';
-    if (sym === 'EURUSD=X') return v.toFixed(4);
-    if (sym === '^TNX') return v.toFixed(2) + '%';
-    if (v >= 10000) return v.toLocaleString('en-US', {{maximumFractionDigits:0}});
-    if (v >= 1000)  return v.toLocaleString('en-US', {{maximumFractionDigits:1}});
-    if (v >= 100)   return v.toFixed(2);
-    return v.toFixed(2);
-  }}
-  function load() {{
-    var yahooSyms = TICKERS.filter(function(t){{return t.cg==null;}}).map(function(t){{return t.sym;}});
-    var cgIds     = TICKERS.filter(function(t){{return t.cg!=null;}}).map(function(t){{return t.cg;}});
-    var quotes    = {{}};
-    var pending   = 2;
-    function done(){{ if(--pending===0) render(quotes); }}
-
-    /* CoinGecko — crypto, always 24/7 */
-    fetch('https://api.coingecko.com/api/v3/simple/price?ids='+cgIds.join(',')+'&vs_currencies=usd&include_24hr_change=true')
-      .then(function(r){{return r.json();}})
-      .then(function(data){{
-        TICKERS.forEach(function(t){{
-          if (t.cg && data[t.cg]) {{
-            quotes[t.sym] = {{
-              regularMarketPrice: data[t.cg].usd,
-              regularMarketChangePercent: data[t.cg].usd_24h_change
-            }};
-          }}
-        }});
-      }})
-      .catch(function(){{}})
-      .finally(done);
-
-    /* Yahoo Finance — indices, forex, commodities */
-    fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(yahooSyms.join(','))+'&fields=regularMarketPrice,regularMarketChangePercent')
-      .then(function(r){{return r.json();}})
-      .then(function(data){{
-        ((data.quoteResponse||{{}}).result||[]).forEach(function(q){{
-          quotes[q.symbol] = q;
-        }});
-      }})
-      .catch(function(){{}})
-      .finally(done);
-  }}
-  function render(quotes) {{
-    var track = document.getElementById('price-band-track');
-    if (!track) return;
-    track.innerHTML = '';
-    TICKERS.forEach(function(t) {{
-      var q = quotes[t.sym] || {{}};
-      var price = q.regularMarketPrice;
-      var pct   = q.regularMarketChangePercent;
-      var tile  = document.createElement('div');
-      tile.className = 'price-tile';
-      var chgHtml = '';
-      if (pct != null) {{
-        var cls  = pct >= 0 ? 'up' : 'dn';
-        var sign = pct >= 0 ? '+' : '';
-        chgHtml = '<div class="price-tile-chg '+cls+'">'+sign+pct.toFixed(2)+'%</div>';
-      }}
-      tile.innerHTML =
-        '<div class="price-tile-name">'+t.name+'</div>'+
-        '<div class="price-tile-val">'+(price!=null ? fmt(price,t.sym) : '—')+'</div>'+
-        chgHtml;
-      track.appendChild(tile);
-    }});
-  }}
-  load();
-  setInterval(load, 60000);
-}})();
-</script>
-"""
+def build_price_band(prices):
+    def fmt(v, sym):
+        if v is None: return "—"
+        if sym == "EURUSD=X": return f"{v:.4f}"
+        if sym == "^TNX":     return f"{v:.2f}%"
+        if v >= 10000: return f"{v:,.0f}"
+        if v >= 1000:  return f"{v:,.1f}"
+        return f"{v:.2f}"
+    tiles = ""
+    for p in prices:
+        chg = ""
+        if p["pct"] is not None:
+            cls  = "up" if p["pct"] >= 0 else "dn"
+            sign = "+" if p["pct"] >= 0 else ""
+            chg  = f'<div class="price-tile-chg {cls}">{sign}{p["pct"]:.2f}%</div>'
+        tiles += (
+            f'<div class="price-tile">'
+            f'<div class="price-tile-name">{_s(p["name"])}</div>'
+            f'<div class="price-tile-val">{fmt(p["price"], p["sym"])}</div>'
+            f'{chg}</div>'
+        )
+    if not tiles:
+        tiles = '<span class="price-tile-loading">No price data</span>'
+    return (f'<div class="price-band">'
+            f'<div class="price-band-track" id="price-band-track">{tiles}</div>'
+            f'</div>\n')
 
 def _sort_by_time(groups):
     """Sort groups purely by recency of their most recent article."""
@@ -3181,8 +3155,10 @@ def main():
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     print(f"    → {len(gossip_raw)} gossip articles (after dedup)")
     print("  Fetching Polymarket…")
+    print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
-    print("  Generating AI headlines…")
+    print("  Fetching prices…")
+    prices = _fetch_prices()
     tech_grp  = _enrich_groups(tech_grp,  ai_client, headline_cache)
     macro_grp = _enrich_groups(macro_grp, ai_client, headline_cache)
     _save_headline_cache(headline_cache)
@@ -3267,7 +3243,7 @@ def main():
   </div>
 <div class="snap-feed-bottom">
 {build_polymarket_band(poly_markets)}
-{build_price_band()}
+{build_price_band(prices)}
 </div>
 </section>
 
