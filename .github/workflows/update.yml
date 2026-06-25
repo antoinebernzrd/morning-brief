@@ -2,8 +2,8 @@ name: Update Morning Brief
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 6am UTC = 7am Paris winter / 8am Paris summer
-  workflow_dispatch:       # lets you trigger it manually from GitHub too
+    - cron: '23 */2 * * *'   # every 2 hours, at :23 past (odd minute = more reliable)
+  workflow_dispatch:          # manual trigger from the GitHub Actions tab
 
 permissions:
   contents: write
