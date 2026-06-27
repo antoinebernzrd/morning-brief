@@ -38,7 +38,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
-    "Dezeen", "W Magazine",
+    "Dezeen", "W Magazine","The Art Newspaper",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -196,6 +196,7 @@ MACRO_SOURCES = [
 CULTURE_SOURCES = [
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
+    ("The Art Newspaper", "https://news.google.com/rss/search?q=site:artnewspaper.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
 ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
@@ -823,6 +824,7 @@ SOURCE_CAPS = {
     "First Round Review":1,
     "Dezeen":            10,
     "W Magazine":        10,
+    "The Art Newspaper": 10,
 }
 DEFAULT_CAP = 6  # all other sources
 
