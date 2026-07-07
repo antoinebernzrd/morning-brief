@@ -3,37 +3,39 @@
 Telegram one-time setup — run this ONCE, then never again.
 
 Steps:
-  1. Paste your api_id and api_hash below (from my.telegram.org)
+  1. Export your credentials as environment variables:
+       export TELEGRAM_API_ID=<your_api_id>
+       export TELEGRAM_API_HASH=<your_api_hash>
+     (from my.telegram.org → API development tools)
   2. Run:  python3 ~/news_dashboard/telegram_auth.py
   3. Enter your phone number (+33...) and the code Telegram sends you
   4. Done — session saved, news_fetcher.py will use it silently from now on
+
+Never hardcode credentials in this file — use environment variables only.
 """
 
-# ── Paste your credentials here ──────────────────────────────────────────────
-API_ID   = 33788834           # replace with the integer from my.telegram.org
-API_HASH = "d4d7a4fa445518bf2699129532f28a2b"          # replace with the string  from my.telegram.org
-# ─────────────────────────────────────────────────────────────────────────────
-
-import json, sys
+import os, sys
 from pathlib import Path
 
-SESSION_DIR = Path.home() / "news_dashboard"
-CONFIG_FILE = SESSION_DIR / "telegram_config.json"
+API_ID   = int(os.environ.get("TELEGRAM_API_ID", 0) or 0)
+API_HASH = os.environ.get("TELEGRAM_API_HASH", "")
+
+SESSION_DIR  = Path.home() / ".config" / "morning-brief"
 SESSION_FILE = SESSION_DIR / "telegram_session"
 
 def main():
-    if API_ID == 0 or API_HASH == "":
-        print("❌  Please open this file and fill in API_ID and API_HASH first.")
+    if not API_ID or not API_HASH:
+        print("❌  Missing credentials. Export before running:")
+        print("       export TELEGRAM_API_ID=<your_id>")
+        print("       export TELEGRAM_API_HASH=<your_hash>")
         sys.exit(1)
 
     try:
         from telethon.sync import TelegramClient
     except ImportError:
-        print("Installing telethon…")
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install",
-                               "telethon", "--break-system-packages", "-q"])
-        from telethon.sync import TelegramClient
+        print("❌  telethon not installed. Run: pip install telethon")
+        print("    (add it to requirements.txt and install once manually)")
+        sys.exit(1)
 
     SESSION_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -42,7 +44,6 @@ def main():
         me = client.get_me()
         print(f"✓ Logged in as {me.first_name} ({me.username or me.phone})")
 
-        # Quick test — fetch 3 messages from AFP
         print("  Testing AFP channel fetch…")
         try:
             msgs = client.get_messages("afpfr", limit=3)
@@ -53,11 +54,9 @@ def main():
         except Exception as e:
             print(f"  ⚠  Could not reach @afpfr: {e}")
 
-    # Save credentials so news_fetcher can reuse them
-    CONFIG_FILE.write_text(json.dumps({"api_id": API_ID, "api_hash": API_HASH}))
     print(f"\n✓ Session saved → {SESSION_FILE}.session")
-    print(f"✓ Config  saved → {CONFIG_FILE}")
     print("\nYou're all set — news_fetcher.py will now pull AFP automatically.")
+    print("Make sure TELEGRAM_API_ID and TELEGRAM_API_HASH are set in ~/.zshrc")
 
 if __name__ == "__main__":
     main()
