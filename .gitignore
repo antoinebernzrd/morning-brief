@@ -1,10 +1,22 @@
+# macOS
 .DS_Store
-dashboard.log
+
+# Telegram — credentials and session must NEVER be committed
+telegram_config.json
 telegram_session.session
 telegram_session
-telegram_config.json
+
+# API keys
 openai_config.json
-headline_cache.json
-openai_config.json
-headline_cache.json
+
+# Generated output (published via GitHub Actions → GitHub Pages)
 index.html
+
+# Runtime cache — grows indefinitely, not source code
+headline_cache.json
+dashboard.log
+
+# Scratch / temp files
+news_fetcher trash.py
+*.pyc
+__pycache__/
