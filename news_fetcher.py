@@ -7,6 +7,7 @@ import html as html_lib
 import json
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -547,14 +548,65 @@ def _resolve_gnews(url):
     (they still work when clicked, just redirect through Google)."""
     return url
 
+_FEED_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+
+# Cloudflare blocks *.substack.com for datacenter IPs (GitHub Actions) — if the
+# direct fetch comes back empty there, retry via the Google News RSS proxy.
+FEED_FALLBACKS = {
+    "Silicon Carne":  "https://news.google.com/rss/search?q=site:siliconcarne.substack.com&hl=en&gl=US&ceid=US:en",
+    "TBPN":           "https://news.google.com/rss/search?q=site:tbpn.substack.com&hl=en&gl=US&ceid=US:en",
+    "MTS Newsletter": "https://news.google.com/rss/search?q=site:mtslive.substack.com&hl=en&gl=US&ceid=US:en",
+}
+
+def _http_feed(url, _hops=0):
+    """Fetch feed bytes with full browser headers, then hand to feedparser.
+    Returns (feed, http_status). feedparser's own fetcher trips Cloudflare more
+    often than a plain request with browser-like headers does.
+    Follows redirects manually — pre-3.11 urllib doesn't auto-follow HTTP 308."""
+    req = urllib.request.Request(url, headers={
+        "User-Agent": _FEED_UA,
+        "Accept": "application/rss+xml,application/xml,text/xml,*/*",
+        "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            return feedparser.parse(r.read()), r.status
+    except urllib.error.HTTPError as he:
+        loc = he.headers.get("Location") if he.headers else None
+        if he.code in (301, 302, 303, 307, 308) and loc and _hops < 3:
+            return _http_feed(urllib.parse.urljoin(url, loc), _hops + 1)
+        raise
+
 def _fetch(sources):
     arts = []
     for name, url in sources:
         try:
-            feed = feedparser.parse(url,
-                agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-                request_headers={"Accept":"application/rss+xml,application/xml,text/xml,*/*"})
+            try:
+                feed, status = _http_feed(url)
+            except urllib.error.HTTPError as he:
+                feed, status = None, he.code
+            except Exception:
+                feed, status = None, "?"
+            if not feed or not feed.entries:
+                # transport failed or empty — feedparser's own fetcher handles some
+                # redirect/encoding cases urllib doesn't (e.g. 308 on older Pythons)
+                fp = feedparser.parse(url, agent=_FEED_UA,
+                    request_headers={"Accept":"application/rss+xml,application/xml,text/xml,*/*"})
+                if fp.entries:
+                    feed = fp
+                else:
+                    print(f"  ⚠  {name}: 0 entries (HTTP {status})", end="")
+                    fb = FEED_FALLBACKS.get(name)
+                    if fb:
+                        try:
+                            feed, _ = _http_feed(fb)
+                            print(f" → Google News fallback: {len(feed.entries)} entries", end="")
+                        except Exception:
+                            feed = None
+                    print()
+            if not feed:
+                continue
             for e in feed.entries[:MAX_PER_SOURCE]:
                 arts.append({
                     "source":  name,
