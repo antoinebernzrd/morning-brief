@@ -21,3 +21,4 @@ news_fetcher trash.py
 *.pyc
 __pycache__/
 .claude/
+poly_cache.json
