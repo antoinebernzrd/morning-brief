@@ -58,9 +58,10 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
-    "Dezeen", "W Magazine","The Art Newspaper",
-    # daily in principle, but pauses for French August — keep the latest issue
-    # on screen rather than leaving the pinned slot empty
+    "Dezeen", "The Art Newspaper", "The Ankler",
+    # Listed for other callers' sake, but the geo panel passes weekly_days=2,
+    # so Playbook Paris is held to the same 48h as the rest of that section and
+    # simply drops out while it pauses for French August.
     "Playbook Paris",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
@@ -205,6 +206,9 @@ TECH_SOURCES = [
     ("Lenny's Newsletter",  "https://www.lennysnewsletter.com/feed"),
     ("Pragmatic Engineer",  "https://newsletter.pragmaticengineer.com/feed"),
 ]
+# Pinned to the top of the Private Markets list
+TECH_PINNED = ("MTS Newsletter",)
+
 MACRO_SOURCES = [
     # ── Public finance (the "Public Finance" button) ──────────────────────────
     # FirstFT is the FT's daily debrief — pinned to the top of the list.
@@ -279,9 +283,23 @@ def _keep_block_daily(arts):
     return out
 CULTURE_SOURCES = [
     ("Dezeen",            "https://www.dezeen.com/feed/"),
-    ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
+    # Télérama publishes proper section feeds — every item carries an image,
+    # unlike the Google News proxy which carries none.
+    ("Télérama Cinéma",   "https://www.telerama.fr/rss/cinema.xml"),
+    ("Télérama Séries",   "https://www.telerama.fr/rss/series-tv.xml"),
+    # The Ankler — Richard Rushfield's column specifically
+    ("The Ankler",        "https://theankler.com/richard-rushfield/feed"),
     ("The Art Newspaper", "https://news.google.com/rss/search?q=site:artnewspaper.fr&hl=fr&gl=FR&ceid=FR:fr"),
 ]
+# Colour used for a culture tile when no image can be found
+CULTURE_SOURCE_COLORS = {
+    "Dezeen":            "#1C1C1E",
+    "Télérama Cinéma":   "#7A1F3D",
+    "Télérama Séries":   "#123A5C",
+    "The Ankler":        "#7A3B00",
+    "The Art Newspaper": "#2C4A3B",
+    "The NYT Arts":      "#2A2A2E",
+}
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
 ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 
@@ -1009,7 +1027,9 @@ SOURCE_CAPS = {
     "SiliconMania":      1,
     "First Round Review":1,
     "Dezeen":            10,
-    "W Magazine":        10,
+    "Télérama Cinéma":   10,
+    "Télérama Séries":   10,
+    "The Ankler":        4,
     "The Art Newspaper": 10,
 }
 DEFAULT_CAP = 6  # all other sources
@@ -2134,6 +2154,18 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   width:8px;height:8px;z-index:10;
   box-shadow:0 1px 5px rgba(0,0,0,.5)}
 
+/* ── Culture tile with no image — designed colour block ─────────── */
+.cul-noimg .ci{
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,0) 45%),
+    linear-gradient(to top,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 62%),
+    var(--cul-col,#2A2A2E)!important}
+.cul-noimg .ci::after{background:none!important}
+.cul-noimg::before{
+  content:'';position:absolute;left:11px;right:11px;top:32px;height:1px;
+  background:rgba(255,255,255,.24);z-index:1;pointer-events:none}
+.cul-noimg .ct{text-shadow:none!important}
+
 /* ── Conflict modal (same behaviour as the culture event portal) ── */
 .geo-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -2913,7 +2945,10 @@ def _sort_by_time(groups):
     return sorted(groups, key=lambda g: max(a["ts"] or 0 for a in g), reverse=True)
 
 def build_tech(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups))
+    # MTS floats to the top; stable sort keeps everything else in recency order
+    ordered = sorted(_sort_by_time(groups),
+                     key=lambda g: 0 if g[0]["source"] in TECH_PINNED else 1)
+    rows = "".join(_build_group_row(g) for g in ordered)
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
     return _sec("#0C0C0C","Private Markets",
@@ -3114,11 +3149,19 @@ def build_culture(arts, event_news={}):
     for a in arts[:48]:
         img  = a.get("img","")
         snip = _s(a.get("snip","") or "")
-        bg   = (f"background-image:url({_s(img)});background-size:cover;background-position:center;"
-                if img else "background:linear-gradient(135deg,#3a3a3c,#1c1c1e);")
+        col  = CULTURE_SOURCE_COLORS.get(a["source"], "#2A2A2E")
+        if img:
+            bg  = (f"background-image:url({_s(img)});"
+                   f"background-size:cover;background-position:center;")
+            cls = "card"
+        else:
+            # no image anywhere — a deliberate colour tile in the source's
+            # colour, matching how the Opinions section handles the same case
+            bg  = f"--cul-col:{col};"
+            cls = "card cul-noimg"
         snip_html = f'<div class="cv-snip">{snip}</div>' if snip else ""
         html_cards += (
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="card">'
+            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="{cls}">'
             f'<div class="ci" style="{bg}"></div>'
             f'<span class="cs">{_s(a["source"])}</span>'
             f'<div class="cb"><p class="ct">{_s(a["title"])}</p>'
@@ -3645,7 +3688,11 @@ def main():
     pinned = art_newspaper_arts + nss_arts
     seen_links = {a["link"] for a in pinned if a.get("link")}
     culture_arts = pinned + [a for a in culture_raw if a.get("link") not in seen_links]
-    print(f"    → {len(culture_arts)} articles total")
+    # try for a real picture before falling back to a colour tile
+    _backfill_images(culture_arts, limit=30)
+    _c_img = sum(1 for a in culture_arts if a.get("img"))
+    print(f"    → {len(culture_arts)} articles total, "
+          f"{_c_img} with image / {len(culture_arts)-_c_img} colour tiles")
     print("  Fetching Sports…")
     sports_raw = _dedup_exact(_filter_recent(
         _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
@@ -3713,8 +3760,16 @@ def main():
     }
     conf_js = [{k:v for k,v in c.items() if k!="keywords"} for c in CONFLICTS]
     print("  Fetching Politico (geo panel)…")
+    # Politico gets 48h; the weekly window is pinned to the same value so
+    # Playbook Paris can't reach back further than the rest of the panel.
     geo_arts = _dedup_exact(_filter_recent(
-        _keep_world_brief(_fetch(GEO_SOURCES)), days=4, weekly_days=10))
+        _keep_world_brief(_fetch(GEO_SOURCES)), days=2, weekly_days=2))
+    # World in Brief is a daily — only ever show the current issue, not the
+    # back catalogue Google News returns.
+    _wib_cut = datetime.now(timezone.utc).timestamp() - 86400
+    geo_arts = [a for a in geo_arts
+                if a["source"] != "World in Brief"
+                or (a.get("ts") and a["ts"] >= _wib_cut)]
     geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
                   reverse=True)
     print(f"    → {len(geo_arts)} Politico articles")
