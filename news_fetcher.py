@@ -184,16 +184,46 @@ TECH_SOURCES = [
     ("Pragmatic Engineer",  "https://newsletter.pragmaticengineer.com/feed"),
 ]
 MACRO_SOURCES = [
-    # GN site:ft.com returns ~100 articles vs homepage RSS's 10
-    ("FT",            "https://news.google.com/rss/search?q=site:ft.com&hl=en&gl=US&ceid=US:en"),
-    ("The Economist", "https://www.economist.com/the-world-this-week/rss.xml"),
+    # ── Public finance (the "Public Finance" button) ──────────────────────────
+    # FirstFT is the FT's daily debrief — pinned to the top of the list.
+    ("FirstFT",         "https://www.ft.com/firstft?format=rss"),
+    ("The Street",      "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
     # Les Echos fetched separately via _fetch_les_echos_macro() — Python-side keyword filtering
-    # Added
-    ("The Street",    "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
-    # Crypto
-    ("CoinDesk",      "https://www.coindesk.com/arc/outboundfeeds/rss/"),
-    ("The Block",     "https://www.theblock.co/rss.xml"),
+    # ── Crypto (the "Crypto" button) ─────────────────────────────────────────
+    ("The Block",       "https://www.theblock.co/rss.xml"),
+    # The Block's daily debrief has no feed of its own and its site returns 403
+    # to scripts; its newsletters are only reachable through Google News, mixed
+    # in with their other titles (The Funding, Data & Insights, Layer One).
+    # _keep_block_daily() narrows this back down to "The Daily" issues.
+    ("The Block Daily", "https://news.google.com/rss/search?q=site:theblock.co/newsletters+when:14d&hl=en&gl=US&ceid=US:en"),
 ]
+# Which button each macro source sits behind
+MACRO_CATEGORY = {
+    "FirstFT":         "finance",
+    "The Street":      "finance",
+    "Les Echos":       "finance",
+    "Les Echos macro": "finance",
+    "AFP":             "finance",
+    "The Block":       "crypto",
+    "The Block Daily": "crypto",
+}
+# Daily debriefs — always sorted to the top of the macro list
+MACRO_PINNED = ("FirstFT", "The Block Daily")
+
+def _keep_block_daily(arts):
+    """The Block Daily's feed is a Google News search across *all* The Block
+    newsletters. Keep only 'The Daily' issues and tidy the GN title suffix."""
+    out = []
+    for a in arts:
+        if a["source"] != "The Block Daily":
+            out.append(a)
+            continue
+        title = re.sub(r"\s*-\s*theblock\.co\s*$", "", a["title"]).strip()
+        if not title.lower().startswith("the daily"):
+            continue
+        a["title"] = title
+        out.append(a)
+    return out
 CULTURE_SOURCES = [
     ("Dezeen",            "https://www.dezeen.com/feed/"),
     ("W Magazine",        "https://news.google.com/rss/search?q=site:wmagazine.com&hl=en&gl=US&ceid=US:en"),
@@ -2682,15 +2712,50 @@ def build_tech(groups):
     rows = "".join(_build_group_row(g) for g in _sort_by_time(groups))
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
-    return _sec("#0C0C0C","Tech — Startups — VC",
+    return _sec("#0C0C0C","Private Markets",
                 f'<div class="story-list">{rows}</div>')
 
 def build_macro(groups):
-    rows = "".join(_build_group_row(g) for g in _sort_by_time(groups))
+    ordered = _sort_by_time(groups)
+    # Stable sort → daily debriefs float to the top, everything else keeps its
+    # recency order. Pinning happens before filtering, so whichever button is
+    # active, its debrief is still the first row.
+    ordered = sorted(ordered, key=lambda g: 0 if g[0]["source"] in MACRO_PINNED else 1)
+    rows = ""
+    for g in ordered:
+        src = g[0].get("_canon") or g[0]["source"]
+        cat = MACRO_CATEGORY.get(src) or MACRO_CATEGORY.get(g[0]["source"], "finance")
+        pin = ' data-pin="1"' if g[0]["source"] in MACRO_PINNED else ""
+        rows += _build_group_row(g, extra_cls="macro-item",
+                                 data_attrs=f'data-cat="{cat}"{pin}')
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
-    return _sec("#0C0C0C","Macro — Finance — Markets",
-                f'<div class="story-list">{rows}</div>')
+    body = f"""<div class="story-list" id="macro-list">{rows}</div>
+<script>
+function filterMacro(v){{
+  document.querySelectorAll('.fb[id^="macro-"]').forEach(function(b){{
+    b.classList.toggle('on', b.id==='macro-'+v||(v==='all'&&b.id==='macro-all'));
+  }});
+  document.querySelectorAll('.macro-item').forEach(function(el){{
+    el.style.display=(v==='all'||el.dataset.cat===v)?'':'none';
+  }});
+}}
+</script>"""
+    hd_buttons = (
+        '<div style="display:flex;gap:6px">'
+        '<button class="fb on" id="macro-all" onclick="filterMacro(\'all\')">All</button>'
+        '<button class="fb" id="macro-finance" onclick="filterMacro(\'finance\')">Public Finance</button>'
+        '<button class="fb" id="macro-crypto" onclick="filterMacro(\'crypto\')">Crypto</button>'
+        '</div>'
+    )
+    return (
+        f'<div class="section">'
+        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
+        f'<span class="sec-hd-text">Public Markets</span>'
+        f'{hd_buttons}'
+        f'</div>'
+        f'{body}</div>\n'
+    )
 
 def _build_cal_band_html(event_news={}):
     """Returns the HTML+JS for the compact event band embedded in the culture section."""
@@ -3363,7 +3428,8 @@ def main():
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
     les_echos_macro = _fetch_les_echos(LES_ECHOS_MACRO_KW, "macro")
-    macro_raw = _dedup_exact(_filter_recent(_fetch(MACRO_SOURCES) + les_echos_macro + afp["macro"]))
+    macro_raw = _dedup_exact(_filter_recent(
+        _keep_block_daily(_fetch(MACRO_SOURCES)) + les_echos_macro + afp["macro"]))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Pop Culture…")
