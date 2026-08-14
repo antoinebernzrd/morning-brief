@@ -205,37 +205,28 @@ ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 # ── Gossip page sources ───────────────────────────────────────────────────────
 # Les Echos Politique/Idées handled via _fetch_les_echos keyword filter (see main())
 # Other sources: direct RSS where available, Google News with when:14d as fallback
+# Dropped 2026-08: Le Monde Diplo, Le Canard, Franc-Tireur, Le 1 Hebdo.
+# (Le 1 Hebdo's RSS is dead — every documented feed path 404s.)
 GOSSIP_SOURCES_OTHER = [
-    # Le Monde Diplo — direct RSS (monthly publication)
-    ("Le Monde Diplo",  "https://www.monde-diplomatique.fr/rss/"),
-    # Le 1 Hebdo — try direct then GN with 14d window
-    ("Le 1 Hebdo",      "https://le1hebdo.fr/rss"),
-    ("Le 1 Hebdo",      "https://news.google.com/rss/search?q=site:le1hebdo.fr+when:14d&hl=fr&gl=FR&ceid=FR:fr"),
-    # Franc-Tireur Venezuela Connexion
-    ("Franc-Tireur",    "https://www.franc-tireur.fr/feed"),
-    ("Franc-Tireur",    "https://news.google.com/rss/search?q=site:franc-tireur.fr+when:14d&hl=fr&gl=FR&ceid=FR:fr"),
-    # Le Canard Enchaîné — mostly offline, GN is best we can do
-    ("Le Canard",       "https://news.google.com/rss/search?q=site:lecanardenchaine.fr+when:7d&hl=fr&gl=FR&ceid=FR:fr"),
-    # The Free Press — direct RSS (daily)
-    ("The Free Press",  "https://www.thefp.com/feed"),
+    # The Free Press — direct RSS (daily), carries real article images
+    ("The Free Press",   "https://www.thefp.com/feed"),
+    # The Economist opinion = Leaders (editorials) + By Invitation (guest essays).
+    # Feeds carry no images and article pages sit behind a Cloudflare challenge,
+    # so these render as designed colour tiles (see .gos-noimg).
+    ("The Economist",    "https://www.economist.com/leaders/rss.xml"),
+    ("The Economist",    "https://www.economist.com/by-invitation/rss.xml"),
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
-    "Le Monde Diplo":    7,   # weekly → 7 days
-    "Franc-Tireur":      7,   # weekly column → 7 days
     "Les Echos Idées":   2,   # daily → 48h
-    "Le 1 Hebdo":        2,   # 48h
-    "Le Canard":         2,   # 48h
     "The Free Press":    2,   # daily → 48h
+    "The Economist":     4,   # weekly print cadence → 4 days
 }
-# Colour for each source's badge chip
+# Colour for each source's badge chip (also drives the no-image tile)
 GOSSIP_SOURCE_COLORS = {
-    "Le Monde Diplo":   "#7B1E1E",   # deep red
     "Les Echos Idées":  "#C84B00",   # burnt orange
-    "Le 1 Hebdo":       "#4A235A",   # deep purple
-    "Franc-Tireur":     "#1A3A5C",   # navy
-    "Le Canard":        "#7D6608",   # dark gold
     "The Free Press":   "#1D4E3F",   # dark green
+    "The Economist":    "#E3120B",   # Economist red
 }
 SPORTS_SOURCES_FR = [
     # Direct L'Équipe RSS feeds — much faster than Google News indexing
@@ -471,6 +462,62 @@ def _img(entry):
         if m and m.group(1).startswith("http"):
             return m.group(1)
     return ""
+_OG_RE = (
+    re.compile(r'<meta[^>]+property=["\']og:image(?::url)?["\'][^>]+content=["\']([^"\']+)', re.I),
+    re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image(?::url)?["\']', re.I),
+    re.compile(r'<meta[^>]+name=["\']twitter:image(?::src)?["\'][^>]+content=["\']([^"\']+)', re.I),
+)
+# Hosts that never yield a usable og:image: Google News wraps articles behind a JS
+# redirect (its og:image is a Google logo), and these sit behind a Cloudflare
+# challenge that returns 403 to any script. Don't waste build time on them.
+_OG_SKIP_HOSTS = ("news.google.com", "economist.com")
+
+def _og_image(url, timeout=8):
+    """Scrape an article page for its og:image. Returns "" on any failure —
+    callers fall back to the designed colour tile."""
+    if not url or not url.startswith("http"):
+        return ""
+    if any(h in url for h in _OG_SKIP_HOSTS):
+        return ""
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": _FEED_UA,
+            "Accept": "text/html,application/xhtml+xml,*/*",
+            "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
+        })
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            if "html" not in r.headers.get("Content-Type", ""):
+                return ""
+            head = r.read(180_000).decode(
+                r.headers.get_content_charset() or "utf-8", "ignore")
+    except Exception:
+        return ""
+    for pat in _OG_RE:
+        m = pat.search(head)
+        if m:
+            img = html_lib.unescape(m.group(1).strip())
+            if img.startswith("//"):
+                img = "https:" + img
+            if img.startswith("http"):
+                return img
+    return ""
+
+def _backfill_images(arts, limit=25):
+    """Fill in missing images by scraping og:image, newest first and bounded so a
+    slow site can't stall the build. Articles still without an image afterwards
+    render as colour tiles."""
+    todo = [a for a in arts if not a.get("img")][:limit]
+    if not todo:
+        return arts
+    done = 0
+    for a in todo:
+        img = _og_image(a.get("link", ""))
+        if img:
+            a["img"] = img
+            done += 1
+    print(f"    → og:image backfill: {done}/{len(todo)} recovered")
+    return arts
+
 def _filter_recent(arts, days=2, weekly_days=7):
     """Keep articles from last `days` days. Weekly newsletter sources get `weekly_days`."""
     now_ts = datetime.now(timezone.utc).timestamp()
@@ -1724,16 +1771,48 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gos-card:hover{
   transform:scale(1.04);z-index:2;
   box-shadow:0 10px 30px rgba(0,0,0,.45)}
+/* photo layer + scrim so the headline stays legible on any image */
+.gos-img{
+  position:absolute;inset:0;z-index:0;
+  background-size:cover;background-position:center;
+  transition:transform .35s ease}
+.gos-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.45) 45%,rgba(0,0,0,.12) 100%)}
+.gos-card:hover .gos-img{transform:scale(1.06)}
+/* no-image tile: deliberate colour block in the source's brand colour */
+.gos-noimg{
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 42%),
+    linear-gradient(to top,rgba(0,0,0,.42) 0%,rgba(0,0,0,0) 60%),
+    var(--gos-col,#444)}
+.gos-noimg::after{
+  content:'';position:absolute;left:12px;right:12px;top:34px;height:1px;
+  background:rgba(255,255,255,.22);z-index:1}
+.gos-mark{
+  position:absolute;right:4px;bottom:-30px;z-index:0;
+  font-family:var(--serif);font-size:150px;line-height:1;
+  color:rgba(255,255,255,.13);pointer-events:none;user-select:none}
+.gos-noimg .gos-title{text-shadow:none}
+.gos-noimg .gos-time{color:rgba(255,255,255,.62)}
+/* keep text above photo/colour layers */
+.gos-src,.gos-title,.gos-time{position:relative;z-index:2}
 .gos-src{
   display:inline-block;align-self:flex-start;flex-shrink:0;
   font-size:7px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
   color:#fff;padding:3px 8px;border-radius:0}
 .gos-title{
-  flex:1;padding:8px 0 4px;
-  font-size:18px;font-weight:500;line-height:1.3;color:#fff;
+  flex:1;min-height:0;padding:8px 0 4px;
+  font-size:clamp(14px,1.15vw,17px);font-weight:500;line-height:1.32;color:#fff;
   text-shadow:0 1px 6px rgba(0,0,0,.8);
-  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.gos-time{font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.3px;flex-shrink:0}
+  overflow:hidden;
+  /* line-clamp where the engine honours it… */
+  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;
+  /* …and a fade so that when it doesn't, long headlines dissolve at the
+     bottom edge instead of being sliced through the middle of a word */
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 15px),transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 calc(100% - 15px),transparent 100%)}
+.gos-time{font-size:8px;color:rgba(255,255,255,.55);letter-spacing:.3px;flex-shrink:0}
 
 /* ── snap-geo: conflict accordion items ──────────────────── */
 .snap-geo .cp-list{padding:10px;margin:0 10px 10px;border-radius:0;background:var(--bg2);
@@ -2871,8 +2950,21 @@ def build_gossip(arts):
     for a in arts:
         col      = GOSSIP_SOURCE_COLORS.get(a["source"], "#444")
         time_str = _ago(a["date"])
+        img      = a.get("img", "")
+        if img:
+            # photo card — image fills the tile, scrim keeps the headline readable
+            media = (f'<span class="gos-img" '
+                     f'style="background-image:url({_s(img)})"></span>')
+            cls, style = "gos-card", ""
+        else:
+            # no image available (Google News / Cloudflare-blocked sources):
+            # a deliberate colour tile in the source's brand colour
+            media = '<span class="gos-mark" aria-hidden="true">"</span>'
+            cls, style = "gos-card gos-noimg", f' style="--gos-col:{col}"'
         tiles += (
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="gos-card">'
+            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
+            f'class="{cls}"{style}>'
+            f'{media}'
             f'<span class="gos-src" style="background:{col}">{_s(a["source"])}</span>'
             f'<span class="gos-title">{_s(a["title"])}</span>'
             f'<span class="gos-time">{time_str}</span>'
@@ -3327,7 +3419,11 @@ def main():
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     gossip_raw = _dedup_smart(gossip_raw)
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    print(f"    → {len(gossip_raw)} gossip articles (after dedup)")
+    gossip_raw = gossip_raw[:40]
+    _backfill_images(gossip_raw)
+    _n_img = sum(1 for a in gossip_raw if a.get("img"))
+    print(f"    → {len(gossip_raw)} gossip articles (after dedup), "
+          f"{_n_img} with image / {len(gossip_raw)-_n_img} colour tiles")
     print("  Fetching Polymarket…")
     print("  Fetching Polymarket…")
     poly_markets = _fetch_polymarket()
