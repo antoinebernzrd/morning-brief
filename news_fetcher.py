@@ -40,6 +40,9 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
     "Dezeen", "W Magazine","The Art Newspaper",
+    # daily in principle, but pauses for French August — keep the latest issue
+    # on screen rather than leaving the pinned slot empty
+    "Playbook Paris",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
 SOURCE_CANONICAL = {
@@ -197,6 +200,18 @@ MACRO_SOURCES = [
     # _keep_block_daily() narrows this back down to "The Daily" issues.
     ("The Block Daily", "https://news.google.com/rss/search?q=site:theblock.co/newsletters+when:14d&hl=en&gl=US&ceid=US:en"),
 ]
+# ── Geopolitics side panel ────────────────────────────────────────────────────
+# Politico publishes proper RSS for its sections *and* its newsletters, so
+# Playbook Paris needs no email subscription — same trick as The Block Daily,
+# just with a real feed instead of a Google News search.
+GEO_SOURCES = [
+    ("Playbook Paris",  "https://www.politico.eu/newsletter/playbook-paris/feed/"),
+    ("Politico France", "https://www.politico.eu/country/france/feed/"),
+    ("Politico EU",     "https://www.politico.eu/feed/"),
+]
+# Playbook Paris is the daily debrief — pinned to the top of the panel
+GEO_PINNED = ("Playbook Paris",)
+
 # Which button each macro source sits behind
 MACRO_CATEGORY = {
     "FirstFT":         "finance",
@@ -1102,7 +1117,28 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 
 /* ── Map ─────────────────────────────────────────────────────── */
 .map-wrap{display:flex;height:440px}
-#map{flex:0 0 62%;height:100%;overflow:hidden}
+/* left half: map on top, conflict names underneath */
+.geo-left{flex:0 0 62%;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+#map{flex:1;min-height:0;overflow:hidden}
+/* conflict names — multi-column grid of chips under the map */
+.cp-grid{
+  flex:0 0 auto;max-height:44%;overflow-y:auto;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px;padding:10px 12px 12px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.cp-grid::-webkit-scrollbar{width:2px}
+.cp-grid::-webkit-scrollbar-thumb{background:var(--border)}
+.cp-chip{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 9px;min-width:0;
+  background:none;border:none;border-radius:var(--r);
+  font-family:inherit;font-size:11px;font-weight:400;color:var(--muted);
+  text-align:left;cursor:pointer;
+  transition:background .15s ease,color .15s ease}
+.cp-chip:hover{background:var(--bg3);color:var(--text)}
+.cp-chip.has-new{color:var(--text);font-weight:500}
+.cp-chip-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* right half: Politico feed, same row styling as the markets lists */
 .cp{flex:1;display:flex;flex-direction:column;
   border-left:none;background:var(--bg2);overflow:hidden}
 .cp-hd{display:none}
@@ -1974,8 +2010,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   .snap-geo{height:auto!important;overflow:visible!important}
   .snap-geo>.section{height:auto!important;display:block!important}
   .snap-geo .map-wrap{flex-direction:column;height:auto!important;min-height:0!important}
-  .snap-geo #map{height:52vw!important;min-height:220px;max-height:320px;width:100%!important}
-  .snap-geo .cp{height:280px;width:100%}
+  .snap-geo .geo-left{flex:none;width:100%;overflow:visible}
+  .snap-geo #map{height:52vw!important;min-height:220px;max-height:320px;width:100%!important;
+    flex:none}
+  /* conflict names: 2 columns on a phone, no inner scroll */
+  .cp-grid{grid-template-columns:repeat(2,minmax(0,1fr));
+    max-height:none;overflow:visible;padding:10px 12px}
+  .cp-chip{font-size:12px;padding:9px 8px}
+  .snap-geo .cp{height:auto;width:100%}
 
   /* feed: reset flex column so sections just stack */
   .snap-feed{display:block}
@@ -2047,6 +2089,52 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   width:8px;height:8px;z-index:10;
   box-shadow:0 1px 5px rgba(0,0,0,.5)}
 
+/* ── Conflict modal (same behaviour as the culture event portal) ── */
+.geo-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:9998;display:none;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.geo-backdrop.active{display:block}
+.geo-modal{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(62vw,760px);max-height:78vh;
+  z-index:9999;display:none;flex-direction:column;
+  background:var(--bg);border-radius:0;overflow:hidden;
+  box-shadow:0 32px 100px rgba(0,0,0,.85)}
+.geo-modal.active{display:flex}
+.geo-modal-hd{
+  flex:0 0 auto;padding:20px 22px 16px;
+  background:#D42B17;color:#fff}
+.geo-modal-meta{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.geo-modal-chip{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,.85);background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.3);padding:3px 8px}
+.geo-modal-name{font-size:clamp(19px,2vw,27px);font-weight:700;line-height:1.15}
+.geo-modal-since{font-size:12px;color:rgba(255,255,255,.72);font-weight:300;margin-top:3px}
+.geo-modal-body{
+  flex:1;min-height:0;overflow-y:auto;padding:18px 22px 22px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.geo-modal-sum{font-size:13px;line-height:1.65;color:var(--text)}
+.geo-modal-hd2{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin:18px 0 8px;
+  padding-top:14px;border-top:1px solid var(--border)}
+.geo-modal-art{
+  display:block;padding:9px 0;border-bottom:1px solid var(--border);
+  text-decoration:none}
+.geo-modal-art:last-of-type{border-bottom:none}
+.geo-modal-art-ttl{display:block;font-size:13px;color:var(--text);line-height:1.4}
+.geo-modal-art-meta{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.geo-modal-art:hover .geo-modal-art-ttl{color:var(--accent)}
+.geo-modal-none{font-size:11px;color:var(--muted)}
+.geo-modal-x{
+  position:absolute;top:14px;right:16px;z-index:2;
+  width:28px;height:28px;line-height:26px;text-align:center;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:15px;cursor:pointer;padding:0}
+.geo-modal-x:hover{background:rgba(255,255,255,.3)}
+
 /* ── Mobile bottom tab bar (hidden on desktop) ───────────── */
 .mb-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:9000;
   background:rgba(252,252,252,.94);
@@ -2069,6 +2157,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 @media(max-width:768px){
   .mb-nav{display:flex}
   .mb-more{display:block}
+  /* conflict modal goes near-fullscreen on a phone. Lives here rather than in
+     the snap-override block above, which is declared before .geo-modal's base
+     rule and would therefore lose on specificity ties. */
+  .geo-modal{width:calc(100vw - 24px);max-height:82vh}
+  .geo-modal-hd{padding:18px 18px 14px}
+  .geo-modal-body{padding:16px 18px 20px}
 }
 /* "show more" button under clamped mobile lists (phone-only, see media below) */
 .mb-more{display:none;width:100%;margin:6px 0 2px;padding:12px 0;
@@ -2167,7 +2261,15 @@ def build_ticker(items):
         f'<div class="ticker-track"><div class="ticker-items">{links}</div></div>'
         f'</div>\n'
     )
-def build_map(conflicts_json, articles_json):
+def build_geo_feed(arts):
+    """Right-hand Politico panel — same row markup as the markets lists."""
+    ordered = sorted(arts, key=lambda a: 0 if a["source"] in GEO_PINNED else 1)
+    rows = "".join(_build_group_row([a]) for a in ordered[:40])
+    if not rows:
+        rows = '<p style="font-size:11px;color:var(--dim);padding:14px 16px">No articles fetched.</p>'
+    return f'<div class="story-list" id="geo-feed">{rows}</div>'
+
+def build_map(conflicts_json, articles_json, geo_arts=()):
     return f"""
 <div class="section">
   <div class="sec-hd" style="border-top:2px solid #D42B17">
@@ -2175,18 +2277,31 @@ def build_map(conflicts_json, articles_json):
     <span class="sec-hd-meta">● conflict / tension</span>
   </div>
   <div class="map-wrap">
-    <div id="map"></div>
+    <div class="geo-left">
+      <div id="map"></div>
+      <div id="cp-grid" class="cp-grid"></div>
+    </div>
     <div class="cp">
-      <div id="cp-list" class="cp-list"></div>
+      {build_geo_feed(geo_arts)}
     </div>
   </div>
+</div>
+<div class="geo-backdrop" id="geo-backdrop"></div>
+<div class="geo-modal" id="geo-modal" role="dialog" aria-modal="true">
+  <button class="geo-modal-x" id="geo-modal-x" aria-label="Close">✕</button>
+  <div class="geo-modal-hd">
+    <div class="geo-modal-meta"><span class="geo-modal-chip" id="geo-modal-type"></span></div>
+    <div class="geo-modal-name" id="geo-modal-name"></div>
+    <div class="geo-modal-since" id="geo-modal-since"></div>
+  </div>
+  <div class="geo-modal-body" id="geo-modal-body"></div>
 </div>
 <script>
 (function(){{
   var C = {conflicts_json};
   var A = {articles_json};
   var TC = {{ conflict:'#EF4444', tension:'#EF4444' }};
-  var listEl = document.getElementById('cp-list');
+  var listEl = document.getElementById('cp-grid');
   var markers = {{}};
   var GRID_SPACING = 8; /* must match canvas SPACING below */
 
@@ -2309,52 +2424,60 @@ def build_map(conflicts_json, articles_json):
       markers[c.id]=m;
     }}
   }}
+  /* ── Conflict modal — same open/close behaviour as the culture events ── */
+  var mdl   = document.getElementById('geo-modal');
+  var mdlBd = document.getElementById('geo-backdrop');
+  function closeModal() {{
+    mdl.classList.remove('active');
+    mdlBd.classList.remove('active');
+  }}
+  mdlBd.addEventListener('click', closeModal);
+  document.getElementById('geo-modal-x').addEventListener('click', closeModal);
+  document.addEventListener('keydown', function(e){{
+    if (e.key === 'Escape') closeModal();
+  }});
+
   function toggleItem(id) {{
     var c = C.find(function(x){{return x.id===id;}});
     if (!c) return;
-    var item = listEl.querySelector('[data-id="'+id+'"]');
-    if (!item) return;
-    var wasOpen = item.classList.contains('open');
-    /* close all */
-    listEl.querySelectorAll('.cp-item.open').forEach(function(el){{
-      el.classList.remove('open');
-    }});
-    if (!wasOpen) {{
-      item.classList.add('open');
-      markSeen(id);
-      _replacePulse(c);
-      item.classList.remove('has-new');
-      item.scrollIntoView({{behavior:'smooth',block:'nearest'}});
-    }}
+    var arts = A[c.id]||[];
+    var artsHtml = arts.length
+      ? '<div class="geo-modal-hd2">Recent Coverage</div>' + arts.map(function(a){{
+          return '<a href="'+_esc(a.link)+'" target="_blank" rel="noopener" class="geo-modal-art">'
+            +'<span class="geo-modal-art-ttl">'+_esc(a.title)+'</span>'
+            +'<span class="geo-modal-art-meta">'+_esc(a.source)+(a.ago?' · '+a.ago:'')+'</span>'
+            +'</a>';
+        }}).join('')
+      : '<div class="geo-modal-hd2">Recent Coverage</div>'
+        +'<p class="geo-modal-none">No recent articles matched.</p>';
+    document.getElementById('geo-modal-type').textContent  = c.type||'conflict';
+    document.getElementById('geo-modal-name').textContent  = c.name;
+    document.getElementById('geo-modal-since').textContent = 'Since '+(c.started||'—');
+    document.getElementById('geo-modal-body').innerHTML =
+      '<div class="geo-modal-sum">'+_esc(c.summary)+'</div>'+artsHtml;
+    document.getElementById('geo-modal-body').scrollTop = 0;
+    mdl.classList.add('active');
+    mdlBd.classList.add('active');
+
+    markSeen(id);
+    _replacePulse(c);
+    var chip = listEl.querySelector('[data-id="'+id+'"]');
+    if (chip) chip.classList.remove('has-new');
   }}
 
-  /* Build accordion list */
+  /* Build the conflict-name grid under the map */
   C.forEach(function(c){{
     var col    = TC[c.type]||'#888';
     var hasNew = isNew(c.id);
-    var arts   = A[c.id]||[];
-    var artsHtml = arts.length
-      ? arts.map(function(a){{
-          return '<a href="'+_esc(a.link)+'" target="_blank" rel="noopener" class="cp-art">'
-            +_esc(a.title)+'<br><small>'+_esc(a.source)+(a.ago?' · '+a.ago:'')+'</small></a>';
-        }}).join('')
-      : '<p class="cp-no">No recent articles matched.</p>';
 
-    var item = document.createElement('div');
-    item.className='cp-item'+(hasNew?' has-new':''); item.dataset.id=c.id;
+    var item = document.createElement('button');
+    item.className='cp-chip'+(hasNew?' has-new':''); item.dataset.id=c.id;
+    item.type='button';
     item.innerHTML=
-      '<div class="cp-item-row">'
-        +'<span class="dot" style="background:'+col+'"></span>'
-        +'<span class="cp-item-name">'+_esc(c.name)+'</span>'
-        +'<span class="cp-chevron">›</span>'
-      +'</div>'
-      +'<div class="cp-item-body">'
-        +'<div class="cp-meta">Since '+_esc(c.started)+'</div>'
-        +'<div class="cp-sum">'+_esc(c.summary)+'</div>'
-        +(arts.length?'<div class="cp-arts-hd">Recent Coverage</div>'+artsHtml:'')
-      +'</div>';
+       '<span class="dot" style="background:'+col+'"></span>'
+      +'<span class="cp-chip-name">'+_esc(c.name)+'</span>';
 
-    item.querySelector('.cp-item-row').addEventListener('click',function(){{toggleItem(c.id);}});
+    item.addEventListener('click',function(){{toggleItem(c.id);}});
     listEl.appendChild(item);
 
     /* Map marker — snapped to nearest canvas grid dot */
@@ -3510,6 +3633,11 @@ def main():
         for cid, arts in raw_match.items()
     }
     conf_js = [{k:v for k,v in c.items() if k!="keywords"} for c in CONFLICTS]
+    print("  Fetching Politico (geo panel)…")
+    geo_arts = _dedup_exact(_filter_recent(_fetch(GEO_SOURCES), days=4, weekly_days=10))
+    geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
+                  reverse=True)
+    print(f"    → {len(geo_arts)} Politico articles")
     now_paris = datetime.now(_PARIS)
     now_str   = now_paris.strftime("%A %d %B %Y — %H:%M")
     # Count articles published since midnight Paris time
@@ -3576,7 +3704,8 @@ def main():
 <!-- ② GEOPOLITICAL -->
 <section class="snap-sec snap-geo">
 {build_map(json.dumps(conf_js, ensure_ascii=False),
-           json.dumps(conf_arts_js, ensure_ascii=False))}
+           json.dumps(conf_arts_js, ensure_ascii=False),
+           geo_arts)}
 </section>
 
 <!-- ③ TECH + MACRO -->
