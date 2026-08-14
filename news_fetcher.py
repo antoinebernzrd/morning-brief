@@ -58,7 +58,7 @@ MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
     "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
-    "Dezeen", "The Art Newspaper", "The Ankler",
+    "Dezeen", "The Ankler",
     # Listed for other callers' sake, but the geo panel passes weekly_days=2,
     # so Playbook Paris is held to the same 48h as the rest of that section and
     # simply drops out while it pauses for French August.
@@ -289,7 +289,9 @@ CULTURE_SOURCES = [
     ("Télérama Séries",   "https://www.telerama.fr/rss/series-tv.xml"),
     # The Ankler — Richard Rushfield's column specifically
     ("The Ankler",        "https://theankler.com/richard-rushfield/feed"),
-    ("The Art Newspaper", "https://news.google.com/rss/search?q=site:artnewspaper.fr&hl=fr&gl=FR&ceid=FR:fr"),
+    # artnet's feed carries no images and its article pages 403 any script,
+    # so these render as colour tiles.
+    ("Artnet",            "https://news.artnet.com/feed"),
 ]
 # Colour used for a culture tile when no image can be found
 CULTURE_SOURCE_COLORS = {
@@ -297,7 +299,7 @@ CULTURE_SOURCE_COLORS = {
     "Télérama Cinéma":   "#7A1F3D",
     "Télérama Séries":   "#123A5C",
     "The Ankler":        "#7A3B00",
-    "The Art Newspaper": "#2C4A3B",
+    "Artnet":            "#1F3A5F",
     "The NYT Arts":      "#2A2A2E",
 }
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
@@ -1030,7 +1032,7 @@ SOURCE_CAPS = {
     "Télérama Cinéma":   10,
     "Télérama Séries":   10,
     "The Ankler":        4,
-    "The Art Newspaper": 10,
+    "Artnet":            10,
 }
 DEFAULT_CAP = 6  # all other sources
 
@@ -1698,16 +1700,20 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── culture event band (bottom 1/4 of culture section) ──── */
 .snap-culture .culture-cal-band{
   flex:1 0 0;min-height:0;
-  display:flex;flex-direction:row;align-items:stretch;
+  /* centre, don't stretch — stretching sets the height independently of the
+     width, which is what turned the event bubbles into ovals */
+  display:flex;flex-direction:row;align-items:center;
   overflow-x:auto;overflow-y:hidden;
   gap:8px;
   padding:8px 12px 10px;
   border-top:none;
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .snap-culture .culture-cal-band::-webkit-scrollbar{display:none}
+/* Size from the height so width follows it — guarantees a true circle
+   whatever the band's height happens to be. */
 .snap-culture .culture-cal-band .cal-ev-card{
-  flex:0 0 12%;
-  aspect-ratio:1/1;
+  flex:0 0 auto;
+  height:100%;width:auto;aspect-ratio:1/1;
   position:relative;border-radius:50%;overflow:hidden;
   cursor:pointer;opacity:.75;
   transition:opacity .3s ease,box-shadow .25s ease}
@@ -1716,7 +1722,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   opacity:.4;cursor:default;filter:grayscale(.6)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past.ev-center{opacity:.55;filter:grayscale(.4)}
 .snap-culture .culture-cal-band .cal-ev-card.ev-live{
-  opacity:1;box-shadow:0 0 0 3px #fff,0 4px 20px rgba(0,0,0,.3)}
+  opacity:1;box-shadow:0 4px 20px rgba(0,0,0,.35)}
 /* overlay backdrop */
 .ccv-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -1777,7 +1783,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .cal-ev-portal-open .cal-search-link:hover{color:#111}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
-  background:#002FA7!important}
+  background:linear-gradient(150deg,#FF8A3D 0%,#E8590C 55%,#C74405 100%)!important}
 .snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{filter:grayscale(.4);opacity:.6}
 .snap-culture .culture-cal-band .cal-ev-body{
   position:absolute;top:50%;left:10%;right:10%;
@@ -2121,8 +2127,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
     height:auto;min-height:0;align-items:center;
     overflow-x:auto;overflow-y:visible;
     padding:12px 16px 16px;gap:10px}
-  .snap-culture .culture-cal-band .cal-ev-card{flex:0 0 46vw;max-width:190px}
-  .snap-culture .culture-cal-band .cal-ev-card.ev-center{flex:0 0 46vw;max-width:190px}
+  .snap-culture .culture-cal-band{height:46vw;max-height:190px}
   .snap-culture .culture-cal-band .cal-ev-name{font-size:11px}
   /* event popup fills the phone */
   .cal-ev-portal-open{width:calc(100vw - 28px)!important;height:min(76vh,560px)!important}
@@ -2354,9 +2359,8 @@ def build_geo_feed(arts):
 def build_map(conflicts_json, articles_json, geo_arts=()):
     return f"""
 <div class="section">
-  <div class="sec-hd" style="border-top:2px solid #D42B17">
-    <span class="sec-hd-text">Geopolitical Flashpoints</span>
-    <span class="sec-hd-meta">● conflict / tension</span>
+  <div class="sec-hd">
+    <span class="sec-hd-text">Geopolitics</span>
   </div>
   <div class="map-wrap">
     <div class="geo-left">
@@ -3201,7 +3205,7 @@ def build_culture(arts, event_news={}):
             f'<div class="cards">{html_cards}</div>'
             f'{cal_band}'
             f'</div>{js_culture}')
-    return _sec("#D42B17","Pop Culture", body)
+    return _sec("#D42B17","Culture", body)
 
 def build_sports(arts):
     rows = "".join(_build_group_row([a]) for a in arts[:60])
@@ -3679,7 +3683,7 @@ def main():
         _keep_block_daily(_fetch(MACRO_SOURCES)) + les_echos_macro + afp["macro"]))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
-    print("  Fetching Pop Culture…")
+    print("  Fetching Culture…")
     art_newspaper_arts = _fetch_art_newspaper(5)
     nss_arts = _fetch_nss(10)
     print(f"    → {len(art_newspaper_arts)} NYT Arts + {len(nss_arts)} NSS articles (pinned)")
