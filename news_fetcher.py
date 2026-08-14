@@ -6,6 +6,7 @@ import feedparser
 import html as html_lib
 import json
 import re
+import socket
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -35,6 +36,24 @@ CONFIG_FILE         = OUTPUT_DIR / "telegram_config.json"
 SESSION_FILE        = OUTPUT_DIR / "telegram_session"
 OPENAI_CONFIG_FILE  = OUTPUT_DIR / "openai_config.json"
 HEADLINE_CACHE_FILE = OUTPUT_DIR / "headline_cache.json"
+# feedparser's own fetcher takes no timeout argument, so a black-holed host
+# leaves the build wedged in SYN_SENT indefinitely. A process-wide default
+# bounds every socket, including the ones we do not open ourselves.
+socket.setdefaulttimeout(25)
+
+# Prefer IPv4. Networks that advertise IPv6 but drop the traffic (some French
+# ISPs, plenty of cafe wifi) leave every connection sitting in SYN_SENT until
+# it times out — browsers hide this with Happy Eyeballs, urllib does not, and
+# one such host per feed is enough to stretch a build into the tens of minutes.
+# Every host we fetch publishes an A record, so we sort IPv4 first and keep the
+# IPv6 results as a fallback rather than dropping them.
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_first(*args, **kwargs):
+    res = _orig_getaddrinfo(*args, **kwargs)
+    return sorted(res, key=lambda r: 0 if r[0] == socket.AF_INET else 1)
+socket.getaddrinfo = _ipv4_first
+
+POLY_CACHE_FILE     = OUTPUT_DIR / "poly_cache.json"
 MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
@@ -205,12 +224,31 @@ MACRO_SOURCES = [
 # Playbook Paris needs no email subscription — same trick as The Block Daily,
 # just with a real feed instead of a Google News search.
 GEO_SOURCES = [
+    # The Economist's daily World in Brief. Its own feed 403s and economist.com
+    # blocks scripts at the Cloudflare edge, so Google News is the way in — and
+    # that search also returns non-brief Economist pieces, hence _keep_world_brief().
+    ("World in Brief",  "https://news.google.com/rss/search?q=site:economist.com/the-world-in-brief+when:7d&hl=en&gl=US&ceid=US:en"),
     ("Playbook Paris",  "https://www.politico.eu/newsletter/playbook-paris/feed/"),
     ("Politico France", "https://www.politico.eu/country/france/feed/"),
     ("Politico EU",     "https://www.politico.eu/feed/"),
 ]
-# Playbook Paris is the daily debrief — pinned to the top of the panel
-GEO_PINNED = ("Playbook Paris",)
+# Daily debriefs — pinned to the top of the panel, World in Brief first
+GEO_PINNED = ("World in Brief", "Playbook Paris")
+
+def _keep_world_brief(arts):
+    """The World in Brief feed is a Google News search over the whole section,
+    which also surfaces ordinary Economist articles. Keep only the briefs."""
+    out = []
+    for a in arts:
+        if a["source"] != "World in Brief":
+            out.append(a)
+            continue
+        title = re.sub(r"\s*-\s*The Economist\s*$", "", a["title"]).strip()
+        if not title.lower().startswith("world in brief"):
+            continue
+        a["title"] = title
+        out.append(a)
+    return out
 
 # Which button each macro source sits behind
 MACRO_CATEGORY = {
@@ -253,6 +291,10 @@ ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 # Dropped 2026-08: Le Monde Diplo, Le Canard, Franc-Tireur, Le 1 Hebdo.
 # (Le 1 Hebdo's RSS is dead — every documented feed path 404s.)
 GOSSIP_SOURCES_OTHER = [
+    # Les Echos "Idées & Débats" — the section feed itself. Keyword-filtering
+    # the general Les Echos feed matched only ~9 items a day, most of them
+    # evergreen topic index pages; this returns the actual opinion pieces.
+    ("Les Echos Idées",  "https://news.google.com/rss/search?q=site:lesechos.fr/idees-debats+when:7d&hl=fr&gl=FR&ceid=FR:fr"),
     # The Free Press — direct RSS (daily), carries real article images
     ("The Free Press",   "https://www.thefp.com/feed"),
     # The Economist opinion = Leaders (editorials) + By Invitation (guest essays).
@@ -263,7 +305,7 @@ GOSSIP_SOURCES_OTHER = [
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
-    "Les Echos Idées":   2,   # daily → 48h
+    "Les Echos Idées":   4,   # section feed → 4 days
     "The Free Press":    2,   # daily → 48h
     "The Economist":     4,   # weekly print cadence → 4 days
 }
@@ -1129,18 +1171,21 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .cp-grid::-webkit-scrollbar{width:2px}
 .cp-grid::-webkit-scrollbar-thumb{background:var(--border)}
 .cp-chip{
-  display:flex;align-items:center;gap:7px;
-  padding:7px 9px;min-width:0;
+  display:flex;align-items:center;gap:9px;
+  padding:10px 11px;min-width:0;
   background:none;border:none;border-radius:var(--r);
-  font-family:inherit;font-size:11px;font-weight:400;color:var(--muted);
+  font-family:inherit;font-size:15px;font-weight:400;color:var(--text);
   text-align:left;cursor:pointer;
   transition:background .15s ease,color .15s ease}
 .cp-chip:hover{background:var(--bg3);color:var(--text)}
 .cp-chip.has-new{color:var(--text);font-weight:500}
 .cp-chip-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* right half: Politico feed, same row styling as the markets lists */
+/* right half: Politico feed, same row styling as the markets lists.
+   #geo-feed overrides .story-list's 560px cap so the panel runs the full
+   height of the section instead of stopping short. */
 .cp{flex:1;display:flex;flex-direction:column;
   border-left:none;background:var(--bg2);overflow:hidden}
+#geo-feed{flex:1;min-height:0;max-height:none;margin:16px 16px 16px 8px}
 .cp-hd{display:none}
 .cp-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .cp-list::-webkit-scrollbar{width:2px}
@@ -2180,7 +2225,7 @@ MOBILE_NAV = """
   <a href="#" data-sec=".snap-feed"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/></svg>News</a>
   <a href="#" data-sec=".snap-culture"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="15" rx="1"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="8.5" r="1.3"/></svg>Culture</a>
   <a href="#" data-sec=".snap-bottom"><svg viewBox="0 0 24 24"><path d="M6 3h12v3.5a6 6 0 0 1-12 0V3z"/><path d="M6 5H3.5c0 3 1.7 4.8 4.2 5.3M18 5h2.5c0 3-1.7 4.8-4.2 5.3M12 12.5V16m-4 5h8m-4-4.5V21"/></svg>Sports</a>
-  <a href="#" data-sec=".snap-gossip"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.8A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Gossip</a>
+  <a href="#" data-sec=".snap-gossip"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.8A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Opinions</a>
 </nav>
 <script>
 (function(){
@@ -2263,7 +2308,12 @@ def build_ticker(items):
     )
 def build_geo_feed(arts):
     """Right-hand Politico panel — same row markup as the markets lists."""
-    ordered = sorted(arts, key=lambda a: 0 if a["source"] in GEO_PINNED else 1)
+    def _rank(a):
+        try:
+            return GEO_PINNED.index(a["source"])
+        except ValueError:
+            return len(GEO_PINNED)
+    ordered = sorted(arts, key=_rank)
     rows = "".join(_build_group_row([a]) for a in ordered[:40])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim);padding:14px 16px">No articles fetched.</p>'
@@ -2315,11 +2365,12 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
   }}
 
   /* ── Leaflet map: static (no pan/zoom), canvas handles base map ── */
-  var map = L.map('map',{{center:[20,10],zoom:2,minZoom:2,maxZoom:2,
+  /* centre/bounds exclude Antarctica — see _isPolar() below */
+  var map = L.map('map',{{center:[26,10],zoom:2,minZoom:2,maxZoom:2,
     zoomControl:false,attributionControl:false,
     dragging:false,scrollWheelZoom:false,doubleClickZoom:false,
     touchZoom:false,keyboard:false,boxZoom:false,
-    maxBounds:[[-80,-200],[85,200]],maxBoundsViscosity:1.0}});
+    maxBounds:[[-58,-200],[85,200]],maxBoundsViscosity:1.0}});
 
   /* ── Canvas dot-world ───────────────────────────────────────── */
   var mapEl = document.getElementById('map');
@@ -2361,11 +2412,25 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
       }});
     }}
 
+    /* Skip Antarctica — any polygon lying entirely below 60°S. Keeps the map
+       to the inhabited world so the dot grid isn't dragged down by an ice cap
+       no conflict marker ever sits on. */
+    function _isPolar(poly) {{
+      var ring = poly[0] || [];
+      for (var i = 0; i < ring.length; i++) {{
+        if (ring[i][1] > -60) return false;
+      }}
+      return ring.length > 0;
+    }}
     _landGeo.features.forEach(function(f) {{
       var g = f.geometry;
-      if (g.type === 'Polygon')      drawRings(g.coordinates);
-      else if (g.type === 'MultiPolygon')
-        g.coordinates.forEach(function(poly) {{ drawRings(poly); }});
+      if (g.type === 'Polygon') {{
+        if (!_isPolar(g.coordinates)) drawRings(g.coordinates);
+      }} else if (g.type === 'MultiPolygon') {{
+        g.coordinates.forEach(function(poly) {{
+          if (!_isPolar(poly)) drawRings(poly);
+        }});
+      }}
     }});
 
     /* Step 2 — pixel-test and place dots on the real canvas */
@@ -2759,10 +2824,26 @@ def _fetch_polymarket(limit=16):
             markets.append({"q": q, "pairs": pairs, "vol": vol_str, "slug": slug})
             if len(markets) >= limit:
                 break
+        if markets:
+            try:
+                POLY_CACHE_FILE.write_text(json.dumps(markets), encoding="utf-8")
+            except Exception:
+                pass
         print(f"    → {len(markets)} Polymarket markets")
         return markets
     except Exception as ex:
+        # French ISPs resolve gamma-api.polymarket.com to the ANJ regulator's
+        # block page, so a build run from France always fails here while CI
+        # (US runners) succeeds. Fall back to the last good payload rather than
+        # publishing an empty band.
         print(f"  ⚠  Polymarket: {ex}")
+        try:
+            cached = json.loads(POLY_CACHE_FILE.read_text(encoding="utf-8"))
+            if cached:
+                print(f"    → reusing {len(cached)} cached markets")
+                return cached
+        except Exception:
+            pass
         return []
 
 def build_polymarket_band(markets):
@@ -3163,7 +3244,7 @@ def build_gossip(arts):
     return (
         f'<div class="section gos-section">'
         f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
-        f'<span class="sec-hd-text">Gossip</span>'
+        f'<span class="sec-hd-text">Opinions</span>'
         f'</div>'
         f'<div class="gos-grid">{tiles}</div>'
         f'</div>'
@@ -3592,12 +3673,10 @@ def main():
     print("  Fetching Cities (City Focus)…")
     cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
     print(f"    → {len(cities_raw)} articles (no grouping)")
-    print("  Fetching Gossip…")
-    _le_politique = _fetch_les_echos(LES_ECHOS_POLITIQUE_KW, "Les Echos Idées")
-    for a in _le_politique:
-        a["source"] = "Les Echos Idées"
-    _gossip_other = _dedup_exact(_fetch(GOSSIP_SOURCES_OTHER))
-    _gossip_all   = _dedup_exact(_le_politique + _gossip_other)
+    print("  Fetching Opinions…")
+    # Les Echos Idées now comes straight from its section feed in
+    # GOSSIP_SOURCES_OTHER, so no keyword pass over the general feed is needed.
+    _gossip_all = _dedup_exact(_fetch(GOSSIP_SOURCES_OTHER))
     # Per-source time window filtering
     _now_ts = datetime.now(timezone.utc).timestamp()
     gossip_raw = [
@@ -3634,7 +3713,8 @@ def main():
     }
     conf_js = [{k:v for k,v in c.items() if k!="keywords"} for c in CONFLICTS]
     print("  Fetching Politico (geo panel)…")
-    geo_arts = _dedup_exact(_filter_recent(_fetch(GEO_SOURCES), days=4, weekly_days=10))
+    geo_arts = _dedup_exact(_filter_recent(
+        _keep_world_brief(_fetch(GEO_SOURCES)), days=4, weekly_days=10))
     geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
                   reverse=True)
     print(f"    → {len(geo_arts)} Politico articles")
