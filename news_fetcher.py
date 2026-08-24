@@ -2252,10 +2252,166 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;
   letter-spacing:1.2px;text-transform:uppercase;cursor:pointer}
 .mb-more:active{background:rgba(128,128,128,.12)}
+
+/* ── Phone layout pass ────────────────────────────────────────────
+   Declared last on purpose: where it disagrees with the older mobile
+   overrides above, this wins. */
+@media(max-width:768px){
+  /* One scale for the whole phone layout. Tighter than v1. */
+  :root{--m:6px;--g:4px;--navh:56px}
+
+  /* ── snap: each section seats itself on the screen ──────────────
+     The section is both the snap target and its own scroller, so a swipe
+     scrolls its content and only pages once that content runs out. */
+  /* The document scrolls; sections just align to it. Proximity rather than
+     mandatory so a section taller than the screen can still be read through
+     instead of trapping the gesture. */
+  html{scroll-snap-type:y proximity!important;scroll-behavior:smooth}
+  .snap-sec{
+    height:auto!important;min-height:100svh!important;
+    scroll-snap-align:start;
+    overflow:visible!important;
+    padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))}
+  .hero-sec{padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))}
+
+  /* ── no black/white rule between sections ───────────────────────── */
+  .sec-hd{border-top:none!important;border-bottom:none!important}
+  .section,.gos-section{border-top:none!important}
+
+  /* ── headers: title, then a shrinkable button row ───────────────── */
+  .sec-hd{padding:0 var(--m);gap:8px;flex-wrap:nowrap;align-items:center}
+  .sec-hd-text{font-size:15px;padding:11px 0 8px}
+  .sec-hd > div{
+    display:flex;gap:5px;flex:1 1 auto;min-width:0;justify-content:flex-end;
+    overflow-x:auto;scrollbar-width:none}
+  .sec-hd > div::-webkit-scrollbar{display:none}
+  .fb{flex:0 0 auto;padding:5px 9px;font-size:7.5px;letter-spacing:.7px}
+
+  /* ── 1. no map on a phone ───────────────────────────────────────── */
+  .snap-geo #map{display:none!important}
+  .snap-geo>.section{height:auto!important;display:block!important}
+  .snap-geo .map-wrap{display:block;height:auto!important}
+  .snap-geo .geo-left{flex:none;width:100%;overflow:visible}
+  .cp-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    max-height:none;overflow:visible;
+    gap:var(--g);padding:var(--g) var(--m)}
+  .cp-chip{font-size:13px;padding:11px 10px;
+    background:var(--bg2);border-radius:var(--r)}
+
+  /* ── 2. geo panel uses the Private Markets recipe ───────────────── */
+  .snap-geo .cp{background:transparent;overflow:visible;height:auto;width:100%}
+
+  /* ── 3. every list gets the same gutter, so the section colour
+     frames all of them identically. The old rule pinned the bottom
+     sections' lists to margin:0, which is why Sports / Cities / Paris
+     had no blue edge while Markets did. */
+  .story-list,.paris-list,#geo-feed,
+  .snap-bottom .story-list,.snap-bottom .paris-list{
+    margin:0 var(--m) var(--m)!important;
+    padding:var(--g)!important;
+    max-height:none;overflow:visible;
+    gap:var(--g);background:var(--bg2)}
+  .sg,.pi{padding:10px 11px}
+
+  /* markets bands */
+  .poly-band-track{margin:var(--g) var(--m) 2px}
+  .price-band-track{margin:2px var(--m) var(--g)}
+
+  /* ── 4. Culture: square bricks, three rows ──────────────────────── */
+  /* Height chain must be unbroken: section -> .section -> body -> grid.
+     A content-sized ancestor is why the grid ended up short and the rest of
+     the screen was dead space. --sq is set by fitPhone() so three rows fill
+     exactly and the bricks stay square. */
+  .snap-culture{display:flex;flex-direction:column}
+  .snap-culture>.section{flex:1;min-height:0;display:flex;flex-direction:column}
+  .snap-culture .culture-body{flex:1;min-height:0;display:flex;flex-direction:column}
+  .snap-culture .cards{
+    --sq:44vw;
+    flex:none;
+    display:grid!important;
+    grid-template-rows:repeat(3,var(--sq));
+    grid-auto-flow:column;
+    grid-auto-columns:var(--sq);
+    height:auto;max-height:none;
+    gap:var(--g);padding:var(--g) var(--m);
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x proximity;scroll-padding-left:var(--m)}
+  .snap-culture .card{
+    width:auto;height:auto;aspect-ratio:auto;
+    scroll-snap-align:start}
+  .snap-culture .ct{font-size:12px;line-height:1.25}
+  .snap-culture .cb{padding:16px 9px 9px}
+
+  /* ── 6. event circles: no clipped shadows, no dead gap ──────────── */
+  .snap-culture .culture-cal-band{
+    flex:0 0 auto;height:30vw;max-height:132px;
+    align-items:center;
+    gap:var(--g);padding:0 var(--m) var(--g);
+    overflow-x:auto;overflow-y:hidden}
+  /* the band clips on the x-axis, so a drop shadow gets sliced — drop it */
+  .snap-culture .culture-cal-band .cal-ev-card,
+  .snap-culture .culture-cal-band .cal-ev-card.ev-live{box-shadow:none!important}
+  .snap-culture .culture-cal-band .cal-ev-name{font-size:10px}
+
+  /* ── 5. Opinions: all rows on screen, swipe sideways ────────────── */
+  .snap-gossip{display:flex;flex-direction:column}
+  .snap-gossip>.gos-section{flex:1;min-height:0;display:flex;flex-direction:column}
+  .gos-grid{
+    flex:1;min-height:0;height:auto;
+    display:grid!important;
+    grid-template-rows:repeat(4,minmax(0,1fr));
+    grid-auto-flow:column;
+    grid-auto-columns:44vw;
+    gap:var(--g);padding:var(--g) var(--m);
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x proximity;scroll-padding-left:var(--m)}
+  .gos-card{scroll-snap-align:start;padding:9px}
+  .gos-title{font-size:12.5px;-webkit-line-clamp:3}
+  .gos-src{font-size:6.5px;padding:2px 6px}
+
+  /* ── Paris — What's On fills its screen ─────────────────────────── */
+  .snap-bottom>.three-col{display:block;height:auto}
+  .snap-bottom .three-col>.section{height:auto!important}
+
+  .mb-more{margin:3px 0 0}
+}
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
 # ══════════════════════════════════════════════════════════════════════════════
+PHONE_FIT_JS = """
+<script>
+(function(){
+  /* Culture's bricks must be square AND fill the screen. CSS can express one
+     or the other, not both: a column can't take its width from a row's flexed
+     height. So measure once and hand the result back as --sq. */
+  function fitPhone(){
+    if (window.innerWidth > 768) return;
+    var sec   = document.querySelector('.snap-culture');
+    var cards = document.querySelector('.snap-culture .cards');
+    var hd    = document.querySelector('.snap-culture .sec-hd');
+    var band  = document.querySelector('.culture-cal-band');
+    if (!sec || !cards || !hd) return;
+    var cs   = getComputedStyle(sec);
+    var pad  = parseFloat(cs.paddingBottom) || 0;
+    var gap  = parseFloat(getComputedStyle(cards).rowGap) || 4;
+    var cpad = parseFloat(getComputedStyle(cards).paddingTop) || 4;
+    var avail = sec.getBoundingClientRect().height - pad
+              - hd.getBoundingClientRect().height
+              - (band ? band.getBoundingClientRect().height : 0)
+              - cpad * 2;
+    var sq = Math.floor((avail - gap * 2) / 3);
+    if (sq > 40) cards.style.setProperty('--sq', sq + 'px');
+  }
+  fitPhone();
+  window.addEventListener('resize', fitPhone);
+  window.addEventListener('orientationchange', function(){ setTimeout(fitPhone, 250); });
+  if (document.readyState !== 'complete') window.addEventListener('load', fitPhone);
+})();
+</script>
+"""
+
 MOBILE_NAV = """
 <nav class="mb-nav" id="mb-nav" aria-label="Sections">
   <a href="#" data-sec=".snap-geo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9s1.4-6.4 3.9-9z"/></svg>World</a>
@@ -3880,6 +4036,9 @@ def main():
 
 <!-- Mobile bottom tab bar -->
 {MOBILE_NAV}
+
+<!-- Phone sizing -->
+{PHONE_FIT_JS}
 
 <!-- Unread dot tracker -->
 <script>
