@@ -1050,7 +1050,12 @@ SOURCE_CAPS = {
     "Scott Aaronson":    1,
     "Bits About Money":  1,
     "Reaction Wheel":    1,
-    "Works in Progress": 4,
+    # ── Opinions. Les Echos' idees-debats feed is far more prolific than the
+    # others and was taking 27 of the section's 40 cards, crowding the rest out.
+    "Les Echos Idées":  12,
+    "The Free Press":   15,
+    "The Economist":    10,
+    "Works in Progress": 6,
     "Lenny's Newsletter":1,
     "Pragmatic Engineer":1,
     "The NBS":           1,
@@ -3940,6 +3945,7 @@ def main():
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     gossip_raw = _dedup_smart(gossip_raw)
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    gossip_raw = _cap_per_source(gossip_raw)   # newest N per source
     gossip_raw = gossip_raw[:40]
     _backfill_images(gossip_raw)
     _n_img = sum(1 for a in gossip_raw if a.get("img"))
