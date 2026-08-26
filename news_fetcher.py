@@ -201,6 +201,8 @@ TECH_SOURCES = [
     ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
+    ("Stratechery",         "https://stratechery.com/feed/"),
+    ("Scott Aaronson",      "https://scottaaronson.blog/?feed=rss2"),
     ("TechCrunch",          "https://techcrunch.com/feed/"),
     ("First Round Review",  "https://news.google.com/rss/search?q=site:review.firstround.com&hl=en&gl=US&ceid=US:en"),
     ("Lenny's Newsletter",  "https://www.lennysnewsletter.com/feed"),
@@ -208,6 +210,20 @@ TECH_SOURCES = [
 ]
 # Pinned to the top of the Private Markets list
 TECH_PINNED = ("MTS Newsletter",)
+
+# Rare, evergreen essayists: both go months between posts, so a recency window
+# would hide them almost permanently. Fetched separately and always shown, the
+# way NYT Arts is in Culture.
+TECH_EVERGREEN = [
+    ("Bits About Money", "https://www.bitsaboutmoney.com/archive/rss/"),
+    ("Reaction Wheel",   "https://reactionwheel.net/feed"),
+]
+
+# Per-source recency windows (days). Anything absent uses the section default.
+SOURCE_WINDOW_DAYS = {
+    "Scott Aaronson":    14,   # ~2 posts a week
+    "Works in Progress": 14,   # ~weekly
+}
 
 MACRO_SOURCES = [
     # ── Public finance (the "Public Finance" button) ──────────────────────────
@@ -317,6 +333,8 @@ GOSSIP_SOURCES_OTHER = [
     ("Les Echos Idées",  "https://news.google.com/rss/search?q=site:lesechos.fr/idees-debats+when:7d&hl=fr&gl=FR&ceid=FR:fr"),
     # The Free Press — direct RSS (daily), carries real article images
     ("The Free Press",   "https://www.thefp.com/feed"),
+    # 229 posts and fresh, but not one carries an image — renders as colour tiles
+    ("Works in Progress","https://worksinprogress.co/rss.xml"),
     # The Economist opinion = Leaders (editorials) + By Invitation (guest essays).
     # Feeds carry no images and article pages sit behind a Cloudflare challenge,
     # so these render as designed colour tiles (see .gos-noimg).
@@ -328,12 +346,14 @@ GOSSIP_WINDOW_DAYS = {
     "Les Echos Idées":   4,   # section feed → 4 days
     "The Free Press":    2,   # daily → 48h
     "The Economist":     4,   # weekly print cadence → 4 days
+    "Works in Progress": 14,  # ~weekly
 }
 # Colour for each source's badge chip (also drives the no-image tile)
 GOSSIP_SOURCE_COLORS = {
     "Les Echos Idées":  "#C84B00",   # burnt orange
     "The Free Press":   "#1D4E3F",   # dark green
     "The Economist":    "#E3120B",   # Economist red
+    "Works in Progress":"#2F4858",   # slate
 }
 SPORTS_SOURCES_FR = [
     # Direct L'Équipe RSS feeds — much faster than Google News indexing
@@ -626,20 +646,23 @@ def _backfill_images(arts, limit=25):
     return arts
 
 def _filter_recent(arts, days=2, weekly_days=7):
-    """Keep articles from last `days` days. Weekly newsletter sources get `weekly_days`."""
+    """Keep articles from the last `days` days. SOURCE_WINDOW_DAYS overrides that
+    per source; WEEKLY_SOURCES falls back to `weekly_days`."""
     now_ts = datetime.now(timezone.utc).timestamp()
-    cutoff_daily  = now_ts - days * 86400
-    cutoff_weekly = now_ts - weekly_days * 86400
     result = []
     for a in arts:
         if not a["ts"]:          # no date → keep
             result.append(a)
-        elif a["source"] in WEEKLY_SOURCES:
-            if a["ts"] >= cutoff_weekly:
-                result.append(a)
+            continue
+        src = a["source"]
+        if src in SOURCE_WINDOW_DAYS:
+            window = SOURCE_WINDOW_DAYS[src]
+        elif src in WEEKLY_SOURCES:
+            window = weekly_days
         else:
-            if a["ts"] >= cutoff_daily:
-                result.append(a)
+            window = days
+        if a["ts"] >= now_ts - window * 86400:
+            result.append(a)
     return result
 def _filter_keywords(arts, keywords):
     """Keep only articles whose title+snippet contains at least one keyword (case-insensitive)."""
@@ -1023,6 +1046,11 @@ SOURCE_CAPS = {
     "Not Boring":        1,
     "TBPN":              1,
     "MTS Newsletter":    1,
+    "Stratechery":       2,
+    "Scott Aaronson":    1,
+    "Bits About Money":  1,
+    "Reaction Wheel":    1,
+    "Works in Progress": 4,
     "Lenny's Newsletter":1,
     "Pragmatic Engineer":1,
     "The NBS":           1,
@@ -2871,6 +2899,20 @@ def _build_group_row(g, extra_cls="", data_attrs=""):
         f'</div>\n'
     )
 
+def _fetch_evergreen(sources, n=1):
+    """Latest n from each source, ignoring the recency window. For writers who
+    publish a few times a year, where the newest piece is what matters, not
+    whether it landed this week."""
+    out = []
+    for name, url in sources:
+        try:
+            arts = _fetch([(name, url)])
+            arts.sort(key=lambda a: a["ts"] or 0, reverse=True)
+            out.extend(arts[:n])
+        except Exception as ex:
+            print(f"  ⚠  {name}: {ex}")
+    return out
+
 def _fetch_art_newspaper(n=5):
     """Always return the latest n NYT Arts articles, ignoring age filter."""
     try:
@@ -3831,6 +3873,10 @@ def main():
     print("  Fetching Tech/VC…")
     les_echos_tech = _fetch_les_echos(LES_ECHOS_TECH_KW, "tech")
     tech_raw = _dedup_exact(_filter_recent(_fetch(TECH_SOURCES) + les_echos_tech + afp["tech"]))
+    _ever = _fetch_evergreen(TECH_EVERGREEN)
+    _ever_links = {a["link"] for a in _ever if a.get("link")}
+    tech_raw = _ever + [a for a in tech_raw if a.get("link") not in _ever_links]
+    print(f"    → {len(_ever)} evergreen ({', '.join(a['source'] for a in _ever) or 'none'})")
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
