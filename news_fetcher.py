@@ -1136,13 +1136,21 @@ CSS = """
   --bg:#ffffff;--bg2:#f2f2f7;--bg3:#D6E4F7;
   --border:#d1d1d6;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;--r-sm:5px;
+  /* The panel colour that replaced Klein blue. It is light, so anything
+     sitting on it needs --panel-ink rather than white. */
+  --panel:#C6CEDE;--panel-ink:#16203A;
+  --panel-ink-soft:rgba(22,32,58,.60);--panel-ink-faint:rgba(22,32,58,.34);
+  --panel-line:rgba(22,32,58,.18);
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif;
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
-    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040}
+    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040;
+    --panel:#20263A;--panel-ink:#E7EAF3;
+    --panel-ink-soft:rgba(231,234,243,.58);--panel-ink-faint:rgba(231,234,243,.32);
+    --panel-line:rgba(231,234,243,.16)}
   header{background:rgba(6,6,6,.97)}
   .cp-sum{color:#555}
   .cp-art{color:#555}
@@ -1490,23 +1498,23 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── Hero section ────────────────────────────────────────── */
 .hero-sec{display:flex;flex-direction:column;justify-content:center;
-  padding:0 60px;border-top:3px solid #002FA7;background:#002FA7}
+  padding:0 60px;border-top:3px solid var(--panel);background:var(--panel)}
 .hero-eyebrow{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
   color:rgba(255,255,255,.55);font-family:var(--sans);margin-bottom:16px;display:block}
 .hero-h1{font-family:var(--display);font-size:clamp(60px,8.5vw,118px);
-  font-style:normal;font-weight:700;color:#ffffff;
+  font-style:normal;font-weight:700;color:var(--panel-ink);
   letter-spacing:-3px;line-height:.93;margin-bottom:36px}
 .hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:36px}
-.hero-count{font-size:9px;color:rgba(255,255,255,.9);letter-spacing:.9px;
+.hero-count{font-size:9px;color:var(--panel-ink);letter-spacing:.9px;
   font-weight:600;text-transform:uppercase}
-.hero-date-str{font-size:9px;color:rgba(255,255,255,.55);letter-spacing:.9px;text-transform:uppercase}
-.hero-sep{color:rgba(255,255,255,.25);font-size:12px}
+.hero-date-str{font-size:9px;color:var(--panel-ink-soft);letter-spacing:.9px;text-transform:uppercase}
+.hero-sep{color:var(--panel-ink-faint);font-size:12px}
 .hero-hint{position:absolute;bottom:90px;left:60px;font-size:7.5px;
-  letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--panel-ink-faint)}
 .hero-sec .ticker{position:absolute;bottom:0;left:0;right:0;
-  background:rgba(0,0,0,.18);border-bottom:none;border-top:1px solid rgba(255,255,255,.12)}
-.hero-sec .t-item{color:rgba(255,255,255,.5);border-right-color:rgba(255,255,255,.12)}
-.hero-sec .t-item:hover{color:#fff}
+  background:rgba(0,0,0,.05);border-bottom:none;border-top:1px solid var(--panel-line)}
+.hero-sec .t-item{color:var(--panel-ink-soft);border-right-color:var(--panel-line)}
+.hero-sec .t-item:hover{color:var(--panel-ink)}
 
 /* ── Snap section inner layouts ──────────────────────────── */
 .snap-geo{height:100vh!important;overflow:hidden!important}
@@ -1552,13 +1560,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
-.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:#002FA7}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
 .snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
-  overflow:hidden;border-bottom:none;background:#002FA7}
-.snap-feed .sec-hd{background:#002FA7!important}
-.snap-feed .sec-hd-text{color:#fff!important}
-.snap-feed .poly-band{background:#002FA7!important}
+  overflow:hidden;border-bottom:none;background:var(--panel)}
+.snap-feed .sec-hd{background:var(--panel)!important}
+.snap-feed .sec-hd-text{color:var(--panel-ink)!important}
+.snap-feed .poly-band{background:var(--panel)!important}
 /* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
 .snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
 .snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
@@ -1571,11 +1579,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
-  background:#002FA7;overflow:hidden}
+  background:var(--panel);overflow:hidden}
 .snap-feed-bottom .poly-band{flex:1;min-width:0}
 .snap-feed-bottom .price-band{flex:1;min-width:0}
 .price-band{display:flex;flex-direction:column;
-  border-top:none;background:#002FA7;overflow:hidden}
+  border-top:none;background:var(--panel);overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
   margin:16px 16px 16px 8px;border-radius:var(--r);background:var(--bg2);
@@ -1596,7 +1604,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
 .poly-band{display:flex;flex-direction:column;
-  border-top:none;background:#002FA7;overflow:hidden}
+  border-top:none;background:var(--panel);overflow:hidden}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
@@ -1875,14 +1883,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   text-decoration:none;border-bottom:1px solid var(--border)}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
-.snap-bottom{background:#002FA7}
-.snap-bottom .fb{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
-.snap-bottom .fb.on{background:#fff;color:#002FA7;border-color:#fff}
-.snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.25);border-color:#fff;color:#fff}
+.snap-bottom{background:var(--panel)}
+.snap-bottom .fb{background:rgba(255,255,255,.35);border-color:var(--panel-line);color:var(--panel-ink)}
+.snap-bottom .fb.on{background:var(--panel-ink);color:var(--panel);border-color:var(--panel-ink)}
+.snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.6);border-color:var(--panel-ink-soft);color:var(--panel-ink)}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
-.snap-bottom .three-col>.section{height:100%!important;background:#002FA7}
-.snap-bottom .sec-hd{background:#002FA7!important}
-.snap-bottom .sec-hd-text{color:#fff!important}
+.snap-bottom .three-col>.section{height:100%!important;background:var(--panel)}
+.snap-bottom .sec-hd{background:var(--panel)!important}
+.snap-bottom .sec-hd-text{color:var(--panel-ink)!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
 /* ── shared card token (used below) ─────────────────────────
