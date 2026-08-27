@@ -2618,6 +2618,89 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   box-shadow:none;
   z-index:auto}
 
+
+/* ══ Design language, applied to every section ═══════════════════
+   The Markets page settled on the reference's treatment; this promotes it
+   to the whole brief. Flat items on a near-white ground, separation by
+   whitespace rather than chrome, meta at weight 300 in a warm grey, titles
+   at 500 and never bolder, and picture cards that shrink on hover over
+   .6s. Scoped rules for Markets stay where they are — they say the same
+   thing, just more specifically. */
+:root{--ground:#F0F0F0;--ink:#000;--meta:#696764;--wash:rgba(0,0,0,.045);
+  --hair:rgba(0,0,0,.10)}
+@media(prefers-color-scheme:dark){
+  :root{--ground:#101010;--ink:#F4F4F4;--meta:#8A8784;
+    --wash:rgba(255,255,255,.06);--hair:rgba(255,255,255,.13)}
+}
+
+/* one ground everywhere */
+.hero-sec,.snap-geo,.snap-culture,.snap-bottom,.snap-gossip,
+.snap-geo>.section,.snap-culture>.section,.snap-gossip>.gos-section,
+.snap-bottom .three-col>.section,.snap-geo .cp{background:var(--ground)}
+.sec-hd{background:var(--ground)!important;border-top:none!important}
+.sec-hd-text{color:var(--ink)!important;font-weight:500}
+.sec-hd-meta{color:var(--meta)!important}
+
+/* list containers lose their grey box — whitespace separates */
+.story-list,.paris-list,#geo-feed,.snap-geo .cp-list{
+  background:transparent!important;padding:0!important;gap:2px}
+
+/* rows go flat, with a wash on hover instead of a fill */
+.sg,.pi{
+  background:transparent!important;border-radius:var(--r-sm);
+  padding:7px 8px;transition:background .18s ease}
+.sg:hover,.pi:hover,.sg-multi.open{background:var(--wash)!important}
+.sg-title,.pi-title{
+  font-size:13.5px;font-weight:500;line-height:1.12;color:var(--ink);
+  letter-spacing:0}
+.badge,.sg-time,.pi-src,.pi-t,.sg-cnt{
+  font-size:11.5px;font-weight:300;letter-spacing:0;text-transform:none;
+  color:var(--meta);background:none!important;padding:0}
+.sg-cnt{color:var(--accent)}
+.sg-art-link{border-bottom-color:var(--hair)}
+.sg-art-src{font-size:10.5px;font-weight:300;color:var(--meta)}
+.sg-art-ttl{font-size:12.5px;font-weight:400;color:var(--ink)}
+
+/* the bottom sections' 3D flip hover is replaced by the same quiet wash */
+.snap-bottom .sg::before,.snap-bottom .pi::before{display:none!important}
+.snap-bottom .sg:hover .sg-title,.snap-bottom .sg-multi.open .sg-title,
+.snap-bottom .pi:hover .pi-title{color:var(--ink)!important}
+.snap-bottom .sg:hover .sg-time,.snap-bottom .sg:hover .sg-cnt,
+.snap-bottom .pi:hover .pi-t{color:var(--meta)!important}
+.snap-bottom .fb{background:transparent;border-color:var(--hair);color:var(--meta)}
+.snap-bottom .fb.on{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
+/* picture cards everywhere behave like the reference's */
+.card,.gos-card{
+  border-radius:.3rem;
+  transition:transform .6s cubic-bezier(.19,1,.22,1)}
+.card:hover,.gos-card:hover,
+.snap-culture .card:hover:not(.cv-open){
+  transform:scale(.97)!important;box-shadow:none!important;z-index:auto}
+.gos-title{font-weight:500;line-height:1.14}
+.gos-src,.snap-culture .cs{font-weight:400}
+
+/* conflict names read as rows, not chips */
+.cp-chip{
+  background:transparent!important;border-radius:var(--r-sm);
+  font-size:13.5px;font-weight:500;color:var(--ink);
+  transition:background .18s ease}
+.cp-chip:hover{background:var(--wash)!important}
+.cp-chip.has-new{font-weight:500}
+/* these need the extra specificity to beat the older section-scoped rules */
+.snap-bottom .sg,.snap-bottom .pi,.snap-feed .sg,.snap-geo .sg{
+  border-radius:var(--r-sm)}
+.snap-culture .card,.snap-gossip .gos-card,.mkt-slow .card{border-radius:.3rem}
+
+/* hero picks up the same ink */
+.hero-h1{color:var(--ink)}
+.hero-count{color:var(--ink);font-weight:500}
+.hero-date-str,.hero-sep,.hero-hint{color:var(--meta)}
+.hero-sec .ticker{background:transparent;border-top:1px solid var(--hair)}
+.hero-sec .t-item{color:var(--meta);border-right-color:var(--hair)}
+.hero-sec .t-item:hover{color:var(--ink)}
+.btn{color:var(--ink);border-color:var(--hair)}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
