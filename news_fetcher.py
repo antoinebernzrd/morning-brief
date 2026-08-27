@@ -2573,7 +2573,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .mk-src-multi{color:var(--accent);font-weight:400}
 .snap-feed .mk-time{font-size:11.5px;font-weight:300;letter-spacing:0;
   color:var(--mk-meta)}
-.snap-feed .mk-time:before{content:"\00B7";margin:0 5px;color:var(--mk-meta)}
+.snap-feed .mk-time:before{content:"·";margin:0 5px;color:var(--mk-meta)}
 /* headline: 500 and tight, never bold */
 .snap-feed .mk-t{font-size:13.5px;font-weight:500;line-height:1.12;
   color:var(--mk-title);letter-spacing:0}
@@ -2603,6 +2603,20 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   .snap-feed .fb{border-color:rgba(255,255,255,.2)}
   .snap-feed .fb.on{color:#101010}
 }
+
+
+/* Long reads: the reference's own card mechanics, read off its stylesheet —
+   .posts_item-link:hover scales the image to 0.97 over 0.6s on
+   cubic-bezier(.19,1,.22,1), with a .3rem radius and no shadow. So these
+   shrink on hover rather than lifting, unlike the Culture bricks they
+   otherwise share styling with. */
+.mkt-slow .card{
+  border-radius:.3rem;
+  transition:transform .6s cubic-bezier(.19,1,.22,1)}
+.mkt-slow .card:hover{
+  transform:scale(.97);
+  box-shadow:none;
+  z-index:auto}
 
 """
 # ══════════════════════════════════════════════════════════════════════════════
