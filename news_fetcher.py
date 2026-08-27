@@ -1159,6 +1159,8 @@ CSS = """
   /* The panel colour that replaced Klein blue. It is light, so anything
      sitting on it needs --panel-ink rather than white. */
   --panel:#C6CEDE;--panel-ink:#16203A;
+  /* gap from a section title to its first brick, used everywhere */
+  --sec-gap:10px;
   --panel-ink-soft:rgba(22,32,58,.60);--panel-ink-faint:rgba(22,32,58,.34);
   --panel-line:rgba(22,32,58,.18);
   --serif:'Cormorant Garamond',Georgia,serif;
@@ -1699,7 +1701,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   /* column width ≈ row height → squares
      row height ≈ (100vh - 66px)*3/4 / 3 - gaps ≈ (100vh-66px)/4 - 15px */
   grid-auto-columns:calc((100vh - 66px) / 4 - 15px);
-  gap:12px;padding:14px 12px 8px;
+  gap:12px;padding:var(--sec-gap) 12px 8px;
   overflow-x:auto;overflow-y:hidden;
   border-top:none!important;
   scrollbar-width:none}
@@ -1963,7 +1965,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   grid-auto-flow:column;
   /* column width = row height → perfect squares */
   grid-auto-columns:calc((100vh - 66px - 3*10px - 56px) / 4);
-  gap:10px;padding:8px 16px 14px;
+  gap:10px;padding:var(--sec-gap) 16px 14px;
   overflow-x:auto;overflow-y:hidden;
   scrollbar-width:none}
 .gos-grid::-webkit-scrollbar{display:none}
@@ -2328,11 +2330,12 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mkt-col{height:100%;display:flex;flex-direction:column;overflow:hidden;
   background:var(--panel)}
 .mkt-body{flex:1;min-height:0;display:flex;flex-direction:column;
-  gap:2px;padding:0 14px 14px;overflow:hidden}
+  gap:2px;padding:var(--sec-gap) 14px 14px;overflow:hidden}
 .mkt-tier{display:flex;flex-direction:column;min-height:0}
+.mkt-tier + .mkt-tier .mkt-tier-hd{padding-top:9px}
 .mkt-tier-hd{
   display:flex;align-items:center;gap:9px;
-  padding:9px 2px 6px;
+  padding:0 2px 6px;
   font-size:7.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;
   color:var(--panel-ink-faint)}
 .mkt-tier-hd:after{content:'';flex:1;height:1px;background:var(--panel-line)}
@@ -2348,7 +2351,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mk:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:2}
 /* Flex children shrink by default, which squeezed every headline to zero
    height and left bricks 20px tall showing only the source and the time. */
-.mk-src,.mk-t,.mk-time{flex:0 0 auto}
+.mk-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.mk-hd .mk-time{flex:0 0 auto}
+.mk-hd,.mk-t{flex:0 0 auto}
 .mk-src{font-size:6.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
   color:var(--muted)}
 .mk-src-multi{color:var(--accent)}
@@ -2370,7 +2375,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* Fixed width, not 1fr: with 1fr a column holding one brick drew it double
    the width of a column holding two, so the two markets never matched. */
 .mkt-daily .mk-row{
-  grid-auto-flow:column;grid-auto-columns:238px;
+  /* same width as a Latest brick: the fast band is two columns with a 5px
+     gap, so one Today brick spans exactly half of the row */
+  grid-auto-flow:column;grid-auto-columns:calc((100% - 5px) / 2);
+  padding-right:3px;
   overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x proximity;scrollbar-width:none}
 .mkt-daily .mk-row::-webkit-scrollbar{display:none}
@@ -3309,9 +3317,9 @@ def _brick(g):
     src      = _s(primary.get("_canon") or primary["source"])
     if n == 1:
         return (f'<a class="mk" href="{_s(primary["link"])}" target="_blank" rel="noopener">'
-                f'<span class="mk-src">{src}</span>'
-                f'<span class="mk-t">{_s(primary["title"])}</span>'
-                f'<span class="mk-time">{time_str}</span></a>\n')
+                f'<span class="mk-hd"><span class="mk-src">{src}</span>'
+                f'<span class="mk-time">{time_str}</span></span>'
+                f'<span class="mk-t">{_s(primary["title"])}</span></a>\n')
     arts = "".join(
         f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="mk-sub" '
         f'onclick="event.stopPropagation()">'
@@ -3320,9 +3328,9 @@ def _brick(g):
         for a in g)
     title = primary.get("_headline") or primary["title"]
     return (f'<div class="mk mk-multi" onclick="this.classList.toggle(\'open\')">'
-            f'<span class="mk-src mk-src-multi">{n} sources</span>'
+            f'<span class="mk-hd"><span class="mk-src mk-src-multi">{n} sources</span>'
+            f'<span class="mk-time">{time_str}</span></span>'
             f'<span class="mk-t">{_s(title)}</span>'
-            f'<span class="mk-time">{time_str}</span>'
             f'<div class="mk-subs">{arts}</div></div>\n')
 
 # Colour behind a slow-read card when no picture can be found
