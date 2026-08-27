@@ -1704,7 +1704,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-top:none!important;
   scrollbar-width:none}
 .snap-culture .cards::-webkit-scrollbar{display:none}
-.snap-culture .card{
+.snap-culture .card,.mkt-slow .card{
   display:block!important;
   position:relative;
   width:100%;height:100%;
@@ -1713,35 +1713,35 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   cursor:pointer;
   transition:transform .2s ease,box-shadow .2s ease,z-index .2s ease;
   text-decoration:none}
-.snap-culture .card:hover:not(.cv-open){
+.snap-culture .card:hover:not(.cv-open),.mkt-slow .card:hover{
   transform:scale(1.05);
   z-index:2;
   box-shadow:0 10px 30px rgba(0,0,0,.45)}
 /* image fills the whole card */
-.snap-culture .ci{
+.snap-culture .ci,.mkt-slow .ci{
   position:absolute!important;inset:0!important;
   height:100%!important;width:100%!important;flex-shrink:0}
-.snap-culture .ci::after{
+.snap-culture .ci::after,.mkt-slow .ci::after{
   background:linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,.1) 40%,transparent 70%)}
 /* source label — dark pill so it reads on any image */
-.snap-culture .cs{
+.snap-culture .cs,.mkt-slow .cs{
   top:9px;bottom:auto;z-index:3;
   background:rgba(0,0,0,.62);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   border-radius:var(--r-sm);padding:3px 7px;
   color:#fff!important;font-size:8px;letter-spacing:1.2px}
 /* normal text bottom */
-.snap-culture .cb{
+.snap-culture .cb,.mkt-slow .cb{
   position:absolute!important;bottom:0;left:0;right:0;
   padding:22px 11px 12px;background:none;
   display:flex;flex-direction:column;justify-content:flex-end;z-index:2;
   transition:opacity .2s}
 .snap-culture .card.cv-open .cb{opacity:0;pointer-events:none}
-.snap-culture .ct{
+.snap-culture .ct,.mkt-slow .ct{
   color:#fff!important;opacity:1!important;
   font-size:18px;margin-bottom:4px;line-height:1.3;font-weight:500;
   text-shadow:0 1px 6px rgba(0,0,0,1),0 2px 10px rgba(0,0,0,.8)}
-.snap-culture .ctime{color:rgba(255,255,255,.45);font-size:11px}
+.snap-culture .ctime,.mkt-slow .ctime{color:rgba(255,255,255,.45);font-size:11px}
 /* info overlay — slides up from bottom within card */
 .snap-culture .cv-overlay{
   position:absolute;left:0;right:0;bottom:0;
@@ -2390,43 +2390,19 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mkt-fast .mk-row::-webkit-scrollbar{width:2px}
 .mkt-fast .mk-row::-webkit-scrollbar-thumb{background:var(--panel-line)}
 
-/* Slow reads — a third of the column, using the Culture card */
+/* Slow reads — a third of the column. The card IS the Culture card: its look
+   comes from the shared .snap-culture/.mkt-slow rules below, so the two
+   sections cannot drift apart. Only layout lives here. */
 .mkt-slow{flex:1 1 0;min-height:0}
 .mkt-fast{flex:2 1 0;min-height:0}
 .mkt-slow .mk-row{
-  flex:1;grid-auto-flow:column;grid-auto-columns:152px;
+  flex:1;grid-auto-flow:column;grid-auto-columns:168px;
   min-height:0;overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x proximity;scrollbar-width:none}
 .mkt-slow .mk-row::-webkit-scrollbar{display:none}
 .mkt-slow .card{
-  position:relative;display:block;height:100%;min-height:0;
-  border-radius:var(--r);overflow:hidden;text-decoration:none;
-  scroll-snap-align:start;
-  transition:transform .2s ease,box-shadow .2s ease}
-.mkt-slow .card:hover{transform:scale(1.03);z-index:2;
-  box-shadow:0 10px 26px rgba(0,0,0,.4)}
-.mkt-slow .card .ci{position:absolute;inset:0}
-.mkt-slow .card .ci::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.35) 45%,rgba(0,0,0,.05) 100%)}
-.mkt-slow .card.cul-noimg .ci{
-  background:
-    linear-gradient(150deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 45%),
-    linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 62%),
-    var(--cul-col,#2A2A2E)}
-.mkt-slow .card .cs{
-  position:absolute;top:8px;left:8px;z-index:3;
-  background:rgba(0,0,0,.62);backdrop-filter:blur(4px);
-  padding:3px 7px;border-radius:var(--r-sm);
-  color:#fff;font-size:6.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase}
-.mkt-slow .card .cb{
-  position:absolute;left:0;right:0;bottom:0;z-index:2;
-  padding:18px 9px 8px;display:flex;flex-direction:column;gap:2px}
-.mkt-slow .card .ct{
-  color:#fff;font-size:11.5px;font-weight:500;line-height:1.28;margin:0;
-  text-shadow:0 1px 6px rgba(0,0,0,.9);
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.mkt-slow .card .ctime{color:rgba(255,255,255,.55);font-size:7.5px}
+  position:relative;height:100%;width:100%;min-height:0;
+  scroll-snap-align:start}
 
 @media(max-width:768px){
   .mkt-body{padding:0 var(--m) var(--m);gap:0}
