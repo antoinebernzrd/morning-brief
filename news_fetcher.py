@@ -2701,6 +2701,56 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .hero-sec .t-item:hover{color:var(--ink)}
 .btn{color:var(--ink);border-color:var(--hair)}
 
+
+/* ══ One brick, one gap, everywhere ══════════════════════════════
+   Every list in the brief now renders the Markets brick, so its styling
+   moves out of .snap-feed and becomes the default. One gap value drives
+   every grid of bricks — Culture's 12px and Opinions' 10px were visibly
+   looser than Markets' 5px. */
+:root{--brick-gap:5px}
+
+.mk{
+  display:flex;flex-direction:column;gap:6px;
+  background:transparent;border-radius:var(--r-sm);
+  padding:7px 8px;min-width:0;overflow:hidden;
+  text-decoration:none;cursor:pointer;
+  transition:background .18s ease}
+.mk:hover{background:var(--wash);transform:none;box-shadow:none}
+.mk-hd{display:flex;align-items:baseline;justify-content:flex-start;gap:0}
+.mk-hd,.mk-t{flex:0 0 auto}
+.mk-src,.mk-time{
+  font-size:11.5px;font-weight:300;letter-spacing:0;text-transform:none;
+  color:var(--meta)}
+.mk-src-multi{color:var(--accent);font-weight:400}
+.mk-time:before{content:"·";margin:0 5px;color:var(--meta)}
+.mk-t{
+  font-size:13.5px;font-weight:500;line-height:1.12;color:var(--ink);
+  letter-spacing:0;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden}
+.mk-subs{display:none;margin-top:6px;border-top:1px solid var(--hair);padding-top:5px}
+.mk-multi.open .mk-subs{display:block}
+.mk-multi.open .mk-t{-webkit-line-clamp:unset}
+.mk-sub{display:block;padding:5px 0;text-decoration:none;
+  border-bottom:1px solid var(--hair)}
+.mk-sub:last-child{border-bottom:none}
+.mk-sub-src{display:block;font-size:10.5px;font-weight:300;color:var(--meta)}
+.mk-sub-t{display:block;font-size:12.5px;font-weight:400;line-height:1.2;color:var(--ink)}
+
+/* the containers that hold them */
+.story-list,.paris-list,#geo-feed,.snap-geo .cp-list{
+  display:flex;flex-direction:column;gap:var(--brick-gap)!important}
+
+/* every grid of bricks uses the same gap */
+.snap-culture .cards,.gos-grid,.cp-grid,.mk-row,
+.snap-culture .culture-cal-band{gap:var(--brick-gap)!important}
+
+/* Latest starts at the same height in both market columns: the Today band
+   is a fixed two-line brick rather than sizing to whatever it holds */
+.mkt-daily .mk-row{grid-auto-rows:74px}
+.mkt-daily .mk{height:74px}
+.snap-feed .mkt-daily .mk-t{font-size:15px;-webkit-line-clamp:2}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
@@ -3160,41 +3210,9 @@ def _enrich_groups(groups, client, cache):
     return result
 
 def _build_group_row(g, extra_cls="", data_attrs=""):
-    """Render a story group. Single article → direct link. Multiple → click to expand."""
-    primary  = g[0]
-    n        = len(g)
-    time_str = _ago(primary["date"])
-    attrs    = f" {data_attrs}" if data_attrs else ""
-    if n == 1:
-        return (
-            f'<div class="sg{" "+extra_cls if extra_cls else ""}"{attrs}>'
-            f'<a href="{_s(primary["link"])}" target="_blank" rel="noopener" class="sg-title">'
-            f'{_s(primary["title"])}</a>'
-            f'<span class="badge">{_s(primary["source"])}</span>'
-            f'<span class="sg-time">{time_str}</span>'
-            f'</div>\n'
-        )
-    arts_html = "".join(
-        f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
-        f'class="sg-art-link" onclick="event.stopPropagation()">'
-        f'<span class="sg-art-src">{_s(a.get("_canon") or a["source"])}</span>'
-        f'<span class="sg-art-ttl">{_s(a["title"])}</span>'
-        f'<span class="sg-art-time">{_ago(a["date"])}</span>'
-        f'</a>'
-        for a in g
-    )
-    display_title = primary.get("_headline") or primary["title"]
-    return (
-        f'<div class="sg sg-multi{" "+extra_cls if extra_cls else ""}"{attrs} '
-        f'onclick="this.classList.toggle(\'open\')">'
-        f'<div class="sg-hd">'
-        f'<span class="sg-title">{_s(display_title)}</span>'
-        f'<span class="sg-cnt">{n} sources</span>'
-        f'<span class="sg-time">{time_str}</span>'
-        f'</div>'
-        f'<div class="sg-arts">{arts_html}</div>'
-        f'</div>\n'
-    )
+    """Kept for its callers; every list in the brief now renders the same
+    brick as the Markets page."""
+    return _brick(g, extra_cls=extra_cls, data_attrs=data_attrs)
 
 def _fetch_evergreen(sources, n=1):
     """Latest n from each source, ignoring the recency window. For writers who
@@ -3461,15 +3479,20 @@ def _cadence(g):
             or SOURCE_CADENCE.get(a.get("_canon") or "")
             or DEFAULT_CADENCE)
 
-def _brick(g):
-    """One article as a brick. Multi-source groups keep the click-to-expand
-    behaviour the old rows had, just wearing a different shape."""
+def _brick(g, extra_cls="", data_attrs=""):
+    """One article as a brick — Source · time over a 500-weight headline.
+    This is the single row shape for the whole brief: markets, geo, sports,
+    cities and Paris all render through it. Multi-source groups keep the
+    click-to-expand behaviour the old rows had."""
     primary  = g[0]
     n        = len(g)
     time_str = _ago(primary["date"])
     src      = _s(primary.get("_canon") or primary["source"])
+    cls      = f' {extra_cls}' if extra_cls else ""
+    attrs    = f' {data_attrs}' if data_attrs else ""
     if n == 1:
-        return (f'<a class="mk" href="{_s(primary["link"])}" target="_blank" rel="noopener">'
+        return (f'<a class="mk{cls}"{attrs} href="{_s(primary["link"])}" '
+                f'target="_blank" rel="noopener">'
                 f'<span class="mk-hd"><span class="mk-src">{src}</span>'
                 f'<span class="mk-time">{time_str}</span></span>'
                 f'<span class="mk-t">{_s(primary["title"])}</span></a>\n')
@@ -3480,7 +3503,8 @@ def _brick(g):
         f'<span class="mk-sub-t">{_s(a["title"])}</span></a>'
         for a in g)
     title = primary.get("_headline") or primary["title"]
-    return (f'<div class="mk mk-multi" onclick="this.classList.toggle(\'open\')">'
+    return (f'<div class="mk mk-multi{cls}"{attrs} '
+            f'onclick="this.classList.toggle(\'open\')">'
             f'<span class="mk-hd"><span class="mk-src mk-src-multi">{n} sources</span>'
             f'<span class="mk-time">{time_str}</span></span>'
             f'<span class="mk-t">{_s(title)}</span>'
@@ -3843,14 +3867,7 @@ function filterCity(v){{
 def build_paris(arts):
     rows = ""
     for a in arts[:20]:
-        rows += (
-            f'<div class="pi">'
-            f'<span class="pi-src">{_s(a["source"])}</span>'
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="pi-title">'
-            f'{_s(a["title"])}</a>'
-            f'<span class="pi-t">{_ago(a["date"])}</span>'
-            f'</div>\n'
-        )
+        rows += _brick([a])
     if not rows:
         rows = '<p style="font-size:11px;color:var(--dim);padding:14px 0">No Paris events fetched — feeds may be unavailable.</p>'
     return _sec("#0C0C0C","Paris — What’s On",
