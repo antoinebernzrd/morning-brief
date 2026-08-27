@@ -222,6 +222,8 @@ TECH_EVERGREEN = [
 # Per-source recency windows (days). Anything absent uses the section default.
 SOURCE_WINDOW_DAYS = {
     "Scott Aaronson":    14,   # ~2 posts a week
+    "Film Comment":      30,   # publishes in bursts, then goes quiet for weeks
+    "Common Edge":        7,   # near-daily
     "Works in Progress": 14,   # ~weekly
 }
 
@@ -308,6 +310,10 @@ CULTURE_SOURCES = [
     # artnet's feed carries no images and its article pages 403 any script,
     # so these render as colour tiles.
     ("Artnet",            "https://news.artnet.com/feed"),
+    # Neither carries a feed image, but both expose og:image on the article
+    # page, so _backfill_images() gives them real pictures.
+    ("Film Comment",      "https://www.filmcomment.com/feed/"),
+    ("Common Edge",       "https://commonedge.org/feed/"),
 ]
 # Colour used for a culture tile when no image can be found
 CULTURE_SOURCE_COLORS = {
@@ -316,6 +322,8 @@ CULTURE_SOURCE_COLORS = {
     "Télérama Séries":   "#123A5C",
     "The Ankler":        "#7A3B00",
     "Artnet":            "#1F3A5F",
+    "Film Comment":      "#3B1F1F",   # deep maroon
+    "Common Edge":       "#33403B",   # slate green
     "The NYT Arts":      "#2A2A2E",
 }
 # NYT Arts is fetched separately and always pinned (5 latest guaranteed)
@@ -1062,6 +1070,8 @@ SOURCE_CAPS = {
     "SiliconMania":      1,
     "First Round Review":1,
     "Dezeen":            10,
+    "Film Comment":       6,
+    "Common Edge":        6,
     "Télérama Cinéma":   10,
     "Télérama Séries":   10,
     "The Ankler":        4,
