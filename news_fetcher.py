@@ -211,6 +211,26 @@ TECH_SOURCES = [
 # Pinned to the top of the Private Markets list
 TECH_PINNED = ("MTS Newsletter",)
 
+# How often a source publishes. Drives which of the three bands an article
+# lands in on the Markets page: the day's debriefs on top, the fast wire in
+# the middle, the occasional essayists along the bottom.
+SOURCE_CADENCE = {
+    # once a day, read these first
+    "MTS Newsletter":"daily", "Stratechery":"daily",
+    "FirstFT":"daily", "The Block Daily":"daily",
+    # several times a day
+    "TechCrunch":"fast", "FT Tech":"fast", "FT Companies Tech":"fast", "FT":"fast",
+    "The Block":"fast", "The Street":"fast", "The NBS":"fast", "SiliconMania":"fast",
+    "Les Echos":"fast", "Les Echos tech":"fast", "Les Echos macro":"fast",
+    "tech":"fast", "macro":"fast", "AFP":"fast",
+    # every week or two, or rarer
+    "Not Boring":"slow", "Silicon Carne":"slow", "TBPN":"slow",
+    "First Round Review":"slow", "Lenny's Newsletter":"slow",
+    "Pragmatic Engineer":"slow", "Scott Aaronson":"slow",
+    "Bits About Money":"slow", "Reaction Wheel":"slow",
+}
+DEFAULT_CADENCE = "fast"
+
 # Rare, evergreen essayists: both go months between posts, so a recency window
 # would hide them almost permanently. Fetched separately and always shown, the
 # way NYT Arts is in Culture.
@@ -1561,7 +1581,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
 .snap-feed{display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
-.snap-feed>.two-col{flex:3 0 0;min-height:0;border-bottom:none}
+.snap-feed>.two-col{flex:1;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
   overflow:hidden;border-bottom:none;background:var(--panel)}
 .snap-feed .sec-hd{background:var(--panel)!important}
@@ -2303,6 +2323,112 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;
   letter-spacing:1.2px;text-transform:uppercase;cursor:pointer}
 .mb-more:active{background:rgba(128,128,128,.12)}
+
+/* ── Markets: three cadence bands of bricks ─────────────────────── */
+.mkt-col{height:100%;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--panel)}
+.mkt-body{flex:1;min-height:0;display:flex;flex-direction:column;
+  gap:2px;padding:0 14px 14px;overflow:hidden}
+.mkt-tier{display:flex;flex-direction:column;min-height:0}
+.mkt-tier-hd{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 2px 6px;
+  font-size:7.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;
+  color:var(--panel-ink-faint)}
+.mkt-tier-hd:after{content:'';flex:1;height:1px;background:var(--panel-line)}
+.mk-row{display:grid;gap:5px;min-height:0}
+
+/* the brick */
+.mk{
+  display:flex;flex-direction:column;gap:4px;
+  padding:9px 10px;min-width:0;overflow:hidden;
+  background:var(--bg);border-radius:var(--r);
+  text-decoration:none;cursor:pointer;
+  transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease}
+.mk:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:2}
+.mk-src{font-size:6.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--muted)}
+.mk-src-multi{color:var(--accent)}
+.mk-t{font-size:11.5px;line-height:1.32;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mk-time{font-size:7.5px;color:var(--muted);margin-top:auto}
+.mk-subs{display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:5px}
+.mk-multi.open .mk-subs{display:block}
+.mk-multi.open .mk-t{-webkit-line-clamp:unset}
+.mk-sub{display:block;padding:5px 0;text-decoration:none;
+  border-bottom:1px solid var(--border)}
+.mk-sub:last-child{border-bottom:none}
+.mk-sub-src{display:block;font-size:6.5px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted)}
+.mk-sub-t{display:block;font-size:10.5px;line-height:1.35;color:var(--text)}
+
+/* Today — the day's debriefs, a row of 2-3, dark so they read first */
+.mkt-daily{flex:0 0 auto}
+.mkt-daily .mk-row{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.mkt-daily .mk{background:var(--panel-ink);min-height:78px}
+.mkt-daily .mk-t{color:var(--panel);font-size:12.5px;font-weight:500;-webkit-line-clamp:3}
+.mkt-daily .mk-src{color:var(--panel-ink-faint);color:rgba(255,255,255,.45)}
+.mkt-daily .mk-time{color:rgba(255,255,255,.4)}
+
+/* Latest — the fast wire, dense and scrollable */
+.mkt-fast{flex:1;min-height:0}
+.mkt-fast .mk-row{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;overflow-y:auto;padding-right:3px;
+  scrollbar-width:thin;scrollbar-color:var(--panel-line) transparent}
+.mkt-fast .mk-row::-webkit-scrollbar{width:2px}
+.mkt-fast .mk-row::-webkit-scrollbar-thumb{background:var(--panel-line)}
+
+/* Slow reads — a third of the column, using the Culture card */
+.mkt-slow{flex:1 1 0;min-height:0}
+.mkt-fast{flex:2 1 0;min-height:0}
+.mkt-slow .mk-row{
+  flex:1;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  min-height:0;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;scrollbar-width:none}
+.mkt-slow .mk-row::-webkit-scrollbar{display:none}
+.mkt-slow .card{
+  position:relative;display:block;height:100%;min-height:0;
+  border-radius:var(--r);overflow:hidden;text-decoration:none;
+  scroll-snap-align:start;
+  transition:transform .2s ease,box-shadow .2s ease}
+.mkt-slow .card:hover{transform:scale(1.03);z-index:2;
+  box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.mkt-slow .card .ci{position:absolute;inset:0}
+.mkt-slow .card .ci::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.35) 45%,rgba(0,0,0,.05) 100%)}
+.mkt-slow .card.cul-noimg .ci{
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 45%),
+    linear-gradient(to top,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 62%),
+    var(--cul-col,#2A2A2E)}
+.mkt-slow .card .cs{
+  position:absolute;top:8px;left:8px;z-index:3;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(4px);
+  padding:3px 7px;border-radius:var(--r-sm);
+  color:#fff;font-size:6.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase}
+.mkt-slow .card .cb{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;
+  padding:18px 9px 8px;display:flex;flex-direction:column;gap:2px}
+.mkt-slow .card .ct{
+  color:#fff;font-size:11.5px;font-weight:500;line-height:1.28;margin:0;
+  text-shadow:0 1px 6px rgba(0,0,0,.9);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mkt-slow .card .ctime{color:rgba(255,255,255,.55);font-size:7.5px}
+
+@media(max-width:768px){
+  .mkt-body{padding:0 var(--m) var(--m);gap:0}
+  .mkt-fast .mk-row{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+  .mkt-daily .mk-row{
+    grid-auto-flow:column;grid-auto-columns:64vw;
+    overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:2px}
+  .mkt-daily .mk{scroll-snap-align:start}
+  .mkt-slow{flex:none}
+  .mkt-slow .mk-row{grid-auto-columns:44vw;height:44vw}
+  .mkt-fast{flex:none}
+}
+
 
 /* ── Phone layout pass ────────────────────────────────────────────
    Declared last on purpose: where it disagrees with the older mobile
@@ -3169,42 +3295,110 @@ def _sort_by_time(groups):
     """Sort groups purely by recency of their most recent article."""
     return sorted(groups, key=lambda g: max(a["ts"] or 0 for a in g), reverse=True)
 
+def _one_per_source(groups):
+    """The Today band has only three slots — spend them on three different
+    debriefs rather than letting one source take two."""
+    seen, out = set(), []
+    for g in groups:
+        src = g[0].get("_canon") or g[0]["source"]
+        if src in seen:
+            continue
+        seen.add(src)
+        out.append(g)
+    return out
+
+def _cadence(g):
+    a = g[0]
+    return (SOURCE_CADENCE.get(a["source"])
+            or SOURCE_CADENCE.get(a.get("_canon") or "")
+            or DEFAULT_CADENCE)
+
+def _brick(g):
+    """One article as a brick. Multi-source groups keep the click-to-expand
+    behaviour the old rows had, just wearing a different shape."""
+    primary  = g[0]
+    n        = len(g)
+    time_str = _ago(primary["date"])
+    src      = _s(primary.get("_canon") or primary["source"])
+    if n == 1:
+        return (f'<a class="mk" href="{_s(primary["link"])}" target="_blank" rel="noopener">'
+                f'<span class="mk-src">{src}</span>'
+                f'<span class="mk-t">{_s(primary["title"])}</span>'
+                f'<span class="mk-time">{time_str}</span></a>\n')
+    arts = "".join(
+        f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="mk-sub" '
+        f'onclick="event.stopPropagation()">'
+        f'<span class="mk-sub-src">{_s(a.get("_canon") or a["source"])}</span>'
+        f'<span class="mk-sub-t">{_s(a["title"])}</span></a>'
+        for a in g)
+    title = primary.get("_headline") or primary["title"]
+    return (f'<div class="mk mk-multi" onclick="this.classList.toggle(\'open\')">'
+            f'<span class="mk-src mk-src-multi">{n} sources</span>'
+            f'<span class="mk-t">{_s(title)}</span>'
+            f'<span class="mk-time">{time_str}</span>'
+            f'<div class="mk-subs">{arts}</div></div>\n')
+
+# Colour behind a slow-read card when no picture can be found
+SLOW_SOURCE_COLORS = {
+    "Not Boring":"#1E3A5F", "Silicon Carne":"#5C2118", "TBPN":"#123A2E",
+    "Scott Aaronson":"#2A2A3E", "First Round Review":"#3B2A55",
+    "Lenny's Newsletter":"#5A3A12", "Pragmatic Engineer":"#123A5C",
+    "Bits About Money":"#2C4A3B", "Reaction Wheel":"#4A2A2A",
+}
+
+def _slow_card(g):
+    """Slow reads use the Culture card: picture, source chip, title over a
+    scrim — falling back to a colour tile when there's no image."""
+    a   = g[0]
+    src = a.get("_canon") or a["source"]
+    img = a.get("img", "")
+    col = SLOW_SOURCE_COLORS.get(a["source"], "#2A2A2E")
+    if img:
+        media = (f'<div class="ci" style="background-image:url({_s(img)});'
+                 f'background-size:cover;background-position:center"></div>')
+        cls = "card"
+    else:
+        media = f'<div class="ci" style="--cul-col:{col}"></div>'
+        cls = "card cul-noimg"
+    return (f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="{cls}">'
+            f'{media}'
+            f'<span class="cs">{src}</span>'
+            f'<div class="cb"><p class="ct">{_s(a["title"])}</p>'
+            f'<span class="ctime">{_ago(a["date"])}</span></div></a>\n')
+
+def _tier(label, groups, cls, limit):
+    if not groups:
+        return ""
+    render = _slow_card if cls == "mkt-slow" else _brick
+    bricks = "".join(render(g) for g in groups[:limit])
+    return (f'<div class="mkt-tier {cls}">'
+            f'<div class="mkt-tier-hd"><span>{label}</span></div>'
+            f'<div class="mk-row">{bricks}</div></div>')
+
+def _build_market_col(groups, label, hd_buttons="", body_id=""):
+    """A markets column: today's debriefs on top, the fast wire in the middle,
+    the slower essayists along the bottom."""
+    buckets = {"daily": [], "fast": [], "slow": []}
+    for g in _sort_by_time(groups):
+        buckets[_cadence(g)].append(g)
+    buckets["daily"] = _one_per_source(buckets["daily"])
+    buckets["slow"]  = _one_per_source(buckets["slow"])
+    idattr = f' id="{body_id}"' if body_id else ""
+    body = (
+        _tier("Today", buckets["daily"], "mkt-daily", 3) +
+        _tier("Latest", buckets["fast"], "mkt-fast", 30) +
+        _tier("Slow reads", buckets["slow"], "mkt-slow", 4)
+    )
+    if not body:
+        body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
+    return (f'<div class="section mkt-col">'
+            f'<div class="sec-hd"><span class="sec-hd-text">{label}</span>{hd_buttons}</div>'
+            f'<div class="mkt-body"{idattr}>{body}</div></div>\n')
+
 def build_tech(groups):
-    # MTS floats to the top; stable sort keeps everything else in recency order
-    ordered = sorted(_sort_by_time(groups),
-                     key=lambda g: 0 if g[0]["source"] in TECH_PINNED else 1)
-    rows = "".join(_build_group_row(g) for g in ordered)
-    if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
-    return _sec("#0C0C0C","Private Markets",
-                f'<div class="story-list">{rows}</div>')
+    return _build_market_col(groups, "Private Markets")
 
 def build_macro(groups):
-    ordered = _sort_by_time(groups)
-    # Stable sort → daily debriefs float to the top, everything else keeps its
-    # recency order. Pinning happens before filtering, so whichever button is
-    # active, its debrief is still the first row.
-    ordered = sorted(ordered, key=lambda g: 0 if g[0]["source"] in MACRO_PINNED else 1)
-    rows = ""
-    for g in ordered:
-        src = g[0].get("_canon") or g[0]["source"]
-        cat = MACRO_CATEGORY.get(src) or MACRO_CATEGORY.get(g[0]["source"], "finance")
-        pin = ' data-pin="1"' if g[0]["source"] in MACRO_PINNED else ""
-        rows += _build_group_row(g, extra_cls="macro-item",
-                                 data_attrs=f'data-cat="{cat}"{pin}')
-    if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles in the past 48h.</p>'
-    body = f"""<div class="story-list" id="macro-list">{rows}</div>
-<script>
-function filterMacro(v){{
-  document.querySelectorAll('.fb[id^="macro-"]').forEach(function(b){{
-    b.classList.toggle('on', b.id==='macro-'+v||(v==='all'&&b.id==='macro-all'));
-  }});
-  document.querySelectorAll('.macro-item').forEach(function(el){{
-    el.style.display=(v==='all'||el.dataset.cat===v)?'':'none';
-  }});
-}}
-</script>"""
     hd_buttons = (
         '<div style="display:flex;gap:6px">'
         '<button class="fb on" id="macro-all" onclick="filterMacro(\'all\')">All</button>'
@@ -3212,14 +3406,47 @@ function filterMacro(v){{
         '<button class="fb" id="macro-crypto" onclick="filterMacro(\'crypto\')">Crypto</button>'
         '</div>'
     )
-    return (
-        f'<div class="section">'
-        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
-        f'<span class="sec-hd-text">Public Markets</span>'
-        f'{hd_buttons}'
-        f'</div>'
-        f'{body}</div>\n'
-    )
+    # tag each brick with its category so the buttons can filter them
+    buckets = {"daily": [], "fast": [], "slow": []}
+    for g in _sort_by_time(groups):
+        buckets[_cadence(g)].append(g)
+    buckets["daily"] = _one_per_source(buckets["daily"])
+    buckets["slow"]  = _one_per_source(buckets["slow"])
+
+    def tier(label, gs, cls, limit):
+        if not gs: return ""
+        out = ""
+        for g in gs[:limit]:
+            src = g[0].get("_canon") or g[0]["source"]
+            cat = MACRO_CATEGORY.get(g[0]["source"]) or MACRO_CATEGORY.get(src, "finance")
+            if cls == "mkt-slow":
+                out += _slow_card(g).replace('class="card', f'class="macro-item card', 1) \
+                                    .replace('rel="noopener"', f'rel="noopener" data-cat="{cat}"', 1)
+                continue
+            out += _brick(g).replace('class="mk"', f'class="mk macro-item" data-cat="{cat}"', 1) \
+                            .replace('class="mk mk-multi"', f'class="mk mk-multi macro-item" data-cat="{cat}"', 1)
+        return (f'<div class="mkt-tier {cls}">'
+                f'<div class="mkt-tier-hd"><span>{label}</span></div>'
+                f'<div class="mk-row">{out}</div></div>')
+
+    body = (tier("Today", buckets["daily"], "mkt-daily", 3) +
+            tier("Latest", buckets["fast"], "mkt-fast", 30) +
+            tier("Slow reads", buckets["slow"], "mkt-slow", 4))
+    if not body:
+        body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
+    js = """<script>
+function filterMacro(v){
+  document.querySelectorAll('.fb[id^="macro-"]').forEach(function(b){
+    b.classList.toggle('on', b.id==='macro-'+v||(v==='all'&&b.id==='macro-all'));
+  });
+  document.querySelectorAll('.macro-item').forEach(function(el){
+    el.style.display=(v==='all'||el.dataset.cat===v)?'':'none';
+  });
+}
+</script>"""
+    return (f'<div class="section mkt-col">'
+            f'<div class="sec-hd"><span class="sec-hd-text">Public Markets</span>{hd_buttons}</div>'
+            f'<div class="mkt-body">{body}</div>{js}</div>\n')
 
 def _build_cal_band_html(event_news={}):
     """Returns the HTML+JS for the compact event band embedded in the culture section."""
@@ -3900,6 +4127,11 @@ def main():
     _ever_links = {a["link"] for a in _ever if a.get("link")}
     tech_raw = _ever + [a for a in tech_raw if a.get("link") not in _ever_links]
     print(f"    → {len(_ever)} evergreen ({', '.join(a['source'] for a in _ever) or 'none'})")
+    # the Slow reads band renders picture cards, so those articles need images
+    _slow = [a for a in tech_raw
+             if SOURCE_CADENCE.get(a["source"]) == "slow" and not a.get("img")]
+    if _slow:
+        _backfill_images(_slow, limit=12)
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
@@ -3969,11 +4201,8 @@ def main():
     _n_img = sum(1 for a in gossip_raw if a.get("img"))
     print(f"    → {len(gossip_raw)} gossip articles (after dedup), "
           f"{_n_img} with image / {len(gossip_raw)-_n_img} colour tiles")
-    print("  Fetching Polymarket…")
-    print("  Fetching Polymarket…")
-    poly_markets = _fetch_polymarket()
-    print("  Fetching prices…")
-    prices = _fetch_prices()
+    # The Polymarket and price bands were removed from the Markets page, so
+    # their fetches are gone too — no point paying for data nothing renders.
     tech_grp  = _enrich_groups(tech_grp,  ai_client, headline_cache)
     macro_grp = _enrich_groups(macro_grp, ai_client, headline_cache)
     _save_headline_cache(headline_cache)
@@ -4079,10 +4308,6 @@ def main():
 {build_tech(tech_grp)}
 {build_macro(macro_grp)}
   </div>
-<div class="snap-feed-bottom">
-{build_polymarket_band(poly_markets)}
-{build_price_band(prices)}
-</div>
 </section>
 
 <!-- ④ CULTURE + EVENTS -->
