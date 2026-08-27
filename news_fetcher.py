@@ -2340,18 +2340,21 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* the brick */
 .mk{
-  display:flex;flex-direction:column;gap:4px;
+  display:flex;flex-direction:column;gap:4px;height:auto;
   padding:9px 10px;min-width:0;overflow:hidden;
   background:var(--bg);border-radius:var(--r);
   text-decoration:none;cursor:pointer;
   transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease}
 .mk:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:2}
+/* Flex children shrink by default, which squeezed every headline to zero
+   height and left bricks 20px tall showing only the source and the time. */
+.mk-src,.mk-t,.mk-time{flex:0 0 auto}
 .mk-src{font-size:6.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
   color:var(--muted)}
 .mk-src-multi{color:var(--accent)}
 .mk-t{font-size:11.5px;line-height:1.32;color:var(--text);
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.mk-time{font-size:7.5px;color:var(--muted);margin-top:auto}
+.mk-time{font-size:7.5px;color:var(--muted)}
 .mk-subs{display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:5px}
 .mk-multi.open .mk-subs{display:block}
 .mk-multi.open .mk-t{-webkit-line-clamp:unset}
@@ -2364,7 +2367,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* Today — the day's debriefs, a row of 2-3, dark so they read first */
 .mkt-daily{flex:0 0 auto}
-.mkt-daily .mk-row{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+/* Fixed width, not 1fr: with 1fr a column holding one brick drew it double
+   the width of a column holding two, so the two markets never matched. */
+.mkt-daily .mk-row{
+  grid-auto-flow:column;grid-auto-columns:238px;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;scrollbar-width:none}
+.mkt-daily .mk-row::-webkit-scrollbar{display:none}
+.mkt-daily .mk{scroll-snap-align:start}
 .mkt-daily .mk{background:var(--panel-ink);min-height:78px}
 .mkt-daily .mk-t{color:var(--panel);font-size:12.5px;font-weight:500;-webkit-line-clamp:3}
 .mkt-daily .mk-src{color:var(--panel-ink-faint);color:rgba(255,255,255,.45)}
@@ -2374,6 +2384,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mkt-fast{flex:1;min-height:0}
 .mkt-fast .mk-row{
   grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:min-content;
   align-content:start;overflow-y:auto;padding-right:3px;
   scrollbar-width:thin;scrollbar-color:var(--panel-line) transparent}
 .mkt-fast .mk-row::-webkit-scrollbar{width:2px}
@@ -2383,7 +2394,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mkt-slow{flex:1 1 0;min-height:0}
 .mkt-fast{flex:2 1 0;min-height:0}
 .mkt-slow .mk-row{
-  flex:1;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  flex:1;grid-auto-flow:column;grid-auto-columns:152px;
   min-height:0;overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x proximity;scrollbar-width:none}
 .mkt-slow .mk-row::-webkit-scrollbar{display:none}
@@ -3382,12 +3393,11 @@ def _build_market_col(groups, label, hd_buttons="", body_id=""):
     for g in _sort_by_time(groups):
         buckets[_cadence(g)].append(g)
     buckets["daily"] = _one_per_source(buckets["daily"])
-    buckets["slow"]  = _one_per_source(buckets["slow"])
     idattr = f' id="{body_id}"' if body_id else ""
     body = (
-        _tier("Today", buckets["daily"], "mkt-daily", 3) +
-        _tier("Latest", buckets["fast"], "mkt-fast", 30) +
-        _tier("Slow reads", buckets["slow"], "mkt-slow", 4)
+        _tier("Today", buckets["daily"], "mkt-daily", 8) +
+        _tier("Latest", buckets["fast"], "mkt-fast", 60) +
+        _tier("Slow reads", buckets["slow"], "mkt-slow", 14)
     )
     if not body:
         body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
@@ -3411,7 +3421,6 @@ def build_macro(groups):
     for g in _sort_by_time(groups):
         buckets[_cadence(g)].append(g)
     buckets["daily"] = _one_per_source(buckets["daily"])
-    buckets["slow"]  = _one_per_source(buckets["slow"])
 
     def tier(label, gs, cls, limit):
         if not gs: return ""
@@ -3429,9 +3438,9 @@ def build_macro(groups):
                 f'<div class="mkt-tier-hd"><span>{label}</span></div>'
                 f'<div class="mk-row">{out}</div></div>')
 
-    body = (tier("Today", buckets["daily"], "mkt-daily", 3) +
-            tier("Latest", buckets["fast"], "mkt-fast", 30) +
-            tier("Slow reads", buckets["slow"], "mkt-slow", 4))
+    body = (tier("Today", buckets["daily"], "mkt-daily", 8) +
+            tier("Latest", buckets["fast"], "mkt-fast", 60) +
+            tier("Slow reads", buckets["slow"], "mkt-slow", 14))
     if not body:
         body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
     js = """<script>
