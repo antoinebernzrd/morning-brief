@@ -2549,60 +2549,59 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   .mb-more{margin:3px 0 0}
 }
 
-/* ── Markets: editorial-card styling ─────────────────────────────
-   Scoped to .snap-feed, and declared last so it wins ties against the
-   cadence-band rules above. Near-white ground, white cards with a soft
-   lift, meta as one quiet grey line, bold near-black headline. Paint only —
-   layout and structure are untouched, and the Slow reads cards are left
-   alone because they deliberately share the Culture card. */
-.snap-feed{--panel:#F1F1F1;--panel-ink:#111;
-  --mk-card:#fff;--mk-title:#0E0E0E;--mk-meta:#8C8C8C;--mk-radius:14px}
-.snap-feed .mkt-tier-hd{color:var(--mk-meta);letter-spacing:1.5px}
-.snap-feed .mkt-tier-hd:after{background:rgba(0,0,0,.09)}
+/* ── Markets: the reference's flat editorial treatment ───────────
+   Measured off oimachi.co rather than eyeballed from a screenshot: their
+   insight items are transparent on the ground, not cards. Separation comes
+   from whitespace and a tight type ramp, and the site never goes bolder
+   than 500. Scoped to .snap-feed and declared last so it wins ties. */
+.snap-feed{--panel:#F0F0F0;--panel-ink:#111;
+  --mk-title:#000;--mk-meta:#696764;--mk-radius:5px}
+.snap-feed .mkt-tier-hd{color:var(--mk-meta);letter-spacing:1.4px;font-weight:500}
+.snap-feed .mkt-tier-hd:after{background:rgba(0,0,0,.10)}
+/* flat: no fill, no shadow — whitespace does the separating */
 .snap-feed .mk{
-  background:var(--mk-card);
+  background:transparent;
   border-radius:var(--mk-radius);
-  padding:14px 15px;gap:7px;
-  box-shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(0,0,0,.045);
-  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
-.snap-feed .mk:hover{
-  transform:translateY(-2px);
-  box-shadow:0 2px 4px rgba(0,0,0,.06),0 14px 30px rgba(0,0,0,.10)}
-/* meta reads as one line: Source · 3h */
+  padding:7px 8px;gap:6px;
+  box-shadow:none;
+  transition:background .18s ease}
+.snap-feed .mk:hover{background:rgba(0,0,0,.045);transform:none;box-shadow:none}
+/* meta: light weight, warm grey, one line — Source · 3h */
 .snap-feed .mk-hd{justify-content:flex-start;gap:0;align-items:baseline}
-.snap-feed .mk-src{font-size:11px;font-weight:400;letter-spacing:0;
+.snap-feed .mk-src{font-size:11.5px;font-weight:300;letter-spacing:0;
   text-transform:none;color:var(--mk-meta)}
-.snap-feed .mk-src-multi{color:var(--accent);font-weight:500}
-.snap-feed .mk-time{font-size:11px;font-weight:400;letter-spacing:0;
+.snap-feed .mk-src-multi{color:var(--accent);font-weight:400}
+.snap-feed .mk-time{font-size:11.5px;font-weight:300;letter-spacing:0;
   color:var(--mk-meta)}
-.snap-feed .mk-time:before{content:"\00B7";margin:0 6px;color:var(--mk-meta)}
-/* headline carries the weight */
-.snap-feed .mk-t{font-size:14px;font-weight:700;line-height:1.34;
-  color:var(--mk-title);letter-spacing:-.2px}
-/* Today: same card, a larger headline rather than a different fill */
-.snap-feed .mkt-daily .mk{background:var(--mk-card);min-height:0;padding:15px 16px}
-.snap-feed .mkt-daily .mk-t{font-size:16px;font-weight:700;line-height:1.3;
+.snap-feed .mk-time:before{content:"\00B7";margin:0 5px;color:var(--mk-meta)}
+/* headline: 500 and tight, never bold */
+.snap-feed .mk-t{font-size:13.5px;font-weight:500;line-height:1.12;
+  color:var(--mk-title);letter-spacing:0}
+/* Today: a size step, still 500 */
+.snap-feed .mkt-daily .mk{padding:8px}
+.snap-feed .mkt-daily .mk-t{font-size:15.5px;font-weight:500;line-height:1.1;
   color:var(--mk-title)}
 .snap-feed .mkt-daily .mk-src,
 .snap-feed .mkt-daily .mk-time{color:var(--mk-meta)}
 /* expanded multi-source list */
-.snap-feed .mk-subs{border-top-color:rgba(0,0,0,.08)}
-.snap-feed .mk-sub{border-bottom-color:rgba(0,0,0,.06)}
-.snap-feed .mk-sub-src{font-size:10px;font-weight:400;letter-spacing:0;
+.snap-feed .mk-subs{border-top-color:rgba(0,0,0,.10)}
+.snap-feed .mk-sub{border-bottom-color:rgba(0,0,0,.07)}
+.snap-feed .mk-sub-src{font-size:10.5px;font-weight:300;letter-spacing:0;
   text-transform:none;color:var(--mk-meta)}
-.snap-feed .mk-sub-t{font-size:12.5px;color:var(--mk-title)}
-/* filter buttons on the lighter ground */
-.snap-feed .fb{border-color:rgba(0,0,0,.16);color:var(--mk-meta)}
-.snap-feed .fb.on{background:var(--mk-title);color:var(--mk-card);
-  border-color:var(--mk-title)}
+.snap-feed .mk-sub-t{font-size:12.5px;font-weight:400;line-height:1.2;
+  color:var(--mk-title)}
+/* filter buttons, same quiet register */
+.snap-feed .fb{border-color:rgba(0,0,0,.18);color:var(--mk-meta);font-weight:500}
+.snap-feed .fb.on{background:var(--mk-title);color:#F0F0F0;border-color:var(--mk-title)}
 @media(prefers-color-scheme:dark){
-  .snap-feed{--panel:#0F0F0F;--panel-ink:#EDEDED;
-    --mk-card:#191919;--mk-title:#F2F2F2;--mk-meta:#7C7C7C}
-  .snap-feed .mkt-tier-hd:after{background:rgba(255,255,255,.12)}
-  .snap-feed .mk{box-shadow:0 1px 2px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.4)}
-  .snap-feed .mk-subs{border-top-color:rgba(255,255,255,.10)}
-  .snap-feed .mk-sub{border-bottom-color:rgba(255,255,255,.08)}
-  .snap-feed .fb{border-color:rgba(255,255,255,.18)}
+  .snap-feed{--panel:#101010;--panel-ink:#EDEDED;
+    --mk-title:#F4F4F4;--mk-meta:#8A8784}
+  .snap-feed .mkt-tier-hd:after{background:rgba(255,255,255,.13)}
+  .snap-feed .mk:hover{background:rgba(255,255,255,.06)}
+  .snap-feed .mk-subs{border-top-color:rgba(255,255,255,.12)}
+  .snap-feed .mk-sub{border-bottom-color:rgba(255,255,255,.09)}
+  .snap-feed .fb{border-color:rgba(255,255,255,.2)}
+  .snap-feed .fb.on{color:#101010}
 }
 
 """
