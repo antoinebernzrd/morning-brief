@@ -216,8 +216,9 @@ TECH_PINNED = ("MTS Newsletter",)
 # the middle, the occasional essayists along the bottom.
 SOURCE_CADENCE = {
     # once a day, read these first
-    "MTS Newsletter":"daily", "Stratechery":"daily", "The NBS":"daily",
-    "FirstFT":"daily", "The Block Daily":"daily",
+    "MTS Newsletter":"daily", "Stratechery":"slow", "The NBS":"daily",
+    "FirstFT":"daily", "The Block Daily":"daily",     "Howard Marks":"slow", "Musings on Markets":"slow", "Citation Needed":"slow",
+    "Le Grand Continent":"slow",
     # several times a day
     "TechCrunch":"fast", "FT Tech":"fast", "FT Companies Tech":"fast", "FT":"fast",
     "The Block":"fast", "The Street":"fast", "SiliconMania":"fast",
@@ -240,8 +241,8 @@ TECH_EVERGREEN = [
 ]
 
 # Per-source recency windows (days). Anything absent uses the section default.
-SOURCE_WINDOW_DAYS = {
-    "Scott Aaronson":    14,   # ~2 posts a week
+SOURCE_WINDOW_DAYS = {"Howard Marks":365, "Le Grand Continent":14, "Musings on Markets":45,
+                      "Citation Needed":21,     "Scott Aaronson":    14,   # ~2 posts a week
     "Film Comment":      30,   # publishes in bursts, then goes quiet for weeks
     "Common Edge":        7,   # near-daily
     "Works in Progress": 14,   # ~weekly
@@ -252,6 +253,10 @@ MACRO_SOURCES = [
     # FirstFT is the FT's daily debrief — pinned to the top of the list.
     ("FirstFT",         "https://www.ft.com/firstft?format=rss"),
     ("The Street",      "https://news.google.com/rss/search?q=site:thestreet.com&hl=en&gl=US&ceid=US:en"),
+    # The stack: Oaktree publishes no feed at all (every rss path 404s), so
+    # Marks comes through Google News; Damodaran's blogspot feed is direct.
+    ("Howard Marks",    "https://news.google.com/rss/search?q=site:oaktreecapital.com%2Finsights%2Fmemo+when:365d&hl=en&gl=US&ceid=US:en"),
+    ("Musings on Markets", "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss"),
     # Les Echos fetched separately via _fetch_les_echos_macro() — Python-side keyword filtering
     # ── Crypto (the "Crypto" button) ─────────────────────────────────────────
     ("The Block",       "https://www.theblock.co/rss.xml"),
@@ -260,6 +265,7 @@ MACRO_SOURCES = [
     # in with their other titles (The Funding, Data & Insights, Layer One).
     # _keep_block_daily() narrows this back down to "The Daily" issues.
     ("The Block Daily", "https://news.google.com/rss/search?q=site:theblock.co/newsletters+when:14d&hl=en&gl=US&ceid=US:en"),
+    ("Citation Needed", "https://www.citationneeded.news/rss/"),
 ]
 # ── Geopolitics side panel ────────────────────────────────────────────────────
 # Politico publishes proper RSS for its sections *and* its newsletters, so
@@ -273,9 +279,28 @@ GEO_SOURCES = [
     ("Playbook Paris",  "https://www.politico.eu/newsletter/playbook-paris/feed/"),
     ("Politico France", "https://www.politico.eu/country/france/feed/"),
     ("Politico EU",     "https://www.politico.eu/feed/"),
+    # The long-form tier: Politico is a wire, this is the essay side.
+    ("Le Grand Continent", "https://legrandcontinent.eu/fr/feed/"),
 ]
 # Daily debriefs — pinned to the top of the panel, World in Brief first
 GEO_PINNED = ("World in Brief", "Playbook Paris")
+
+_GN_SUFFIX = re.compile(r"\s*[-–—]\s*(?:Bloomberg\.com|Bloomberg|"
+                        r"Oaktree Capital Management|Oaktree Capital|"
+                        r"TheStreet|The Street|The Block)\s*$", re.I)
+
+def _drop_audio_dupes(arts):
+    """Oaktree posts each memo twice — once to read, once to listen to. The
+    audio page carries the same title with "(Audio)" appended."""
+    return [a for a in arts if not re.search(r"\(\s*audio\s*\)\s*$",
+                                             _GN_SUFFIX.sub("", a["title"]).strip(), re.I)]
+
+def _strip_gn_suffix(arts):
+    """Google News tacks " - Publisher" onto every headline it returns. The
+    source is already printed above the title, so the suffix is just noise."""
+    for a in arts:
+        a["title"] = _GN_SUFFIX.sub("", a["title"]).strip()
+    return arts
 
 def _keep_world_brief(arts):
     """The World in Brief feed is a Google News search over the whole section,
@@ -292,15 +317,26 @@ def _keep_world_brief(arts):
         out.append(a)
     return out
 
+# Printed next to the source, the way Culture names its beat
+MACRO_BEAT = {
+    "FirstFT":"Public Finance", "The Street":"Public Finance",
+    "Howard Marks":"Public Finance", "Musings on Markets":"Public Finance",
+    "AFP":"Public Finance", "Les Echos":"Public Finance",
+    "The Block":"Crypto", "The Block Daily":"Crypto",
+    "Citation Needed":"Crypto",
+}
 # Which button each macro source sits behind
 MACRO_CATEGORY = {
     "FirstFT":         "finance",
     "The Street":      "finance",
+    "Howard Marks":    "finance",
+    "Musings on Markets": "finance",
     "Les Echos":       "finance",
     "Les Echos macro": "finance",
     "AFP":             "finance",
     "The Block":       "crypto",
     "The Block Daily": "crypto",
+    "Citation Needed": "crypto",
 }
 # Daily debriefs — always sorted to the top of the macro list
 MACRO_PINNED = ("FirstFT", "The Block Daily")
@@ -366,12 +402,6 @@ ART_NEWSPAPER_FEED = "https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"
 # Dropped 2026-08: Le Monde Diplo, Le Canard, Franc-Tireur, Le 1 Hebdo.
 # (Le 1 Hebdo's RSS is dead — every documented feed path 404s.)
 GOSSIP_SOURCES_OTHER = [
-    # Les Echos "Idées & Débats" — the section feed itself. Keyword-filtering
-    # the general Les Echos feed matched only ~9 items a day, most of them
-    # evergreen topic index pages; this returns the actual opinion pieces.
-    ("Les Echos Idées",  "https://news.google.com/rss/search?q=site:lesechos.fr/idees-debats+when:7d&hl=fr&gl=FR&ceid=FR:fr"),
-    # The Free Press — direct RSS (daily), carries real article images
-    ("The Free Press",   "https://www.thefp.com/feed"),
     # 229 posts and fresh, but not one carries an image — renders as colour tiles
     ("Works in Progress","https://worksinprogress.co/rss.xml"),
     # The Economist opinion = Leaders (editorials) + By Invitation (guest essays).
@@ -382,31 +412,33 @@ GOSSIP_SOURCES_OTHER = [
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
-    "Les Echos Idées":   4,   # section feed → 4 days
-    "The Free Press":    2,   # daily → 48h
     "The Economist":     4,   # weekly print cadence → 4 days
     "Works in Progress": 14,  # ~weekly
 }
 # Colour for each source's badge chip (also drives the no-image tile)
 GOSSIP_SOURCE_COLORS = {
-    "Les Echos Idées":  "#C84B00",   # burnt orange
-    "The Free Press":   "#1D4E3F",   # dark green
     "The Economist":    "#E3120B",   # Economist red
     "Works in Progress":"#2F4858",   # slate
 }
+MACRO_SOURCE_COLORS = {
+    "Howard Marks":"#123A2E",
+    "Musings on Markets":"#3B2A55", "Citation Needed":"#4A2A2A",
+    "FirstFT":"#3A2A22", "The Block Daily":"#12324A", "The Street":"#1F2A24",
+}
+# L'Équipe retired its RSS — every lequipe.fr/rss/ path now 404s, and RMC and
+# Eurosport return nothing. Google News is the only remaining route to L'Équipe
+# and it carries no usable image, so the French side is carried by Le Monde and
+# France Info, both of which ship a picture on every item.
 SPORTS_SOURCES_FR = [
-    # Direct L'Équipe RSS feeds — much faster than Google News indexing
-    ("L'Équipe",        "https://www.lequipe.fr/rss/actu_rss.xml"),
-    ("L'Équipe Tennis", "https://www.lequipe.fr/rss/actu_rss_Tennis.xml"),
-    ("L'Équipe Foot",   "https://www.lequipe.fr/rss/actu_rss_Football.xml"),
-    ("L'Équipe F1",     "https://www.lequipe.fr/rss/actu_rss_Formule1.xml"),
-    # Google News as backup for broader coverage
+    ("Le Monde Sport",  "https://www.lemonde.fr/sport/rss_full.xml"),
+    ("France Info Sport", "https://www.francetvinfo.fr/sports.rss"),
     ("L'Équipe GN",     "https://news.google.com/rss/search?q=site:lequipe.fr+when:2d&hl=fr&gl=FR&ceid=FR:fr"),
-    ("RMC Sport",       "https://rmcsport.bfmtv.com/rss/infos.xml"),
 ]
 SPORTS_SOURCES_INT = [
-    ("BBC Sport", "https://feeds.bbci.co.uk/sport/rss.xml"),
-    ("Eurosport", "https://news.google.com/rss/search?q=site:eurosport.com+when:2d&hl=en&gl=US&ceid=US:en"),
+    ("BBC Sport",     "https://feeds.bbci.co.uk/sport/rss.xml"),
+    ("BBC Football",  "https://feeds.bbci.co.uk/sport/football/rss.xml"),
+    ("Sky Sports",    "https://www.skysports.com/rss/12040"),
+    ("Guardian Sport","https://www.theguardian.com/uk/sport/rss"),
 ]
 CONFLICT_NEWS_SOURCES = [
     # ── Broad wire / world feeds ──────────────────────────────────────────────
@@ -981,7 +1013,7 @@ _TRUSTED_PUBS = frozenset([
 def _fetch_event_news(name, max_items=8):
     """Fetch latest news for a calendar event, filtered to trusted sources."""
     q = name.replace(" ", "+").replace("'", "").replace("&", "and")
-    url = (f"https://news.google.com/rss/search?q=%22{q}%22+when:14d"
+    url = (f"https://news.google.com/rss/search?q=%22{q}%22+when:7d"
            f"&hl=en&gl=US&ceid=US:en")
     try:
         feed = feedparser.parse(
@@ -994,7 +1026,7 @@ def _fetch_event_news(name, max_items=8):
             dt  = _parse_date(e)
             src = getattr(getattr(e, "source", None), "title", "") or ""
             return {"title": e.get("title", "—"), "link": _resolve_gnews(e.get("link", "#")),
-                    "source": src, "ago": _ago(dt), "img": _img(e)}
+                    "source": src, "ago": _ago(dt), "ts": _ts(dt), "img": _img(e)}
         # First pass: trusted publishers only
         arts = []
         for e in feed.entries[:30]:
@@ -1006,6 +1038,8 @@ def _fetch_event_news(name, max_items=8):
         # Fallback: too few trusted results → take top unfiltered
         if len(arts) < 3:
             arts = [_make(e) for e in feed.entries[:max_items]]
+        # Google returns these by its own relevance ranking, not by date
+        arts.sort(key=lambda a: a.get("ts") or 0, reverse=True)
         return arts
     except Exception as ex:
         print(f"  ⚠  event news ({name}): {ex}")
@@ -1069,8 +1103,9 @@ LES_ECHOS_POLITIQUE_KW = [
 ]
 
 def _fetch_les_echos(keywords, label):
-    """Fetch Les Echos broadly, filter by keywords in Python — 100% reliable."""
-    arts = _fetch([(label, _LE_FEED)])
+    """Fetch Les Echos broadly, filter by keywords in Python — 100% reliable.
+    The label becomes the source name, so it has to read as a masthead."""
+    arts = _fetch([(f"Les Echos {label}", _LE_FEED)])
     result = []
     for a in arts:
         text = (a.get("title","") + " " + a.get("snip","")).lower()
@@ -1081,6 +1116,9 @@ def _fetch_les_echos(keywords, label):
 
 # Sources capped at 1 article (show only latest)
 SOURCE_CAPS = {
+    "Howard Marks":      1,
+    "Musings on Markets":1,
+    "Citation Needed":   3,
     "Silicon Carne":     1,
     "Not Boring":        1,
     "TBPN":              1,
@@ -1089,10 +1127,7 @@ SOURCE_CAPS = {
     "Scott Aaronson":    1,
     "Bits About Money":  1,
     "Reaction Wheel":    1,
-    # ── Opinions. Les Echos' idees-debats feed is far more prolific than the
-    # others and was taking 27 of the section's 40 cards, crowding the rest out.
-    "Les Echos Idées":  12,
-    "The Free Press":   15,
+    # ── Opinions
     "The Economist":    10,
     "Works in Progress": 6,
     "Lenny's Newsletter":1,
@@ -1259,7 +1294,6 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:600;
 .map-wrap{display:flex;height:440px}
 /* left half: map on top, conflict names underneath */
 .geo-left{flex:0 0 62%;min-width:0;display:flex;flex-direction:column;overflow:hidden}
-#map{flex:1;min-height:0;overflow:hidden;border-radius:var(--r)}
 /* conflict names — multi-column grid of chips under the map */
 .cp-grid{
   flex:0 0 auto;max-height:44%;overflow-y:auto;
@@ -1546,18 +1580,16 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo>.section{height:100%!important;display:flex!important;flex-direction:column!important}
 .snap-geo .sec-hd{flex-shrink:0}
 .snap-geo .map-wrap{flex:1!important;height:0!important;min-height:0!important}
-.snap-geo #map{height:100%!important;position:relative!important}
 .cp-list{position:relative}
 .cp-list::after{content:'';position:sticky;bottom:0;display:block;
   height:40px;background:linear-gradient(to bottom,transparent,var(--bg2));
   pointer-events:none}
 /* ── Map: light theme ─────────────────────────────────────── */
-#map{background:var(--bg)!important}
 #map .leaflet-control-zoom a{background:var(--bg)!important;color:var(--muted)!important;
   border-color:var(--border)!important}
 #map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
 .snap-geo>.section{background:var(--bg)}
-.snap-geo .sec-hd{background:var(--ground)!important;border-bottom:none;padding:0 16px}
+.snap-geo .sec-hd{background:var(--ground)!important;border-bottom:none}
 .snap-geo .sec-hd-text{color:var(--ink)}
 .snap-geo .sec-hd-meta{color:var(--meta)}
 .snap-geo .cp{background:var(--bg);border-left:none;position:relative;z-index:1}
@@ -1804,59 +1836,67 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   position:fixed;inset:0;background:rgba(0,0,0,.6);
   z-index:9998;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .ccv-backdrop.active{display:block}
-/* portal overlay — card is moved to document.body so all styles are self-contained */
+/* Portal overlay — the card is moved to document.body, so every rule here is
+   self-contained. Built on the same tokens as the rest of the brief: the
+   picture sits above the text, not behind it. */
 .cal-ev-portal-open{
   position:fixed!important;
   left:50%!important;top:50%!important;
   transform:translate(-50%,-50%)!important;
-  width:min(65vw,860px)!important;
-  height:min(72vh,680px)!important;
+  width:min(62vw,760px)!important;
+  max-height:min(84vh,760px)!important;height:auto!important;
   z-index:9999!important;
+  background:var(--ground)!important;
   border-radius:var(--r)!important;overflow:hidden!important;
-  box-shadow:0 32px 100px rgba(0,0,0,.85)!important;
-  opacity:1!important;cursor:default;display:block!important}
+  box-shadow:0 30px 90px rgba(0,0,0,.45)!important;
+  opacity:1!important;cursor:default;
+  display:flex!important;flex-direction:column!important;
+  aspect-ratio:auto!important;padding:0!important;border-bottom:none!important}
 .cal-ev-portal-open .cal-ev-bg{
-  position:absolute;inset:0;
-  background-size:cover!important;background-position:center top!important}
+  position:static;flex:0 0 auto;display:block;
+  width:100%;aspect-ratio:16/7;
+  background-size:cover!important;background-position:center!important}
+/* No picture in the coverage — open on the headline instead of a colour slab. */
+.cal-ev-portal-open .cal-ev-bg-flat{display:none}
 .cal-ev-portal-open .cal-ev-body{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:40px 20px 16px;
-  background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 100%);
-  transform:none}
-.cal-ev-portal-open .cal-ev-meta{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  position:static;flex:0 0 auto;display:block;
+  padding:16px 22px 14px;background:none;transform:none;height:auto}
+.cal-ev-portal-open .cal-ev-meta{
+  display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .cal-ev-portal-open .cal-ev-cat-chip{
-  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  color:rgba(255,255,255,.8);background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);padding:3px 8px}
+  font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--meta);background:var(--wash);border:none;
+  border-radius:var(--r-sm);padding:3px 8px}
 .cal-ev-portal-open .cal-live-badge{
-  font-size:9px;font-weight:700;color:#fff;background:#16A34A;
+  font-size:10px;font-weight:500;letter-spacing:.06em;color:#fff;background:#DC2626;
   border-radius:var(--r-sm);padding:3px 7px}
 .cal-ev-portal-open .cal-ev-name{
-  font-size:clamp(18px,2.2vw,32px);font-weight:700;
-  color:#fff;line-height:1.15;margin-bottom:5px;
-  text-shadow:0 2px 8px rgba(0,0,0,.6)}
+  font-size:28px;font-weight:500;color:var(--ink);line-height:1.1;
+  margin-bottom:4px;text-shadow:none;text-align:left}
 .cal-ev-portal-open .cal-ev-range{
-  font-size:13px;color:rgba(255,255,255,.6);font-weight:300}
+  font-size:12px;color:var(--meta);font-weight:400}
 .cal-ev-portal-open .cal-ev-panel{
-  position:absolute;left:0;right:0;bottom:0;height:52%;
-  background:rgba(248,248,248,.98);
-  padding:18px 22px 20px;
+  position:static;flex:1 1 auto;min-height:0;height:auto;width:auto;
+  background:none;border-top:1px solid var(--hair);
+  padding:14px 22px 20px;display:block;
   overflow-y:auto;scrollbar-width:thin;
-  transform:translateY(0)!important;transition:none}
+  transform:none!important;transition:none}
 .cal-ev-portal-open .cal-ev-panel-hd{
-  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  color:#888;margin-bottom:10px}
+  font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--meta);margin-bottom:8px}
 .cal-ev-portal-open .cal-det-art{
-  display:flex;flex-direction:column;gap:2px;
-  padding:9px 0;border-bottom:1px solid #e5e5e5;text-decoration:none}
+  display:flex;flex-direction:column;gap:1px;
+  padding:9px 0;border-bottom:1px solid var(--hair);text-decoration:none}
 .cal-ev-portal-open .cal-det-art:last-of-type{border-bottom:none}
-.cal-ev-portal-open .cal-det-art-title{font-size:13px;color:#111;line-height:1.4;font-weight:400}
-.cal-ev-portal-open .cal-det-art-meta{font-size:10px;color:#888;margin-top:2px}
-.cal-ev-portal-open .cal-det-none{font-size:11px;color:#888;margin:4px 0}
+.cal-ev-portal-open .cal-det-art-title{
+  font-size:15px;color:var(--ink);line-height:1.25;font-weight:500}
+.cal-ev-portal-open .cal-det-art-meta{
+  font-size:11.5px;font-weight:300;color:var(--meta);margin-top:3px}
+.cal-ev-portal-open .cal-det-none{font-size:12px;color:var(--meta);margin:4px 0}
 .cal-ev-portal-open .cal-search-link{
-  display:inline-block;margin-top:12px;font-size:10px;font-weight:600;
-  color:#555;text-decoration:none;border-bottom:1px solid #ccc}
-.cal-ev-portal-open .cal-search-link:hover{color:#111}
+  display:inline-block;margin-top:14px;font-size:11px;font-weight:400;
+  color:var(--meta);text-decoration:none;border-bottom:1px solid var(--hair)}
+.cal-ev-portal-open .cal-search-link:hover{color:var(--ink)}
 .snap-culture .culture-cal-band .cal-ev-bg{
   position:absolute;inset:0;
   background:linear-gradient(150deg,#FF8A3D 0%,#E8590C 55%,#C74405 100%)!important}
@@ -2811,6 +2851,255 @@ html{scroll-padding-top:0}
 .snap-culture .cards{grid-auto-flow:column dense}
 .snap-culture .pc-long{grid-row:span 2}
 
+
+/* ══ Round four ══════════════════════════════════════════════════
+
+   1. Markets picture cards are perfect squares — the whole card, text and
+      picture together, not just the image. */
+.mkt-slow{flex:0 0 auto}
+.mkt-slow .mk-row{grid-auto-columns:168px;align-items:start}
+.mkt-slow .pcard{width:168px;aspect-ratio:1/1;height:auto}
+.mkt-slow .pc-img{flex:1;min-height:0}
+
+/* 2. Geo panel now has bands, so it scrolls like the markets column */
+.geo-body{
+  flex:1;min-height:0;display:flex;flex-direction:column;
+  gap:2px;padding:0 14px 14px;overflow:hidden}
+.geo-today{flex:0 0 auto}
+.geo-latest{flex:1;min-height:0}
+.geo-latest .mk-row{
+  overflow-y:auto;align-content:start;padding-right:3px;
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.geo-latest .mk-row::-webkit-scrollbar{width:2px}
+.geo-body .mk-row{display:flex;flex-direction:column;gap:var(--brick-gap)}
+.geo-body .mk{flex:0 0 auto}
+
+/* 3. Culture events: a narrow list down the right, not a band of circles */
+.snap-culture .culture-body{flex-direction:row;gap:12px}
+.snap-culture .cards{flex:1;min-width:0}
+.snap-culture .culture-cal-band{
+  flex:0 0 250px;height:auto;max-height:none;min-height:0;
+  display:flex;flex-direction:column;align-items:stretch;
+  gap:0;padding:0 14px 0 0;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.snap-culture .culture-cal-band::-webkit-scrollbar{width:2px}
+.snap-culture .culture-cal-band .cal-ev-card{
+  flex:0 0 auto;height:auto;width:auto;aspect-ratio:auto;
+  border-radius:0;opacity:1;
+  display:flex;align-items:center;gap:9px;
+  padding:9px 2px;
+  border-bottom:1px solid var(--hair);
+  background:transparent;
+  transition:background .18s ease}
+.snap-culture .culture-cal-band .cal-ev-card:last-child{border-bottom:none}
+.snap-culture .culture-cal-band .cal-ev-card:hover{background:var(--wash)}
+/* the orange disc shrinks to a small square marker */
+.snap-culture .culture-cal-band .cal-ev-bg{
+  position:relative!important;flex:0 0 auto;
+  width:22px;height:22px;border-radius:5px;
+  background:linear-gradient(150deg,#FF8A3D,#E8590C)!important}
+.snap-culture .culture-cal-band .cal-ev-card.ev-past .cal-ev-bg{
+  background:var(--hair)!important;filter:none;opacity:1}
+.snap-culture .culture-cal-band .cal-ev-body{
+  position:relative!important;top:auto;left:auto;right:auto;
+  transform:none!important;flex:1;min-width:0;padding:0;display:block}
+.snap-culture .culture-cal-band .cal-ev-name{
+  font-size:12px;font-weight:500;color:var(--ink);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:none;margin:0}
+.snap-culture .culture-cal-band .cal-ev-range{
+  font-size:10.5px;font-weight:300;color:var(--meta)}
+.snap-culture .culture-cal-band .cal-ev-meta{margin:0 0 1px}
+.snap-culture .culture-cal-band .cal-ev-cat-chip{
+  font-size:8px;padding:1px 5px;background:transparent;
+  border:1px solid var(--hair);color:var(--meta)}
+.snap-culture .culture-cal-band .cal-live-badge{font-size:8px;padding:1px 5px}
+
+/* 4. Conflict names as list rows with hairlines, like the reference's nav */
+.cp-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0 22px;padding:var(--sec-gap) 14px 14px}
+.cp-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 2px;border-radius:0;
+  border-bottom:1px solid var(--hair);
+  font-size:13px;font-weight:400;color:var(--ink)}
+.cp-chip:hover{background:var(--wash)}
+.cp-chip .dot{
+  display:block;                      /* base .dot is display:none */
+  width:20px;height:20px;border-radius:5px;flex:0 0 auto;
+  background:var(--accent)!important}
+.cp-chip.has-new .dot{box-shadow:0 0 0 3px rgba(212,43,23,.18)}
+
+
+/* ══ Markets as an Art Newspaper band ════════════════════════════
+   448 / 448 / 208 on the reference, kept as proportions here: a lead story,
+   a stack of long reads, a rail of the latest. One weight throughout — the
+   hierarchy is size and picture treatment, exactly as on the reference. */
+.mkt-page{height:100%;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--ground)}
+.mkt-band{
+  flex:1;min-height:0;display:grid;
+  grid-template-columns:minmax(0,2.15fr) minmax(0,2.15fr) minmax(0,1fr);
+  gap:0 26px;padding:var(--sec-gap) 14px 14px;overflow:hidden}
+
+/* lead — one story, the big picture */
+.mkt-lead{min-width:0;display:flex;flex-direction:column;overflow:hidden}
+/* the lead does not stretch: its picture stays 4:3 like the reference's,
+   rather than growing into a portrait to fill the column */
+.pc-lead{flex:0 0 auto;padding:0}
+.pc-lead .pc-t{font-size:28px;font-weight:500;line-height:1.1;-webkit-line-clamp:3}
+.pc-lead .pc-hd{font-size:11.5px}
+.pc-lead .pc-snip{font-size:12.5px;-webkit-line-clamp:3;margin-top:2px}
+.pc-lead .pc-img{flex:none;aspect-ratio:4/3;margin:8px 0 0;border-radius:.3rem}
+
+/* stack — long reads, thumbnail beside the text */
+.mkt-stack{
+  min-width:0;display:flex;flex-direction:column;min-height:0;
+  overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.mkt-stack::-webkit-scrollbar{width:2px}
+.pc-row{
+  flex:0 0 auto;
+  display:grid;grid-template-columns:minmax(0,1fr) 152px;
+  grid-template-areas:"hd img" "t img" "snip img";
+  align-content:start;column-gap:12px;row-gap:2px;
+  padding:10px 0;border-bottom:1px solid var(--hair)}
+.mkt-stack .pc-row:last-child{border-bottom:none}
+.pc-row .pc-hd{grid-area:hd}
+.pc-row .pc-t{grid-area:t;font-size:18px;line-height:1.1;-webkit-line-clamp:3}
+.pc-row .pc-snip{grid-area:snip;-webkit-line-clamp:2}
+.pc-row .pc-img{
+  grid-area:img;margin:0;align-self:start;
+  width:152px;aspect-ratio:4/3;flex:none;border-radius:.3rem}
+
+/* rail — the latest, text only */
+.mkt-rail{min-width:0;display:flex;flex-direction:column;min-height:0}
+.mkt-rail-list{
+  flex:1;min-height:0;overflow-y:auto;
+  display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.mkt-rail-list::-webkit-scrollbar{width:2px}
+.mkt-rail .mk{
+  flex:0 0 auto;padding:9px 0;border-radius:0;
+  border-bottom:1px solid var(--hair)}
+.mkt-rail .mk:last-child{border-bottom:none}
+.mkt-rail .mk:hover{background:transparent}
+.mkt-rail .mk:hover .mk-t{color:var(--meta)}
+.mkt-rail .mk-t{font-size:16px;line-height:1.2;-webkit-line-clamp:4}
+
+@media(max-width:768px){
+  .mkt-band{grid-template-columns:1fr;gap:0;overflow-y:auto}
+  .pc-lead .pc-t{font-size:22px}
+  .pc-row{grid-template-columns:minmax(0,1fr) 96px}
+  .pc-row .pc-img{width:96px}
+  .mkt-rail-list{overflow:visible}
+}
+
+
+/* ── Geopolitics on the markets band ─────────────────────────────── */
+.snap-geo{height:100vh!important;overflow:hidden!important}
+.snap-geo>.section{height:100%;display:flex;flex-direction:column}
+.snap-geo #map{
+  flex:none;width:100%;aspect-ratio:4/3;max-height:52%;
+  border-radius:.3rem;overflow:hidden}
+/* the lead story sits under the map as text, since the map is the picture */
+.pc-lead-txt{display:flex;flex-direction:column;gap:5px;padding:11px 0 4px}
+.pc-lead-txt .pc-t{
+  font-size:22px;font-weight:500;line-height:1.12;color:var(--ink);
+  text-decoration:none;display:-webkit-box;-webkit-line-clamp:3;
+  -webkit-box-orient:vertical;overflow:hidden}
+.pc-lead-txt .pc-t:hover{color:var(--meta)}
+/* the extra dailies under the lead, in both markets and geo */
+.mk-daily{
+  padding:8px 0;border-top:1px solid var(--hair);border-radius:0}
+.mk-daily:hover{background:transparent}
+.mk-daily:hover .mk-t{color:var(--meta)}
+.mk-daily .mk-t{font-size:15px;-webkit-line-clamp:2}
+.mkt-lead{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.mkt-lead::-webkit-scrollbar{width:2px}
+/* flashpoints become the rail: one column of rows, not three */
+.snap-geo .cp-grid{
+  display:flex;flex-direction:column;gap:0;padding:0;
+  overflow-y:auto;min-height:0}
+.snap-geo .cp-chip{border-bottom:1px solid var(--hair);padding:9px 2px}
+@media(max-width:768px){
+  .snap-geo #map{display:none!important}
+  .snap-geo .cp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+
+/* The beat sits between source and time, matching .pc-beat on the cards. */
+.mk-beat{font-size:11.5px;font-weight:300;color:var(--meta)}
+.mk-beat:before{content:"\00b7";margin:0 5px;color:var(--meta)}
+
+/* The home page is International Klein Blue — IKB 79, #002FA7. */
+.hero-sec{background:#002FA7!important;border-top-color:#002FA7!important}
+.hero-sec .hero-h1,.hero-sec .hero-count{color:#fff}
+.hero-sec .hero-eyebrow{color:rgba(255,255,255,.62)}
+.hero-sec .hero-date-str,.hero-sec .hero-sep,.hero-sec .hero-hint{
+  color:rgba(255,255,255,.62)}
+.hero-sec .ticker{border-top:1px solid rgba(255,255,255,.22);background:transparent}
+.hero-sec .t-item{color:rgba(255,255,255,.62);
+  border-right-color:rgba(255,255,255,.22)}
+.hero-sec .t-item:hover{color:#fff}
+
+/* A culture rail row carries a thumbnail without growing much: the picture
+   takes the height the two text lines already occupy. */
+.mkt-rail .mk-has-thumb{display:grid;
+  grid-template-columns:minmax(0,1fr) 52px;grid-template-areas:"hd img" "t img";
+  column-gap:9px;align-content:start}
+.mkt-rail .mk-has-thumb .mk-hd{grid-area:hd}
+.mkt-rail .mk-has-thumb .mk-t{grid-area:t}
+.mkt-rail .mk-thumb{grid-area:img;align-self:start;width:52px;aspect-ratio:1/1;
+  background-size:cover;background-position:center;border-radius:var(--r-sm)}
+
+/* A grouped daily keeps its masthead; the rest of the group is a count. */
+.mk-daily .mk-src-multi{font-size:11.5px;font-weight:300;color:var(--meta);
+  opacity:.75;margin-left:5px}
+
+/* ── the standing index, beneath the lead ──────────────────────────
+   Conflicts in Geo, events in Culture. Neither is an article, so it sits
+   under the lead rather than taking one of the three article tiers.
+   The lead itself never scrolls: the picture and headline stay put and the
+   index takes the remaining height as its own scroller. */
+.mkt-lead{display:flex;flex-direction:column;overflow:hidden}
+.mkt-index-hd{flex:0 0 auto;font-size:10px;font-weight:500;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--meta);
+  padding:13px 0 7px;margin-top:11px;border-top:1px solid var(--hair)}
+
+.mkt-lead .cp-grid,.mkt-lead .culture-cal-band{
+  flex:1 1 auto;min-height:0;overflow-y:auto;padding:0;max-height:none}
+
+.mkt-lead .cp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:var(--brick-gap);align-content:start}
+.mkt-lead .cp-chip{font-size:12px;line-height:1.25;padding:7px 8px;
+  background:var(--wash);border-radius:var(--r-sm)}
+
+/* Culture's events read as a list here, not the old circle band. */
+.mkt-lead .culture-cal-band{display:block;height:auto;gap:0}
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card.ev-live,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card.ev-past,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card:hover{
+  width:auto;height:auto;aspect-ratio:auto;
+  border-radius:0;box-shadow:none;background:none;display:block;transform:none;
+  padding:6px 0;border-bottom:1px solid var(--hair)}
+.mkt-lead .culture-cal-band .cal-ev-bg{display:none}
+.mkt-lead .culture-cal-band .cal-ev-body{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:baseline;column-gap:10px;padding:0;height:auto}
+.mkt-lead .culture-cal-band .cal-ev-meta{display:none}
+.mkt-lead .culture-cal-band .ev-live .cal-ev-name::after{
+  content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:#DC2626;vertical-align:middle;margin-left:7px}
+.mkt-lead .culture-cal-band .cal-ev-name{font-size:14px;font-weight:500;line-height:1.2;
+  color:var(--ink);text-align:left;padding:0;margin:0}
+.mkt-lead .culture-cal-band .cal-ev-range{font-size:11px;color:var(--meta);white-space:nowrap;
+  padding:0;margin:0}
+.mkt-lead .culture-cal-band .cal-ev-panel{display:none}
+.mkt-lead .culture-cal-band .cal-ev-card.cal-ev-portal-open .cal-ev-panel{display:block;padding:6px 0 2px}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
@@ -2852,7 +3141,6 @@ MOBILE_NAV = """
   <a href="#" data-sec=".snap-geo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9s1.4-6.4 3.9-9z"/></svg>World</a>
   <a href="#" data-sec=".snap-feed"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/></svg>News</a>
   <a href="#" data-sec=".snap-culture"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="15" rx="1"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="8.5" r="1.3"/></svg>Culture</a>
-  <a href="#" data-sec=".snap-bottom"><svg viewBox="0 0 24 24"><path d="M6 3h12v3.5a6 6 0 0 1-12 0V3z"/><path d="M6 5H3.5c0 3 1.7 4.8 4.2 5.3M18 5h2.5c0 3-1.7 4.8-4.2 5.3M12 12.5V16m-4 5h8m-4-4.5V21"/></svg>Sports</a>
   <a href="#" data-sec=".snap-gossip"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.8A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Opinions</a>
 </nav>
 <script>
@@ -2935,37 +3223,71 @@ def build_ticker(items):
         f'</div>\n'
     )
 def build_geo_feed(arts):
-    """Right-hand Politico panel — same row markup as the markets lists."""
-    def _rank(a):
-        try:
-            return GEO_PINNED.index(a["source"])
-        except ValueError:
-            return len(GEO_PINNED)
-    ordered = sorted(arts, key=_rank)
-    rows = "".join(_build_group_row([a]) for a in ordered[:40])
-    if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim);padding:14px 16px">No articles fetched.</p>'
-    return f'<div class="story-list" id="geo-feed">{rows}</div>'
+    """Right-hand Politico panel. Today carries the daily debriefs — World in
+    Brief and Playbook Paris — and everything else reads as normal."""
+    today  = [a for a in arts if a["source"] in GEO_PINNED]
+    normal = [a for a in arts if a["source"] not in GEO_PINNED]
+    def band(label, items, cls, limit):
+        if not items:
+            return ""
+        rows = "".join(_brick([a]) for a in items[:limit])
+        return (f'<div class="mkt-tier {cls}">'
+                f'<div class="mkt-tier-hd"><span>{label}</span></div>'
+                f'<div class="mk-row">{rows}</div></div>')
+    body = band("Today", today, "geo-today", 4) + band("Latest", normal, "geo-latest", 40)
+    if not body:
+        body = '<p style="font-size:11px;color:var(--meta);padding:14px 16px">No articles fetched.</p>'
+    return f'<div class="geo-body" id="geo-feed">{body}</div>'
+
+# World in Brief arrives through Google News, which carries no image, so its
+# lead falls back to a colour block the way FirstFT's does.
+GEO_SOURCE_COLORS = {
+    "World in Brief":"#3B1512", "Playbook Paris":"#1E2A4A",
+    "Le Grand Continent":"#12324A",
+    "Politico Europe":"#1E2A4A", "Politico France":"#1E2A4A",
+}
 
 def build_map(conflicts_json, articles_json, geo_arts=()):
+    """Geopolitics on the same band as Markets. The lead is the day's World in
+    Brief; the flashpoint list is the standing index beneath it; Politico fills
+    the stack and the rail."""
+    brief  = [a for a in geo_arts if a["source"] == "World in Brief"]
+    lead_a = brief[0] if brief else None
+    # World in Brief is the lead and nothing else — its other issues in the rail
+    # were just the same daily repeated.
+    rest   = [a for a in geo_arts if a["source"] != "World in Brief"]
+    others = [a for a in rest if a["source"] == "Playbook Paris"][:1]
+    longs  = [a for a in rest if a["source"] == "Le Grand Continent"]
+    wire   = [a for a in rest if a["source"] not in
+              ("Le Grand Continent", "Playbook Paris")]
+    stack  = "".join(_pcard(a, GEO_SOURCE_COLORS, extra_cls="pc-row", clamp=3)
+                     for a in longs[:8])
+    rail   = "".join(_brick([a], thumb=True) for a in wire[:26])
+    lead_html = (_pcard(lead_a, GEO_SOURCE_COLORS, extra_cls="pc-lead", clamp=3)
+                 if lead_a else "")
     return f"""
-<div class="section">
-  <div class="sec-hd">
-    <span class="sec-hd-text">Geopolitics</span>
-  </div>
-  <div class="map-wrap">
-    <div class="geo-left">
-      <div id="map"></div>
+<div class="section mkt-page">
+  <div class="sec-hd"><span class="sec-hd-text">Geopolitics</span></div>
+  <div class="mkt-band">
+    <div class="mkt-lead">
+      {lead_html}
+      {"".join(_brick([a], extra_cls="mk-daily") for a in others)}
+      <div class="mkt-index-hd">Flashpoints</div>
       <div id="cp-grid" class="cp-grid"></div>
     </div>
-    <div class="cp">
-      {build_geo_feed(geo_arts)}
+    <div class="mkt-stack">
+      <div class="mkt-tier-hd"><span>Features</span></div>
+      {stack}
+    </div>
+    <div class="mkt-rail">
+      <div class="mkt-tier-hd"><span>Latest</span></div>
+      <div class="mkt-rail-list">{rail}</div>
     </div>
   </div>
 </div>
 <div class="geo-backdrop" id="geo-backdrop"></div>
 <div class="geo-modal" id="geo-modal" role="dialog" aria-modal="true">
-  <button class="geo-modal-x" id="geo-modal-x" aria-label="Close">✕</button>
+  <button class="geo-modal-x" id="geo-modal-x" aria-label="Close">&#10005;</button>
   <div class="geo-modal-hd">
     <div class="geo-modal-meta"><span class="geo-modal-chip" id="geo-modal-type"></span></div>
     <div class="geo-modal-name" id="geo-modal-name"></div>
@@ -2979,117 +3301,6 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
   var A = {articles_json};
   var TC = {{ conflict:'#EF4444', tension:'#EF4444' }};
   var listEl = document.getElementById('cp-grid');
-  var markers = {{}};
-  var GRID_SPACING = 8; /* must match canvas SPACING below */
-
-  function _snapToGrid(latlng) {{
-    /* snap a lat/lng to the nearest canvas grid dot */
-    var px   = map.latLngToContainerPoint(latlng);
-    var half = GRID_SPACING / 2;
-    var sx   = Math.round((px.x - half) / GRID_SPACING) * GRID_SPACING + half;
-    var sy   = Math.round((px.y - half) / GRID_SPACING) * GRID_SPACING + half;
-    return map.containerPointToLatLng([sx, sy]);
-  }}
-
-  /* ── Leaflet map: static (no pan/zoom), canvas handles base map ── */
-  /* centre/bounds exclude Antarctica — see _isPolar() below */
-  var map = L.map('map',{{center:[26,10],zoom:2,minZoom:2,maxZoom:2,
-    zoomControl:false,attributionControl:false,
-    dragging:false,scrollWheelZoom:false,doubleClickZoom:false,
-    touchZoom:false,keyboard:false,boxZoom:false,
-    maxBounds:[[-58,-200],[85,200]],maxBoundsViscosity:1.0}});
-
-  /* ── Canvas dot-world ───────────────────────────────────────── */
-  var mapEl = document.getElementById('map');
-  var dotCanvas = document.createElement('canvas');
-  dotCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:250';
-  mapEl.appendChild(dotCanvas);
-  var _landGeo = null;
-
-  function _drawDotWorld() {{
-    if (!_landGeo) return;
-    var w = mapEl.offsetWidth, h = mapEl.offsetHeight;
-    if (!w || !h) return;
-    dotCanvas.width  = w;
-    dotCanvas.height = h;
-
-    /* Step 1 — rasterise land polygons onto a temporary canvas */
-    var tmp = document.createElement('canvas');
-    tmp.width = w; tmp.height = h;
-    var tc = tmp.getContext('2d');
-    tc.fillStyle = '#fff';
-
-    function drawRings(rings) {{
-      rings.forEach(function(ring) {{
-        tc.beginPath();
-        var prevLng = null;
-        for (var i = 0; i < ring.length; i++) {{
-          var lng = ring[i][0], lat = ring[i][1];
-          /* skip antimeridian wrap artefacts */
-          if (prevLng !== null && Math.abs(lng - prevLng) > 180) {{
-            tc.closePath(); tc.fill(); tc.beginPath();
-          }}
-          var px = map.latLngToContainerPoint(L.latLng(lat, lng));
-          if (i === 0) tc.moveTo(px.x, px.y);
-          else         tc.lineTo(px.x, px.y);
-          prevLng = lng;
-        }}
-        tc.closePath();
-        tc.fill();
-      }});
-    }}
-
-    /* Skip Antarctica — any polygon lying entirely below 60°S. Keeps the map
-       to the inhabited world so the dot grid isn't dragged down by an ice cap
-       no conflict marker ever sits on. */
-    function _isPolar(poly) {{
-      var ring = poly[0] || [];
-      for (var i = 0; i < ring.length; i++) {{
-        if (ring[i][1] > -60) return false;
-      }}
-      return ring.length > 0;
-    }}
-    _landGeo.features.forEach(function(f) {{
-      var g = f.geometry;
-      if (g.type === 'Polygon') {{
-        if (!_isPolar(g.coordinates)) drawRings(g.coordinates);
-      }} else if (g.type === 'MultiPolygon') {{
-        g.coordinates.forEach(function(poly) {{
-          if (!_isPolar(poly)) drawRings(poly);
-        }});
-      }}
-    }});
-
-    /* Step 2 — pixel-test and place dots on the real canvas */
-    var imgData = tc.getImageData(0, 0, w, h).data;
-    var ctx = dotCanvas.getContext('2d');
-    var SPACING = GRID_SPACING, R = 2.4;
-    ctx.fillStyle = 'rgba(190,190,190,0.9)';
-
-    for (var y = SPACING / 2; y < h; y += SPACING) {{
-      for (var x = SPACING / 2; x < w; x += SPACING) {{
-        var xi = Math.min(Math.floor(x), w - 1);
-        var yi = Math.min(Math.floor(y), h - 1);
-        var idx = (yi * w + xi) * 4;
-        if (imgData[idx] > 128) {{
-          ctx.beginPath();
-          ctx.arc(x, y, R, 0, Math.PI * 2);
-          ctx.fill();
-        }}
-      }}
-    }}
-  }}
-
-  /* Load world land topojson (120 KB) */
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
-    .then(function(r) {{ return r.json(); }})
-    .then(function(topo) {{
-      _landGeo = topojson.feature(topo, topo.objects.land);
-      _drawDotWorld();
-    }})
-    .catch(function(e) {{ console.warn('world-atlas load failed', e); }});
-
-  window.addEventListener('resize', function() {{ map.invalidateSize(); _drawDotWorld(); }});
   function _esc(t) {{
     return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }}
@@ -3102,20 +3313,7 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
   function markSeen(id) {{
     localStorage.setItem('seen_'+id, Date.now());
   }}
-  function _replacePulse(c) {{
-    if (markers[c.id] && markers[c.id]._isPulse) {{
-      markers[c.id].remove();
-      var cls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension');
-      var snapped = _snapToGrid(L.latLng(c.lat,c.lon));
-      var m = L.marker(snapped,{{icon:L.divIcon({{
-        className:'',html:'<div class="'+cls+'"></div>',
-        iconSize:[5,5],iconAnchor:[2,2]
-      }})}}).addTo(map);
-      m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
-      m.on('click',function(){{toggleItem(c.id);}});
-      markers[c.id]=m;
-    }}
-  }}
+  function _replacePulse(c) {{ /* no map, nothing to swap */ }}
   /* ── Conflict modal — same open/close behaviour as the culture events ── */
   var mdl   = document.getElementById('geo-modal');
   var mdlBd = document.getElementById('geo-backdrop');
@@ -3157,7 +3355,7 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
     if (chip) chip.classList.remove('has-new');
   }}
 
-  /* Build the conflict-name grid under the map */
+  /* Build the conflict-name grid */
   C.forEach(function(c){{
     var col    = TC[c.type]||'#888';
     var hasNew = isNew(c.id);
@@ -3172,28 +3370,7 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
     item.addEventListener('click',function(){{toggleItem(c.id);}});
     listEl.appendChild(item);
 
-    /* Map marker — snapped to nearest canvas grid dot */
-    var snapped = _snapToGrid(L.latLng(c.lat,c.lon));
-    var m;
-    if (hasNew) {{
-      var sonarCls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension')+' gm-sonar';
-      m = L.marker(snapped,{{icon:L.divIcon({{
-        className:'',html:'<div class="'+sonarCls+'"></div>',
-        iconSize:[5,5],iconAnchor:[2,2]
-      }})}}).addTo(map);
-      m._isPulse = true;
-    }} else {{
-      var dotCls = 'gm-dot '+(c.type==='conflict'?'gm-conflict':'gm-tension');
-      m = L.marker(snapped,{{icon:L.divIcon({{
-        className:'',html:'<div class="'+dotCls+'"></div>',
-        iconSize:[5,5],iconAnchor:[2,2]
-      }})}}).addTo(map);
-    }}
-    m.bindTooltip(c.name,{{direction:'top',opacity:.9}});
-    m.on('click',function(){{toggleItem(c.id);}});
-    markers[c.id]=m;
   }});
-  setTimeout(function(){{map.invalidateSize();_drawDotWorld();}},300);
 }})();
 </script>
 """
@@ -3539,7 +3716,7 @@ def _cadence(g):
             or SOURCE_CADENCE.get(a.get("_canon") or "")
             or DEFAULT_CADENCE)
 
-def _brick(g, extra_cls="", data_attrs=""):
+def _brick(g, extra_cls="", data_attrs="", name_src=False, thumb=False, beat=""):
     """One article as a brick — Source · time over a 500-weight headline.
     This is the single row shape for the whole brief: markets, geo, sports,
     cities and Paris all render through it. Multi-source groups keep the
@@ -3550,12 +3727,19 @@ def _brick(g, extra_cls="", data_attrs=""):
     src      = _s(primary.get("_canon") or primary["source"])
     cls      = f' {extra_cls}' if extra_cls else ""
     attrs    = f' {data_attrs}' if data_attrs else ""
+    beat_html = f'<span class="mk-beat">{_s(beat)}</span>' if beat else ""
+    thumb_html = ""
+    if thumb and primary.get("img"):
+        thumb_html = (f'<span class="mk-thumb" '
+                      f'style="background-image:url({_s(primary["img"])})"></span>')
+        cls += " mk-has-thumb"
     if n == 1:
         return (f'<a class="mk{cls}"{attrs} href="{_s(primary["link"])}" '
                 f'target="_blank" rel="noopener">'
                 f'<span class="mk-hd"><span class="mk-src">{src}</span>'
-                f'<span class="mk-time">{time_str}</span></span>'
-                f'<span class="mk-t">{_s(primary["title"])}</span></a>\n')
+                f'{beat_html}<span class="mk-time">{time_str}</span></span>'
+                f'<span class="mk-t">{_s(primary["title"])}</span>'
+                f'{thumb_html}</a>\n')
     arts = "".join(
         f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="mk-sub" '
         f'onclick="event.stopPropagation()">'
@@ -3563,9 +3747,17 @@ def _brick(g, extra_cls="", data_attrs=""):
         f'<span class="mk-sub-t">{_s(a["title"])}</span></a>'
         for a in g)
     title = primary.get("_headline") or primary["title"]
+    # A daily debrief keeps its masthead: "3 sources" over someone else's
+    # headline reads as a stray article rather than as that day's briefing.
+    if name_src:
+        title = primary["title"]
+        hd = (f'<span class="mk-src">{src}</span>'
+              f'<span class="mk-src-multi">+{n - 1}</span>{beat_html}')
+    else:
+        hd = f'<span class="mk-src mk-src-multi">{n} sources</span>{beat_html}'
     return (f'<div class="mk mk-multi{cls}"{attrs} '
             f'onclick="this.classList.toggle(\'open\')">'
-            f'<span class="mk-hd"><span class="mk-src mk-src-multi">{n} sources</span>'
+            f'<span class="mk-hd">{hd}'
             f'<span class="mk-time">{time_str}</span></span>'
             f'<span class="mk-t">{_s(title)}</span>'
             f'<div class="mk-subs">{arts}</div></div>\n')
@@ -3591,78 +3783,118 @@ def _tier(label, groups, cls, limit):
             f'<div class="mkt-tier-hd"><span>{label}</span></div>'
             f'<div class="mk-row">{bricks}</div></div>')
 
-def _build_market_col(groups, label, hd_buttons="", body_id=""):
-    """A markets column: today's debriefs on top, the fast wire in the middle,
-    the slower essayists along the bottom."""
+def _daily_first(g):
+    """Put the daily debrief at the head of its group so the row is labelled
+    with that masthead rather than whichever story happened to sort first."""
+    if len(g) < 2:
+        return g
+    for i, a in enumerate(g):
+        if SOURCE_CADENCE.get(a.get("_canon") or a["source"]) == "daily":
+            return [a] + g[:i] + g[i + 1:]
+    return g
+
+
+def _build_market_page(groups, label, hd_buttons="", colors=None,
+                       lead_source="", beats=None):
+    """One market as an Art Newspaper band: a lead story, a stack of long
+    reads beside it, and a rail of the latest wire. Lead and stack carry
+    pictures; the rail is text, as on the reference."""
+    colors = colors or SLOW_SOURCE_COLORS
+    beats  = beats or {}
+    def _beat(g): return beats.get(g[0].get("_canon") or g[0]["source"], "")
     buckets = {"daily": [], "fast": [], "slow": []}
     for g in _sort_by_time(groups):
         buckets[_cadence(g)].append(g)
     buckets["daily"] = _one_per_source(buckets["daily"])
-    idattr = f' id="{body_id}"' if body_id else ""
-    body = (
-        _tier("Today", buckets["daily"], "mkt-daily", 8) +
-        _tier("Latest", buckets["fast"], "mkt-fast", 60) +
-        _tier("Slow reads", buckets["slow"], "mkt-slow", 14)
-    )
-    if not body:
-        body = '<p style="font-size:11px;color:var(--meta);padding:14px 16px">No articles in the past 48h.</p>'
-    return (f'<div class="section mkt-col">'
+
+    lead_g = None
+    if lead_source:
+        # The masthead can appear in more than one group, and a cluster it is
+        # buried in takes its cadence from whoever heads it — so the newest
+        # issue may not even be in the daily bucket. Search all three and take
+        # the latest, leaving the rest of its group where it was.
+        best = None
+        for bucket in ("daily", "fast", "slow"):
+            for g in buckets[bucket]:
+                for i, a in enumerate(g):
+                    if (a.get("_canon") or a["source"]) != lead_source:
+                        continue
+                    if best is None or (a.get("ts") or 0) > (best[0].get("ts") or 0):
+                        best = (a, g, i, bucket)
+        if best:
+            a, g, i, bucket = best
+            lead_g = [a]
+            rest_g = g[:i] + g[i + 1:]
+            buckets[bucket] = [x for x in buckets[bucket] if x is not g]
+            if rest_g:
+                buckets[bucket].insert(0, rest_g)
+    if lead_g is None:
+        lead_g = buckets["daily"][0] if buckets["daily"] else (
+                 buckets["fast"][0] if buckets["fast"] else None)
+    seen_src, stack_g = set(), []
+    for g in buckets["slow"]:                  # one per masthead first
+        src = g[0].get("_canon") or g[0]["source"]
+        if src in seen_src:
+            continue
+        seen_src.add(src)
+        stack_g.append(g)
+    # then fill, but no masthead gets more than three slots — Oaktree's memo
+    # archive would otherwise crowd out everyone else with year-old pieces
+    per_src = {src: 1 for src in seen_src}
+    for g in buckets["slow"]:
+        if g in stack_g:
+            continue
+        src = g[0].get("_canon") or g[0]["source"]
+        if per_src.get(src, 0) >= 3:
+            continue
+        per_src[src] = per_src.get(src, 0) + 1
+        stack_g.append(g)
+    stack_g = stack_g[:12]
+    # Only borrow from the wire if the stack would otherwise be nearly empty —
+    # a "Long reads" column full of wire copy is worse than a short one.
+    if len(stack_g) < 3:
+        used = {id(g) for g in stack_g} | ({id(lead_g)} if lead_g else set())
+        stack_g += [g for g in buckets["fast"] if id(g) not in used][:3-len(stack_g)]
+    rail_g = [g for g in buckets["fast"]
+              if g is not lead_g and g not in stack_g][:24]
+
+    # every daily belongs on the lead column — the freshest as the big story,
+    # the others as compact entries beneath it
+    _lead_src = ((lead_g[0].get("_canon") or lead_g[0]["source"]) if lead_g else "")
+    others = [_daily_first(g) for g in buckets["daily"]
+              if g is not lead_g
+              and (g[0].get("_canon") or g[0]["source"]) != _lead_src][:3]
+    lead = ""
+    if lead_g:
+        lead = (f'<div class="mkt-lead">'
+                f'{_pcard(lead_g[0], colors, extra_cls="pc-lead", beat=_beat(lead_g), clamp=3)}'
+                + "".join(_brick(g, extra_cls="mk-daily", name_src=True,
+                                 beat=_beat(g)) for g in others)
+                + f'</div>')
+    stack = "".join(_pcard(g[0], colors, extra_cls="pc-row", beat=_beat(g), clamp=3)
+                    for g in stack_g)
+    rail  = "".join(_brick(g, thumb=True, beat=_beat(g)) for g in rail_g)
+    return (f'<div class="section mkt-page">'
             f'<div class="sec-hd"><span class="sec-hd-text">{label}</span>{hd_buttons}</div>'
-            f'<div class="mkt-body"{idattr}>{body}</div></div>\n')
+            f'<div class="mkt-band">'
+            f'{lead}'
+            f'<div class="mkt-stack"><div class="mkt-tier-hd"><span>Long reads</span></div>{stack}</div>'
+            f'<div class="mkt-rail"><div class="mkt-tier-hd"><span>Latest</span></div>'
+            f'<div class="mkt-rail-list">{rail}</div></div>'
+            f'</div></div>\n')
 
 def build_tech(groups):
-    return _build_market_col(groups, "Private Markets")
+    return _build_market_page(groups, "Private Markets",
+                              lead_source="MTS Newsletter")
 
 def build_macro(groups):
-    hd_buttons = (
-        '<div style="display:flex;gap:6px">'
-        '<button class="fb on" id="macro-all" onclick="filterMacro(\'all\')">All</button>'
-        '<button class="fb" id="macro-finance" onclick="filterMacro(\'finance\')">Public Finance</button>'
-        '<button class="fb" id="macro-crypto" onclick="filterMacro(\'crypto\')">Crypto</button>'
-        '</div>'
-    )
-    # tag each brick with its category so the buttons can filter them
-    buckets = {"daily": [], "fast": [], "slow": []}
-    for g in _sort_by_time(groups):
-        buckets[_cadence(g)].append(g)
-    buckets["daily"] = _one_per_source(buckets["daily"])
+    """Public Markets. The filter buttons are gone — which side a piece is from
+    is said next to the source, the way Culture names its beat."""
+    return _build_market_page(groups, "Public Markets",
+                              colors=MACRO_SOURCE_COLORS,
+                              beats=MACRO_BEAT)
 
-    def tier(label, gs, cls, limit):
-        if not gs: return ""
-        out = ""
-        for g in gs[:limit]:
-            src = g[0].get("_canon") or g[0]["source"]
-            cat = MACRO_CATEGORY.get(g[0]["source"]) or MACRO_CATEGORY.get(src, "finance")
-            if cls == "mkt-slow":
-                out += _slow_card(g).replace('class="card', f'class="macro-item card', 1) \
-                                    .replace('rel="noopener"', f'rel="noopener" data-cat="{cat}"', 1)
-                continue
-            out += _brick(g).replace('class="mk"', f'class="mk macro-item" data-cat="{cat}"', 1) \
-                            .replace('class="mk mk-multi"', f'class="mk mk-multi macro-item" data-cat="{cat}"', 1)
-        return (f'<div class="mkt-tier {cls}">'
-                f'<div class="mkt-tier-hd"><span>{label}</span></div>'
-                f'<div class="mk-row">{out}</div></div>')
-
-    body = (tier("Today", buckets["daily"], "mkt-daily", 8) +
-            tier("Latest", buckets["fast"], "mkt-fast", 60) +
-            tier("Slow reads", buckets["slow"], "mkt-slow", 14))
-    if not body:
-        body = '<p style="font-size:11px;color:var(--meta);padding:14px 16px">No articles in the past 48h.</p>'
-    js = """<script>
-function filterMacro(v){
-  document.querySelectorAll('.fb[id^="macro-"]').forEach(function(b){
-    b.classList.toggle('on', b.id==='macro-'+v||(v==='all'&&b.id==='macro-all'));
-  });
-  document.querySelectorAll('.macro-item').forEach(function(el){
-    el.style.display=(v==='all'||el.dataset.cat===v)?'':'none';
-  });
-}
-</script>"""
-    return (f'<div class="section mkt-col">'
-            f'<div class="sec-hd"><span class="sec-hd-text">Public Markets</span>{hd_buttons}</div>'
-            f'<div class="mkt-body">{body}</div>{js}</div>\n')
-
-def _build_cal_band_html(event_news={}):
+def _build_cal_band_html(event_news={}, paris_arts=()):
     """Returns the HTML+JS for the compact event band embedded in the culture section."""
     today     = datetime.now()
     today_str = today.strftime("%Y-%m-%d")
@@ -3698,7 +3930,23 @@ def _build_cal_band_html(event_news={}):
         if e["start"] <= today_str <= e["end"]: return (0, e["start"])
         if e["end"] >= today_str:               return (1, e["start"])
         return                                        (2, e["start"])
-    sorted_evs = sorted(CALENDAR_EVENTS, key=_ev_sort)
+    # As a standing index this only has to answer "what's on" — everything
+    # running now, plus the next one to open. The rest is calendar noise.
+    _ordered   = sorted(CALENDAR_EVENTS, key=_ev_sort)
+    _live      = [e for e in _ordered if e["start"] <= today_str <= e["end"]]
+    _upcoming  = [e for e in _ordered if e["start"] > today_str][:1]
+    sorted_evs = _live + _upcoming
+    # Paris — What's On used to be its own column. It reads as a standing
+    # listing rather than news, so it sits in this index like any other event.
+    if paris_arts:
+        event_news = dict(event_news)
+        event_news["Paris — What\u2019s On"] = [
+            {"title": a["title"], "link": a["link"], "source": a["source"],
+             "ago": _ago(a["date"]), "img": a.get("img", "")}
+            for a in paris_arts[:20]]
+        sorted_evs = [{"name": "Paris — What\u2019s On", "cat": "culture",
+                       "start": today_str, "end": today_str,
+                       "_range": "Ongoing"}] + sorted_evs
     scroll_idx = 0
     for i, e in enumerate(sorted_evs):
         if e["end"] >= today_str:
@@ -3708,7 +3956,7 @@ def _build_cal_band_html(event_news={}):
     for i, ev in enumerate(sorted_evs):
         col     = cat_col.get(ev["cat"], "#555")
         lbl     = cat_lbl.get(ev["cat"], ev["cat"])
-        rng     = fmt_range(ev["start"], ev["end"])
+        rng     = ev.get("_range") or fmt_range(ev["start"], ev["end"])
         is_live = ev["start"] <= today_str <= ev["end"]
         is_past = ev["end"] < today_str
         cls     = (" ev-live" if is_live else " ev-past" if is_past else "")
@@ -3727,14 +3975,18 @@ def _build_cal_band_html(event_news={}):
         if not arts_html:
             arts_html = '<p class="cal-det-none">No recent coverage.</p>'
         search_url = f'https://www.google.com/search?q={_s(ev["name"]+" 2026")}'
+        # A picture when the coverage has one; otherwise the card carries the
+        # category colour and the portal simply opens on the headline.
         if card_img:
             bg_style = (f"background-image:url({_s(card_img)});"
                         f"background-size:cover;background-position:center top")
         else:
-            bg_style = "background:linear-gradient(135deg,#3a3a3c,#1c1c1e)"
+            bg_style = (f"background:linear-gradient(150deg,rgba(255,255,255,.14) 0%,"
+                        f"rgba(0,0,0,.28) 100%),{col}")
+        img_cls = "" if card_img else " cal-ev-bg-flat"
         cards_html += (
             f'<div class="cal-ev-card{cls}" id="ccv-{i}" style="--evc:{col}">'
-            f'<div class="cal-ev-bg" style="{bg_style}"></div>'
+            f'<div class="cal-ev-bg{img_cls}" style="{bg_style}"></div>'
             f'<div class="cal-ev-body">'
             f'<div class="cal-ev-meta">'
             f'<span class="cal-ev-cat-chip">{_s(lbl)}</span>'
@@ -3834,80 +4086,33 @@ def _pcard(a, colors, extra_cls="", beat="", clamp=3):
             f'<span class="pc-t" style="-webkit-line-clamp:{clamp}">{_s(a["title"])}</span>'
             f'{snip_html}{media}</a>\n')
 
-def build_culture(arts, event_news={}):
-    html_cards = ""
-    for a in arts[:48]:
-        beat = CULTURE_BEAT.get(a["source"], "")
-        long_read = a["source"] in CULTURE_LONG_READ
-        html_cards += _pcard(a, CULTURE_SOURCE_COLORS,
-                             extra_cls="pc-long" if long_read else "",
-                             beat=beat, clamp=3 if long_read else 2)
-    js_culture = """<script>
-(function(){
-  var cc=[].slice.call(document.querySelectorAll('.snap-culture .card'));
-  cc.forEach(function(card){
-    card.addEventListener('click',function(e){
-      if(card.classList.contains('cv-open')){
-        card.classList.remove('cv-open');
-        return;
-      }
-      e.preventDefault();
-      cc.forEach(function(c){c.classList.remove('cv-open');});
-      card.classList.add('cv-open');
-    });
-  });
-  document.addEventListener('click',function(e){
-    if(!e.target.closest('.snap-culture .card'))
-      cc.forEach(function(c){c.classList.remove('cv-open');});
-  });
-})();
-</script>"""
-    cal_band = _build_cal_band_html(event_news)
-    body = (f'<div class="culture-body">'
-            f'<div class="cards">{html_cards}</div>'
-            f'{cal_band}'
-            f'</div>{js_culture}')
+def build_culture(arts, event_news={}, paris_arts=()):
+    """Culture on the same band. No daily here, so the lead is simply the
+    freshest picture story; the events agenda sits beneath it as the standing
+    index, the long-form sources fill the stack, and the rest is the rail."""
+    with_img = [a for a in arts if a.get("img")]
+    lead_a   = with_img[0] if with_img else (arts[0] if arts else None)
+    longs    = [a for a in arts if a["source"] in CULTURE_LONG_READ and a is not lead_a][:10]
+    used     = {id(a) for a in longs} | ({id(lead_a)} if lead_a else set())
+    rest     = [a for a in arts if id(a) not in used][:26]
+
+    def beat(a): return CULTURE_BEAT.get(a["source"], "")
+    lead = (_pcard(lead_a, CULTURE_SOURCE_COLORS, extra_cls="pc-lead",
+                   beat=beat(lead_a), clamp=3) if lead_a else "")
+    stack = "".join(_pcard(a, CULTURE_SOURCE_COLORS, extra_cls="pc-row",
+                           beat=beat(a), clamp=3) for a in longs)
+    rail  = "".join(_brick([a], thumb=True) for a in rest)
+    cal_band = _build_cal_band_html(event_news, paris_arts)
+    body = (f'<div class="mkt-band">'
+            f'  <div class="mkt-lead">{lead}'
+            f'    <div class="mkt-index-hd">What\'s on</div>{cal_band}'
+            f'  </div>'
+            f'  <div class="mkt-stack"><div class="mkt-tier-hd"><span>Long reads</span></div>{stack}</div>'
+            f'  <div class="mkt-rail"><div class="mkt-tier-hd"><span>Latest</span></div>'
+            f'    <div class="mkt-rail-list">{rail}</div></div>'
+            f'</div>')
     return _sec("#D42B17","Culture", body)
 
-def build_sports(arts):
-    rows = "".join(_build_group_row([a]) for a in arts[:60])
-    if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
-    return _sec("#0C0C0C","Sports", f'<div class="story-list">{rows}</div>')
-
-def build_cities(arts):
-    rows = ""
-    for a in arts[:60]:
-        city = "marseille" if a["source"] in MARSEILLE_SOURCE_NAMES else "paris"
-        rows += _build_group_row([a], extra_cls="city-item", data_attrs=f'data-city="{city}"')
-    if not rows:
-        rows = '<p style="font-size:11px;color:var(--dim)">No articles fetched.</p>'
-    body = f"""<div class="story-list" id="city-list">{rows}</div>
-<script>
-function filterCity(v){{
-  document.querySelectorAll('.fb[id^="city-"]').forEach(function(b){{
-    b.classList.toggle('on', b.id==='city-'+v||(v==='all'&&b.id==='city-all'));
-  }});
-  document.querySelectorAll('.city-item').forEach(function(el){{
-    el.style.display=(v==='all'||el.dataset.city===v)?'':'none';
-  }});
-}}
-</script>"""
-    hd_buttons = (
-        '<div style="display:flex;gap:6px">'
-        '<button class="fb on" id="city-all" onclick="filterCity(\'all\')">All</button>'
-        '<button class="fb" id="city-marseille" onclick="filterCity(\'marseille\')">Marseille</button>'
-        '<button class="fb" id="city-paris" onclick="filterCity(\'paris\')">Paris</button>'
-        '</div>'
-    )
-    return (
-        f'<div class="section">'
-        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
-        f'<span class="sec-hd-text">City Focus</span>'
-        f'{hd_buttons}'
-        f'</div>'
-        f'{body}</div>\n'
-    )
 def build_paris(arts):
     rows = ""
     for a in arts[:20]:
@@ -3917,17 +4122,28 @@ def build_paris(arts):
     return _sec("#0C0C0C","Paris — What’s On",
                 f'<div class="paris-list">{rows}</div>')
 def build_gossip(arts):
-    tiles = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, clamp=3) for a in arts)
-    if not tiles:
-        tiles = '<p style="font-size:11px;color:var(--dim);padding:20px">No articles fetched.</p>'
-    return (
-        f'<div class="section gos-section">'
-        f'<div class="sec-hd" style="border-top:2px solid #0C0C0C">'
-        f'<span class="sec-hd-text">Opinions</span>'
-        f'</div>'
-        f'<div class="gos-grid">{tiles}</div>'
-        f'</div>'
-    )
+    """Opinions on the same three columns as the rest of the brief. There is no
+    daily and no wire here — every piece is the same kind of thing — so the
+    columns carry no tier labels and the order is simply newest first."""
+    if not arts:
+        return ('<div class="section mkt-page"><div class="sec-hd">'
+                '<span class="sec-hd-text">Opinions</span></div>'
+                '<p style="font-size:11px;color:var(--dim);padding:20px">'
+                'No articles fetched.</p></div>')
+    # two sources feed this now, so size the stack to what is actually there
+    # rather than leaving the rail with a couple of orphans
+    n_stack = min(8, max(3, (len(arts) - 1) // 2))
+    lead  = _pcard(arts[0], GOSSIP_SOURCE_COLORS, extra_cls="pc-lead", clamp=3)
+    stack = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, extra_cls="pc-row", clamp=3)
+                    for a in arts[1:1 + n_stack])
+    rail  = "".join(_brick([a], thumb=True) for a in arts[1 + n_stack:35])
+    return (f'<div class="section mkt-page">'
+            f'<div class="sec-hd"><span class="sec-hd-text">Opinions</span></div>'
+            f'<div class="mkt-band">'
+            f'<div class="mkt-lead">{lead}</div>'
+            f'<div class="mkt-stack">{stack}</div>'
+            f'<div class="mkt-rail"><div class="mkt-rail-list">{rail}</div></div>'
+            f'</div></div>\n')
 
 def build_calendar_OLD(event_news={}):
     today     = datetime.now()
@@ -4319,9 +4535,9 @@ def main():
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
-    les_echos_macro = _fetch_les_echos(LES_ECHOS_MACRO_KW, "macro")
-    macro_raw = _dedup_exact(_filter_recent(
-        _keep_block_daily(_fetch(MACRO_SOURCES)) + les_echos_macro + afp["macro"]))
+    macro_raw = _cap_per_source(_dedup_exact(_filter_recent(
+        _drop_audio_dupes(_strip_gn_suffix(_keep_block_daily(_fetch(MACRO_SOURCES))))
+        + afp["macro"])))
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture…")
@@ -4338,12 +4554,6 @@ def main():
     _c_img = sum(1 for a in culture_arts if a.get("img"))
     print(f"    → {len(culture_arts)} articles total, "
           f"{_c_img} with image / {len(culture_arts)-_c_img} colour tiles")
-    print("  Fetching Sports…")
-    sports_raw = _dedup_exact(_filter_recent(
-        _fetch(SPORTS_SOURCES_FR) + _fetch(SPORTS_SOURCES_INT)
-    ))
-    sports_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-    print(f"    → {len(sports_raw)} articles (no grouping)")
     print("  Fetching conflict news…")
     conflict_pool = _dedup_exact(_filter_recent(_fetch(CONFLICT_NEWS_SOURCES) + afp["conflict"]))
     print(f"    → {len(conflict_pool)} articles for conflict matching")
@@ -4361,10 +4571,9 @@ def main():
         t = (a.get("title","") or "")
         return not any(p.search(t) for p in _PARIS_BLOCKLIST)
     paris_arts = list(filter(_not_tv, _dedup_exact(_filter_recent(_fetch(PARIS_SOURCES)))))
-    print(f"    → {len(paris_arts)} Paris articles")
-    print("  Fetching Cities (City Focus)…")
-    cities_raw = _filter_city_local(_dedup_exact(_filter_recent(_fetch(CITIES_SOURCES))))
-    print(f"    → {len(cities_raw)} articles (no grouping)")
+    _backfill_images(paris_arts[:8], limit=6)
+    print(f"    → {len(paris_arts)} Paris articles, "
+          f"{sum(1 for a in paris_arts if a.get('img'))} with image")
     print("  Fetching Opinions…")
     # Les Echos Idées now comes straight from its section feed in
     # GOSSIP_SOURCES_OTHER, so no keyword pass over the general feed is needed.
@@ -4415,15 +4624,17 @@ def main():
                 or (a.get("ts") and a["ts"] >= _wib_cut)]
     geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
                   reverse=True)
-    print(f"    → {len(geo_arts)} Politico articles")
+    _backfill_images([a for a in geo_arts
+                      if a["source"] == "Le Grand Continent"], limit=10)
+    print(f"    → {len(geo_arts)} geo articles, "
+          f"{sum(1 for a in geo_arts if a.get('img'))} with image")
     now_paris = datetime.now(_PARIS)
     now_str   = now_paris.strftime("%A %d %B %Y — %H:%M")
     # Count articles published since midnight Paris time
     today_start_ts = now_paris.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
     all_arts = (
         list(tech_raw) + list(macro_raw) + list(culture_arts)
-        + list(sports_raw) + list(conflict_pool)
-        + list(paris_arts) + list(cities_raw)
+        + list(conflict_pool) + list(paris_arts)
     )
     new_today = sum(1 for a in all_arts if a.get("ts") and a["ts"] >= today_start_ts)
     new_today_str = f"{new_today} new article{'s' if new_today != 1 else ''} today"
@@ -4444,11 +4655,9 @@ def main():
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>{CSS}</style>
 </head>
 <body>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 
 <!-- ① HERO -->
@@ -4486,26 +4695,19 @@ def main():
            geo_arts)}
 </section>
 
-<!-- ③ TECH + MACRO -->
-<section class="snap-sec snap-feed">
-  <div class="two-col">
+<!-- ③ PRIVATE MARKETS -->
+<section class="snap-sec snap-feed snap-private">
 {build_tech(tech_grp)}
+</section>
+
+<!-- ④ PUBLIC MARKETS -->
+<section class="snap-sec snap-feed snap-macro">
 {build_macro(macro_grp)}
-  </div>
 </section>
 
 <!-- ④ CULTURE + EVENTS -->
 <section class="snap-sec snap-culture">
-{build_culture(culture_arts, event_news)}
-</section>
-
-<!-- ⑤ SPORTS + CITIES + PARIS -->
-<section class="snap-sec snap-bottom">
-  <div class="three-col">
-{build_sports(sports_raw)}
-{build_cities(cities_raw)}
-{build_paris(paris_arts)}
-  </div>
+{build_culture(culture_arts, event_news, paris_arts)}
 </section>
 
 <!-- ⑥ GOSSIP -->
