@@ -216,11 +216,11 @@ TECH_PINNED = ("MTS Newsletter",)
 # the middle, the occasional essayists along the bottom.
 SOURCE_CADENCE = {
     # once a day, read these first
-    "MTS Newsletter":"daily", "Stratechery":"daily",
+    "MTS Newsletter":"daily", "Stratechery":"daily", "The NBS":"daily",
     "FirstFT":"daily", "The Block Daily":"daily",
     # several times a day
     "TechCrunch":"fast", "FT Tech":"fast", "FT Companies Tech":"fast", "FT":"fast",
-    "The Block":"fast", "The Street":"fast", "The NBS":"fast", "SiliconMania":"fast",
+    "The Block":"fast", "The Street":"fast", "SiliconMania":"fast",
     "Les Echos":"fast", "Les Echos tech":"fast", "Les Echos macro":"fast",
     "tech":"fast", "macro":"fast", "AFP":"fast",
     # every week or two, or rarer
@@ -335,6 +335,17 @@ CULTURE_SOURCES = [
     ("Film Comment",      "https://www.filmcomment.com/feed/"),
     ("Common Edge",       "https://commonedge.org/feed/"),
 ]
+# Each Culture source is a beat, so the tag needs no guesswork.
+CULTURE_BEAT = {
+    "Dezeen":"Architecture", "Common Edge":"Architecture",
+    "Télérama Cinéma":"Cinema", "Film Comment":"Cinema", "The Ankler":"Cinema",
+    "Télérama Séries":"Series",
+    "NSS Magazine":"Fashion",
+    "Artnet":"Arts", "The NYT Arts":"Arts",
+}
+# Sources that publish essays rather than items — their cards run taller.
+CULTURE_LONG_READ = ("The Ankler", "Common Edge", "Film Comment")
+
 # Colour used for a culture tile when no image can be found
 CULTURE_SOURCE_COLORS = {
     "Dezeen":            "#1C1C1E",
@@ -2763,6 +2774,43 @@ html{scroll-padding-top:0}
 .mkt-daily .mk{height:74px}
 .snap-feed .mkt-daily .mk-t{font-size:15px;-webkit-line-clamp:2}
 
+
+/* ══ Picture card ════════════════════════════════════════════════
+   The reference's shape: source · beat · time, then the headline, then the
+   image underneath — rather than text laid over a full-bleed photo. Shared
+   by Culture, Opinions and the Markets Slow reads band. */
+.pcard{
+  display:flex;flex-direction:column;gap:5px;
+  padding:9px 9px 0;min-width:0;overflow:hidden;
+  background:transparent;border-radius:.3rem;
+  text-decoration:none;
+  transition:background .18s ease,transform .6s cubic-bezier(.19,1,.22,1)}
+.pcard:hover{background:var(--wash)}
+.pc-hd{
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:0;
+  font-size:10.5px;font-weight:300;color:var(--meta);line-height:1.3}
+.pc-beat:before,.pc-time:before{content:"·";margin:0 5px;color:var(--meta)}
+.pc-beat{color:var(--meta)}
+.pc-t{
+  font-size:13px;font-weight:500;line-height:1.15;color:var(--ink);
+  display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.pc-snip{
+  font-size:11px;font-weight:300;line-height:1.3;color:var(--meta);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* the picture takes whatever height the text leaves */
+.pc-img{
+  flex:1;min-height:0;margin:2px -9px 0;
+  background-size:cover;background-position:center;
+  transition:transform .6s cubic-bezier(.19,1,.22,1)}
+.pcard:hover .pc-img{transform:scale(.97)}
+.pc-img-flat{background:
+  linear-gradient(150deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,0) 45%),
+  var(--pc-col,#2A2A2E)}
+
+/* Culture: long-read sources run two rows tall */
+.snap-culture .cards{grid-auto-flow:column dense}
+.snap-culture .pc-long{grid-row:span 2}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
@@ -3531,24 +3579,8 @@ SLOW_SOURCE_COLORS = {
 }
 
 def _slow_card(g):
-    """Slow reads use the Culture card: picture, source chip, title over a
-    scrim — falling back to a colour tile when there's no image."""
-    a   = g[0]
-    src = a.get("_canon") or a["source"]
-    img = a.get("img", "")
-    col = SLOW_SOURCE_COLORS.get(a["source"], "#2A2A2E")
-    if img:
-        media = (f'<div class="ci" style="background-image:url({_s(img)});'
-                 f'background-size:cover;background-position:center"></div>')
-        cls = "card"
-    else:
-        media = f'<div class="ci" style="--cul-col:{col}"></div>'
-        cls = "card cul-noimg"
-    return (f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="{cls}">'
-            f'{media}'
-            f'<span class="cs">{src}</span>'
-            f'<div class="cb"><p class="ct">{_s(a["title"])}</p>'
-            f'<span class="ctime">{_ago(a["date"])}</span></div></a>\n')
+    """Slow reads use the same picture card as Culture and Opinions."""
+    return _pcard(g[0], SLOW_SOURCE_COLORS, clamp=2)
 
 def _tier(label, groups, cls, limit):
     if not groups:
@@ -3778,38 +3810,38 @@ def _build_cal_band_html(event_news={}):
 </script>"""
     return f'<div class="culture-cal-band" id="culture-cal-band">{cards_html}</div>{js}'
 
+def _pcard(a, colors, extra_cls="", beat="", clamp=3):
+    """Picture card in the reference's shape: source · beat · time, then the
+    headline, then the image *below* — rather than text laid over a
+    full-bleed photo. Falls back to a colour block when there is no image."""
+    img  = a.get("img","")
+    col  = colors.get(a["source"], "#2A2A2E")
+    snip = _s(a.get("snip","") or "")
+    meta = f'<span class="pc-src">{_s(a["source"])}</span>'
+    if beat:
+        meta += f'<span class="pc-beat">{_s(beat)}</span>'
+    meta += f'<span class="pc-time">{_ago(a["date"])}</span>'
+    if img:
+        media = (f'<span class="pc-img" style="background-image:url({_s(img)})"></span>')
+        cls = "pcard"
+    else:
+        media = f'<span class="pc-img pc-img-flat" style="--pc-col:{col}"></span>'
+        cls = "pcard pc-noimg"
+    snip_html = f'<span class="pc-snip">{snip}</span>' if snip else ""
+    return (f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
+            f'class="{cls}{" "+extra_cls if extra_cls else ""}">'
+            f'<span class="pc-hd">{meta}</span>'
+            f'<span class="pc-t" style="-webkit-line-clamp:{clamp}">{_s(a["title"])}</span>'
+            f'{snip_html}{media}</a>\n')
+
 def build_culture(arts, event_news={}):
     html_cards = ""
     for a in arts[:48]:
-        img  = a.get("img","")
-        snip = _s(a.get("snip","") or "")
-        col  = CULTURE_SOURCE_COLORS.get(a["source"], "#2A2A2E")
-        if img:
-            bg  = (f"background-image:url({_s(img)});"
-                   f"background-size:cover;background-position:center;")
-            cls = "card"
-        else:
-            # no image anywhere — a deliberate colour tile in the source's
-            # colour, matching how the Opinions section handles the same case
-            bg  = f"--cul-col:{col};"
-            cls = "card cul-noimg"
-        snip_html = f'<div class="cv-snip">{snip}</div>' if snip else ""
-        html_cards += (
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" class="{cls}">'
-            f'<div class="ci" style="{bg}"></div>'
-            f'<span class="cs">{_s(a["source"])}</span>'
-            f'<div class="cb"><p class="ct">{_s(a["title"])}</p>'
-            f'<span class="ctime">{_ago(a["date"])}</span></div>'
-            f'<div class="cv-overlay">'
-            f'<div class="cv-src">{_s(a["source"])}</div>'
-            f'<div class="cv-title">{_s(a["title"])}</div>'
-            f'{snip_html}'
-            f'<div class="cv-footer">'
-            f'<span class="cv-time">{_ago(a["date"])}</span>'
-            f'<span class="cv-read">Read article →</span>'
-            f'</div></div>'
-            f'</a>\n'
-        )
+        beat = CULTURE_BEAT.get(a["source"], "")
+        long_read = a["source"] in CULTURE_LONG_READ
+        html_cards += _pcard(a, CULTURE_SOURCE_COLORS,
+                             extra_cls="pc-long" if long_read else "",
+                             beat=beat, clamp=3 if long_read else 2)
     js_culture = """<script>
 (function(){
   var cc=[].slice.call(document.querySelectorAll('.snap-culture .card'));
@@ -3885,30 +3917,7 @@ def build_paris(arts):
     return _sec("#0C0C0C","Paris — What’s On",
                 f'<div class="paris-list">{rows}</div>')
 def build_gossip(arts):
-    tiles = ""
-    for a in arts:
-        col      = GOSSIP_SOURCE_COLORS.get(a["source"], "#444")
-        time_str = _ago(a["date"])
-        img      = a.get("img", "")
-        if img:
-            # photo card — image fills the tile, scrim keeps the headline readable
-            media = (f'<span class="gos-img" '
-                     f'style="background-image:url({_s(img)})"></span>')
-            cls, style = "gos-card", ""
-        else:
-            # no image available (Google News / Cloudflare-blocked sources):
-            # a deliberate colour tile in the source's brand colour
-            media = '<span class="gos-mark" aria-hidden="true">"</span>'
-            cls, style = "gos-card gos-noimg", f' style="--gos-col:{col}"'
-        tiles += (
-            f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
-            f'class="{cls}"{style}>'
-            f'{media}'
-            f'<span class="gos-src" style="background:{col}">{_s(a["source"])}</span>'
-            f'<span class="gos-title">{_s(a["title"])}</span>'
-            f'<span class="gos-time">{time_str}</span>'
-            f'</a>\n'
-        )
+    tiles = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, clamp=3) for a in arts)
     if not tiles:
         tiles = '<p style="font-size:11px;color:var(--dim);padding:20px">No articles fetched.</p>'
     return (
