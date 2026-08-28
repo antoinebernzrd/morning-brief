@@ -65,7 +65,33 @@ WEEKLY_SOURCES = frozenset([
     "Playbook Paris",
 ])
 # Map sub-feeds to their canonical publication name for exact-dupe collapsing
+# Le Grand Continent publishes by rubrique. The site splits into two halves for
+# our purposes: the argued pieces read as Opinions, the reported ones as
+# Geopolitics. Each keeps the masthead and carries its rubrique as the beat.
+LGC_RUBRIQUES = {
+    # source name            (rubrique path,        beat label)
+    "LGC Entretiens":        ("entretiens",         "Entretiens"),
+    "LGC Comptes rendus":    ("comptes-rendus",     "Compte rendu"),
+    "LGC Doctrine":          ("doctrine",           "Pièces de doctrines"),
+    "LGC Histoire":          ("histoire-en-images", "Histoire en image"),
+    "LGC Discours":          ("discours",           "Archives et discours"),
+    "LGC Études":            ("etudes",             "Études"),
+    "LGC Actualité":         ("actu-longues",       "Perspectives sur l\u2019actualité"),
+    "LGC Brèves":            ("actu-breves",        "Perspectives sur l\u2019actualité"),
+}
+LGC_OPINION = ("LGC Entretiens", "LGC Comptes rendus", "LGC Doctrine", "LGC Histoire")
+LGC_GEO     = ("LGC Discours", "LGC Études", "LGC Actualité", "LGC Brèves")
+
+def _lgc_feeds(names):
+    return [(n, f"https://legrandcontinent.eu/fr/{LGC_RUBRIQUES[n][0]}/feed/")
+            for n in names]
+
+LGC_GEO_SOURCES     = _lgc_feeds(LGC_GEO)
+LGC_OPINION_SOURCES = _lgc_feeds(LGC_OPINION)
+LGC_BEAT = {n: b for n, (_, b) in LGC_RUBRIQUES.items()}
+
 SOURCE_CANONICAL = {
+    **{n: "Le Grand Continent" for n in LGC_RUBRIQUES},
     "FT Tech":           "FT",
     "FT Companies Tech": "FT",
     "Les Echos tech":    "Les Echos",
@@ -218,7 +244,7 @@ SOURCE_CADENCE = {
     # once a day, read these first
     "MTS Newsletter":"daily", "Stratechery":"slow", "The NBS":"daily",
     "FirstFT":"daily", "The Block Daily":"daily",     "Howard Marks":"slow", "Musings on Markets":"slow", "Citation Needed":"slow",
-    "Le Grand Continent":"slow",
+    **{n: "slow" for n in LGC_RUBRIQUES},
     # several times a day
     "TechCrunch":"fast", "FT Tech":"fast", "FT Companies Tech":"fast", "FT":"fast",
     "The Block":"fast", "The Street":"fast", "SiliconMania":"fast",
@@ -241,7 +267,8 @@ TECH_EVERGREEN = [
 ]
 
 # Per-source recency windows (days). Anything absent uses the section default.
-SOURCE_WINDOW_DAYS = {"Howard Marks":365, "Le Grand Continent":14, "Musings on Markets":45,
+SOURCE_WINDOW_DAYS = {"Howard Marks":365,
+                      **{n: 14 for n in LGC_RUBRIQUES}, "Musings on Markets":45,
                       "Citation Needed":21,     "Scott Aaronson":    14,   # ~2 posts a week
     "Film Comment":      30,   # publishes in bursts, then goes quiet for weeks
     "Common Edge":        7,   # near-daily
@@ -279,8 +306,10 @@ GEO_SOURCES = [
     ("Playbook Paris",  "https://www.politico.eu/newsletter/playbook-paris/feed/"),
     ("Politico France", "https://www.politico.eu/country/france/feed/"),
     ("Politico EU",     "https://www.politico.eu/feed/"),
-    # The long-form tier: Politico is a wire, this is the essay side.
-    ("Le Grand Continent", "https://legrandcontinent.eu/fr/feed/"),
+    # The long-form tier: Politico is a wire, this is the essay side. Le Grand
+    # Continent is taken rubrique by rubrique rather than through its main
+    # feed, whose categories are topical and don't say what kind of piece it is.
+    *LGC_GEO_SOURCES,
 ]
 # Daily debriefs — pinned to the top of the panel, World in Brief first
 GEO_PINNED = ("World in Brief", "Playbook Paris")
@@ -409,16 +438,19 @@ GOSSIP_SOURCES_OTHER = [
     # so these render as designed colour tiles (see .gos-noimg).
     ("The Economist",    "https://www.economist.com/leaders/rss.xml"),
     ("The Economist",    "https://www.economist.com/by-invitation/rss.xml"),
+    *LGC_OPINION_SOURCES,
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
     "The Economist":     4,   # weekly print cadence → 4 days
     "Works in Progress": 14,  # ~weekly
+    **{n: 14 for n in LGC_OPINION},
 }
 # Colour for each source's badge chip (also drives the no-image tile)
 GOSSIP_SOURCE_COLORS = {
     "The Economist":    "#E3120B",   # Economist red
     "Works in Progress":"#2F4858",   # slate
+    "Le Grand Continent":"#12324A",
 }
 MACRO_SOURCE_COLORS = {
     "Howard Marks":"#123A2E",
@@ -3032,7 +3064,7 @@ html{scroll-padding-top:0}
 
 /* The beat sits between source and time, matching .pc-beat on the cards. */
 .mk-beat{font-size:11.5px;font-weight:300;color:var(--meta)}
-.mk-beat:before{content:"\00b7";margin:0 5px;color:var(--meta)}
+.mk-beat:before{content:"·";margin:0 5px;color:var(--meta)}
 
 /* The home page is International Klein Blue — IKB 79, #002FA7. */
 .hero-sec{background:#002FA7!important;border-top-color:#002FA7!important}
@@ -3257,10 +3289,20 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
     # were just the same daily repeated.
     rest   = [a for a in geo_arts if a["source"] != "World in Brief"]
     others = [a for a in rest if a["source"] == "Playbook Paris"][:1]
-    longs  = [a for a in rest if a["source"] == "Le Grand Continent"]
-    wire   = [a for a in rest if a["source"] not in
-              ("Le Grand Continent", "Playbook Paris")]
-    stack  = "".join(_pcard(a, GEO_SOURCE_COLORS, extra_cls="pc-row", clamp=3)
+    # spread the stack across rubriques before filling by recency, so one
+    # prolific rubrique doesn't take the whole column
+    _lgc   = [a for a in rest if a["source"] in LGC_GEO]
+    seen, longs = set(), []
+    for a in _lgc:
+        if a["source"] in seen:
+            continue
+        seen.add(a["source"])
+        longs.append(a)
+    longs += [a for a in _lgc if a not in longs]
+    wire   = [a for a in rest
+              if a["source"] not in LGC_GEO and a["source"] != "Playbook Paris"]
+    stack  = "".join(_pcard(a, GEO_SOURCE_COLORS, extra_cls="pc-row",
+                            beat=LGC_BEAT.get(a["source"], ""), clamp=3)
                      for a in longs[:8])
     rail   = "".join(_brick([a], thumb=True) for a in wire[:26])
     lead_html = (_pcard(lead_a, GEO_SOURCE_COLORS, extra_cls="pc-lead", clamp=3)
@@ -4067,9 +4109,10 @@ def _pcard(a, colors, extra_cls="", beat="", clamp=3):
     headline, then the image *below* — rather than text laid over a
     full-bleed photo. Falls back to a colour block when there is no image."""
     img  = a.get("img","")
-    col  = colors.get(a["source"], "#2A2A2E")
+    src  = a.get("_canon") or a["source"]
+    col  = colors.get(src, colors.get(a["source"], "#2A2A2E"))
     snip = _s(a.get("snip","") or "")
-    meta = f'<span class="pc-src">{_s(a["source"])}</span>'
+    meta = f'<span class="pc-src">{_s(src)}</span>'
     if beat:
         meta += f'<span class="pc-beat">{_s(beat)}</span>'
     meta += f'<span class="pc-time">{_ago(a["date"])}</span>'
@@ -4133,10 +4176,14 @@ def build_gossip(arts):
     # two sources feed this now, so size the stack to what is actually there
     # rather than leaving the rail with a couple of orphans
     n_stack = min(8, max(3, (len(arts) - 1) // 2))
-    lead  = _pcard(arts[0], GOSSIP_SOURCE_COLORS, extra_cls="pc-lead", clamp=3)
-    stack = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, extra_cls="pc-row", clamp=3)
+    def beat(a): return LGC_BEAT.get(a["source"], "")
+    lead  = _pcard(arts[0], GOSSIP_SOURCE_COLORS, extra_cls="pc-lead",
+                   beat=beat(arts[0]), clamp=3)
+    stack = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, extra_cls="pc-row",
+                           beat=beat(a), clamp=3)
                     for a in arts[1:1 + n_stack])
-    rail  = "".join(_brick([a], thumb=True) for a in arts[1 + n_stack:35])
+    rail  = "".join(_brick([a], thumb=True, beat=beat(a))
+                    for a in arts[1 + n_stack:35])
     return (f'<div class="section mkt-page">'
             f'<div class="sec-hd"><span class="sec-hd-text">Opinions</span></div>'
             f'<div class="mkt-band">'
@@ -4624,8 +4671,7 @@ def main():
                 or (a.get("ts") and a["ts"] >= _wib_cut)]
     geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
                   reverse=True)
-    _backfill_images([a for a in geo_arts
-                      if a["source"] == "Le Grand Continent"], limit=10)
+    _backfill_images([a for a in geo_arts if a["source"] in LGC_GEO], limit=10)
     print(f"    → {len(geo_arts)} geo articles, "
           f"{sum(1 for a in geo_arts if a.get('img'))} with image")
     now_paris = datetime.now(_PARIS)
