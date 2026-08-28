@@ -1156,23 +1156,15 @@ CSS = """
   --bg:#ffffff;--bg2:#f2f2f7;--bg3:#D6E4F7;
   --border:#d1d1d6;--text:#0C0C0C;--muted:#5A7EA8;--dim:#8AAACE;
   --accent:#D42B17;--r:8px;--r-sm:5px;
-  /* The panel colour that replaced Klein blue. It is light, so anything
-     sitting on it needs --panel-ink rather than white. */
-  --panel:#C6CEDE;--panel-ink:#16203A;
   /* gap from a section title to its first brick, used everywhere */
   --sec-gap:10px;
-  --panel-ink-soft:rgba(22,32,58,.60);--panel-ink-faint:rgba(22,32,58,.34);
-  --panel-line:rgba(22,32,58,.18);
   --serif:'Cormorant Garamond',Georgia,serif;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif;
 }
 @media(prefers-color-scheme:dark){
   :root{--bg:#060606;--bg2:#0d0d0d;--bg3:#131313;
-    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040;
-    --panel:#20263A;--panel-ink:#E7EAF3;
-    --panel-ink-soft:rgba(231,234,243,.58);--panel-ink-faint:rgba(231,234,243,.32);
-    --panel-line:rgba(231,234,243,.16)}
+    --border:#1c1c1c;--text:#d4d4d4;--muted:#555;--dim:#333;--accent:#E84040}
   header{background:rgba(6,6,6,.97)}
   .cp-sum{color:#555}
   .cp-art{color:#555}
@@ -1520,23 +1512,23 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── Hero section ────────────────────────────────────────── */
 .hero-sec{display:flex;flex-direction:column;justify-content:center;
-  padding:0 60px;border-top:3px solid var(--panel);background:var(--panel)}
+  padding:0 60px;border-top:3px solid var(--ground);background:var(--ground)}
 .hero-eyebrow{font-size:8px;letter-spacing:3.5px;text-transform:uppercase;
   color:rgba(255,255,255,.55);font-family:var(--sans);margin-bottom:16px;display:block}
 .hero-h1{font-family:var(--display);font-size:clamp(60px,8.5vw,118px);
-  font-style:normal;font-weight:700;color:var(--panel-ink);
+  font-style:normal;font-weight:700;color:var(--ink);
   letter-spacing:-3px;line-height:.93;margin-bottom:36px}
 .hero-meta{display:flex;align-items:center;gap:16px;margin-bottom:36px}
-.hero-count{font-size:9px;color:var(--panel-ink);letter-spacing:.9px;
+.hero-count{font-size:9px;color:var(--ink);letter-spacing:.9px;
   font-weight:600;text-transform:uppercase}
-.hero-date-str{font-size:9px;color:var(--panel-ink-soft);letter-spacing:.9px;text-transform:uppercase}
-.hero-sep{color:var(--panel-ink-faint);font-size:12px}
+.hero-date-str{font-size:9px;color:var(--meta);letter-spacing:.9px;text-transform:uppercase}
+.hero-sep{color:var(--meta);font-size:12px}
 .hero-hint{position:absolute;bottom:90px;left:60px;font-size:7.5px;
-  letter-spacing:2.5px;text-transform:uppercase;color:var(--panel-ink-faint)}
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--meta)}
 .hero-sec .ticker{position:absolute;bottom:0;left:0;right:0;
-  background:rgba(0,0,0,.05);border-bottom:none;border-top:1px solid var(--panel-line)}
-.hero-sec .t-item{color:var(--panel-ink-soft);border-right-color:var(--panel-line)}
-.hero-sec .t-item:hover{color:var(--panel-ink)}
+  background:transparent;border-bottom:none;border-top:1px solid var(--hair)}
+.hero-sec .t-item{color:var(--meta);border-right-color:var(--hair)}
+.hero-sec .t-item:hover{color:var(--ink)}
 
 /* ── Snap section inner layouts ──────────────────────────── */
 .snap-geo{height:100vh!important;overflow:hidden!important}
@@ -1554,9 +1546,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   border-color:var(--border)!important}
 #map .leaflet-control-zoom{border:none!important;box-shadow:none!important}
 .snap-geo>.section{background:var(--bg)}
-.snap-geo .sec-hd{background:var(--bg)!important;border-bottom:none;padding:0 16px}
-.snap-geo .sec-hd-text{color:var(--text)}
-.snap-geo .sec-hd-meta{color:var(--muted)}
+.snap-geo .sec-hd{background:var(--ground)!important;border-bottom:none;padding:0 16px}
+.snap-geo .sec-hd-text{color:var(--ink)}
+.snap-geo .sec-hd-meta{color:var(--meta)}
 .snap-geo .cp{background:var(--bg);border-left:none;position:relative;z-index:1}
 .snap-geo .cp-item{border-bottom-color:var(--border)}
 .snap-geo .cp-item-name{color:var(--text)}
@@ -1582,13 +1574,13 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 }
 .gm-sonar{animation:dot-blink 1.2s ease-in-out infinite}
 
-.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:var(--panel)}
+.snap-feed{display:flex;flex-direction:column;overflow:hidden;background:var(--ground)}
 .snap-feed>.two-col{flex:1;min-height:0;border-bottom:none}
 .snap-feed .two-col>.section{height:100%;display:flex;flex-direction:column;
-  overflow:hidden;border-bottom:none;background:var(--panel)}
-.snap-feed .sec-hd{background:var(--panel)!important}
-.snap-feed .sec-hd-text{color:var(--panel-ink)!important}
-.snap-feed .poly-band{background:var(--panel)!important}
+  overflow:hidden;border-bottom:none;background:var(--ground)}
+.snap-feed .sec-hd{background:var(--ground)!important}
+.snap-feed .sec-hd-text{color:var(--ink)!important}
+.snap-feed .poly-band{background:var(--ground)!important}
 /* ── Match inner gap of article columns to bottom panel gap (8px each side = 16px total) ── */
 .snap-feed .two-col>.section:first-child .story-list{margin-right:8px}
 .snap-feed .two-col>.section:last-child .story-list{margin-left:8px}
@@ -1601,11 +1593,11 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── Markets price band ──────────────────────────────────────── */
 /* ── snap-feed bottom row: Polymarket (left) + Markets (right) ── */
 .snap-feed-bottom{flex:1 0 0;min-height:0;display:flex;flex-direction:row;
-  background:var(--panel);overflow:hidden}
+  background:var(--ground);overflow:hidden}
 .snap-feed-bottom .poly-band{flex:1;min-width:0}
 .snap-feed-bottom .price-band{flex:1;min-width:0}
 .price-band{display:flex;flex-direction:column;
-  border-top:none;background:var(--panel);overflow:hidden}
+  border-top:none;background:var(--ground);overflow:hidden}
 .price-band .sec-hd{display:none!important}
 .price-band-track{flex:1;overflow-x:auto;overflow-y:hidden;
   margin:16px 16px 16px 8px;border-radius:var(--r);background:var(--bg2);
@@ -1626,7 +1618,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .price-tile-loading{font-size:10px;color:var(--muted);padding:0 12px;align-self:center}
 /* ── Polymarket band ─────────────────────────────────────────── */
 .poly-band{display:flex;flex-direction:column;
-  border-top:none;background:var(--panel);overflow:hidden}
+  border-top:none;background:var(--ground);overflow:hidden}
 .poly-band .sec-hd{display:none!important}
 .poly-band-label{display:none}
 .poly-band-track{flex:1;overflow:hidden;position:relative;
@@ -1685,8 +1677,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 .snap-culture>.section{height:100%;display:flex;flex-direction:column;
   background:var(--bg)}
-.snap-culture .sec-hd{background:var(--bg)!important;border-color:var(--border)!important}
-.snap-culture .sec-hd-text{color:var(--text)!important}
+.snap-culture .sec-hd{background:var(--ground)!important;border-color:transparent!important}
+.snap-culture .sec-hd-text{color:var(--ink)!important}
 /* culture body: flex column splits grid (3/4) vs event band (1/4) */
 .snap-culture .culture-body{
   flex:1;min-height:0;
@@ -1905,14 +1897,14 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   text-decoration:none;border-bottom:1px solid var(--border)}
 .snap-culture .culture-cal-band .cal-search-link:hover{color:var(--text)}
 
-.snap-bottom{background:var(--panel)}
-.snap-bottom .fb{background:rgba(255,255,255,.35);border-color:var(--panel-line);color:var(--panel-ink)}
-.snap-bottom .fb.on{background:var(--panel-ink);color:var(--panel);border-color:var(--panel-ink)}
-.snap-bottom .fb:hover:not(.on){background:rgba(255,255,255,.6);border-color:var(--panel-ink-soft);color:var(--panel-ink)}
+.snap-bottom{background:var(--ground)}
+.snap-bottom .fb{background:transparent;border-color:var(--hair);color:var(--meta)}
+.snap-bottom .fb.on{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.snap-bottom .fb:hover:not(.on){background:var(--wash);border-color:var(--meta);color:var(--ink)}
 .snap-bottom>.three-col{height:100%;border-bottom:none}
-.snap-bottom .three-col>.section{height:100%!important;background:var(--panel)}
-.snap-bottom .sec-hd{background:var(--panel)!important}
-.snap-bottom .sec-hd-text{color:var(--panel-ink)!important}
+.snap-bottom .three-col>.section{height:100%!important;background:var(--ground)}
+.snap-bottom .sec-hd{background:var(--ground)!important}
+.snap-bottom .sec-hd-text{color:var(--ink)!important}
 .snap-bottom .story-list,.snap-bottom .paris-list{max-height:none}
 
 /* ── shared card token (used below) ─────────────────────────
@@ -1957,7 +1949,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 /* ── snap-gossip ─────────────────────────────────────────── */
 .snap-gossip{background:var(--bg)}
 .snap-gossip>.gos-section{height:100%;display:flex;flex-direction:column;background:var(--bg)}
-.snap-gossip .sec-hd{background:var(--bg)!important}
+.snap-gossip .sec-hd{background:var(--ground)!important}
 .gos-grid{
   flex:1;min-height:0;
   display:grid;
@@ -2328,7 +2320,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 
 /* ── Markets: three cadence bands of bricks ─────────────────────── */
 .mkt-col{height:100%;display:flex;flex-direction:column;overflow:hidden;
-  background:var(--panel)}
+  background:var(--ground)}
 .mkt-body{flex:1;min-height:0;display:flex;flex-direction:column;
   gap:2px;padding:var(--sec-gap) 14px 14px;overflow:hidden}
 .mkt-tier{display:flex;flex-direction:column;min-height:0}
@@ -2337,8 +2329,8 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   display:flex;align-items:center;gap:9px;
   padding:0 2px 6px;
   font-size:7.5px;font-weight:700;letter-spacing:1.7px;text-transform:uppercase;
-  color:var(--panel-ink-faint)}
-.mkt-tier-hd:after{content:'';flex:1;height:1px;background:var(--panel-line)}
+  color:var(--meta)}
+.mkt-tier-hd:after{content:'';flex:1;height:1px;background:var(--hair)}
 .mk-row{display:grid;gap:5px;min-height:0}
 
 /* the brick */
@@ -2383,10 +2375,10 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   scroll-snap-type:x proximity;scrollbar-width:none}
 .mkt-daily .mk-row::-webkit-scrollbar{display:none}
 .mkt-daily .mk{scroll-snap-align:start}
-.mkt-daily .mk{background:var(--panel-ink);min-height:78px}
-.mkt-daily .mk-t{color:var(--panel);font-size:12.5px;font-weight:500;-webkit-line-clamp:3}
-.mkt-daily .mk-src{color:var(--panel-ink-faint);color:rgba(255,255,255,.45)}
-.mkt-daily .mk-time{color:rgba(255,255,255,.4)}
+.mkt-daily .mk{background:transparent;min-height:0}
+.mkt-daily .mk-t{color:var(--ink);font-size:15px;font-weight:500;-webkit-line-clamp:2}
+.mkt-daily .mk-src{color:var(--meta)}
+.mkt-daily .mk-time{color:var(--meta)}
 
 /* Latest — the fast wire, dense and scrollable */
 .mkt-fast{flex:1;min-height:0}
@@ -2394,9 +2386,9 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
   grid-template-columns:repeat(2,minmax(0,1fr));
   grid-auto-rows:min-content;
   align-content:start;overflow-y:auto;padding-right:3px;
-  scrollbar-width:thin;scrollbar-color:var(--panel-line) transparent}
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
 .mkt-fast .mk-row::-webkit-scrollbar{width:2px}
-.mkt-fast .mk-row::-webkit-scrollbar-thumb{background:var(--panel-line)}
+.mkt-fast .mk-row::-webkit-scrollbar-thumb{background:var(--hair)}
 
 /* Slow reads — a third of the column. The card IS the Culture card: its look
    comes from the shared .snap-culture/.mkt-slow rules below, so the two
@@ -2554,7 +2546,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
    insight items are transparent on the ground, not cards. Separation comes
    from whitespace and a tight type ramp, and the site never goes bolder
    than 500. Scoped to .snap-feed and declared last so it wins ties. */
-.snap-feed{--panel:#F0F0F0;--panel-ink:#111;
+.snap-feed{
   --mk-title:#000;--mk-meta:#696764;--mk-radius:5px}
 .snap-feed .mkt-tier-hd{color:var(--mk-meta);letter-spacing:1.4px;font-weight:500}
 .snap-feed .mkt-tier-hd:after{background:rgba(0,0,0,.10)}
@@ -2594,7 +2586,7 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-feed .fb{border-color:rgba(0,0,0,.18);color:var(--mk-meta);font-weight:500}
 .snap-feed .fb.on{background:var(--mk-title);color:#F0F0F0;border-color:var(--mk-title)}
 @media(prefers-color-scheme:dark){
-  .snap-feed{--panel:#101010;--panel-ink:#EDEDED;
+  .snap-feed{
     --mk-title:#F4F4F4;--mk-meta:#8A8784}
   .snap-feed .mkt-tier-hd:after{background:rgba(255,255,255,.13)}
   .snap-feed .mk:hover{background:rgba(255,255,255,.06)}
@@ -2638,6 +2630,20 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .snap-geo>.section,.snap-culture>.section,.snap-gossip>.gos-section,
 .snap-bottom .three-col>.section,.snap-geo .cp{background:var(--ground)}
 .sec-hd{background:var(--ground)!important;border-top:none!important}
+/* A section title never wraps. City Focus was breaking onto two lines because
+   the 60px gutters left only 211px of a 331px column for a 90px title plus
+   184px of filter buttons; the bottom columns are narrow, so they take the
+   same gutter as the lists they sit above. */
+.sec-hd-text{white-space:nowrap}
+/* Scrolling lands a whole section, never half of one. scroll-snap-stop:always
+   makes every section a hard stop, so once the wheel leaves an inner list
+   (the story lists and Latest grid scroll on their own) the page cannot
+   coast to rest between two sections. */
+.snap-sec{scroll-snap-stop:always}
+html{scroll-padding-top:0}
+.snap-bottom .sec-hd{padding:0 16px}
+.sec-hd>div{min-width:0;flex-shrink:1;overflow-x:auto;scrollbar-width:none}
+.sec-hd>div::-webkit-scrollbar{display:none}
 .sec-hd-text{color:var(--ink)!important;font-weight:500}
 .sec-hd-meta{color:var(--meta)!important}
 
@@ -2737,9 +2743,15 @@ html{scroll-snap-type:y mandatory;overflow-y:scroll}
 .mk-sub-src{display:block;font-size:10.5px;font-weight:300;color:var(--meta)}
 .mk-sub-t{display:block;font-size:12.5px;font-weight:400;line-height:1.2;color:var(--ink)}
 
-/* the containers that hold them */
+/* the containers that hold them.
+   The bricks must not shrink: these lists are height-constrained flex
+   columns, so a default flex:0 1 auto squashed every brick to a fraction of
+   its title and overflow:hidden clipped the headline away. Markets escaped
+   it only because its parent is a grid. */
 .story-list,.paris-list,#geo-feed,.snap-geo .cp-list{
   display:flex;flex-direction:column;gap:var(--brick-gap)!important}
+.story-list>.mk,.paris-list>.mk,#geo-feed>.mk,.snap-geo .cp-list>.mk{
+  flex:0 0 auto}
 
 /* every grid of bricks uses the same gap */
 .snap-culture .cards,.gos-grid,.cp-grid,.mk-row,
@@ -3561,7 +3573,7 @@ def _build_market_col(groups, label, hd_buttons="", body_id=""):
         _tier("Slow reads", buckets["slow"], "mkt-slow", 14)
     )
     if not body:
-        body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
+        body = '<p style="font-size:11px;color:var(--meta);padding:14px 16px">No articles in the past 48h.</p>'
     return (f'<div class="section mkt-col">'
             f'<div class="sec-hd"><span class="sec-hd-text">{label}</span>{hd_buttons}</div>'
             f'<div class="mkt-body"{idattr}>{body}</div></div>\n')
@@ -3603,7 +3615,7 @@ def build_macro(groups):
             tier("Latest", buckets["fast"], "mkt-fast", 60) +
             tier("Slow reads", buckets["slow"], "mkt-slow", 14))
     if not body:
-        body = '<p style="font-size:11px;color:var(--panel-ink-soft);padding:14px 16px">No articles in the past 48h.</p>'
+        body = '<p style="font-size:11px;color:var(--meta);padding:14px 16px">No articles in the past 48h.</p>'
     js = """<script>
 function filterMacro(v){
   document.querySelectorAll('.fb[id^="macro-"]').forEach(function(b){
