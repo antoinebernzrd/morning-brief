@@ -655,7 +655,10 @@ CALENDAR_EVENTS = [
 #  HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 def _s(t):
-    return html_lib.escape(str(t or ""), quote=True)
+    """Escape for HTML. Feeds hand us text that is already entity-encoded —
+    escaping that a second time is what printed "Lenny&#8217;s" on the page —
+    so decode first, then escape exactly once."""
+    return html_lib.escape(html_lib.unescape(str(t or "")), quote=True)
 def _parse_date(entry):
     for attr in ("published_parsed", "updated_parsed"):
         val = getattr(entry, attr, None)
@@ -3132,6 +3135,110 @@ html{scroll-padding-top:0}
 .mkt-lead .culture-cal-band .cal-ev-panel{display:none}
 .mkt-lead .culture-cal-band .cal-ev-card.cal-ev-portal-open .cal-ev-panel{display:block;padding:6px 0 2px}
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE GRID — one source of truth
+   A 10-field modular grid. The band's 4/4/2 spans give 2.10 : 2.10 : 1, which
+   is the proportion the page already had (2.15 : 2.15 : 1) expressed in whole
+   columns instead of decimals. At the 1216px type area the columns land on
+   exactly 100px. Baseline 8px, leading 24px; every height, padding and media
+   size below is a whole multiple of one or the other.
+   ═════════════════════════════════════════════════════════════════════════ */
+:root{--cols:10;--gutter:24px;--bl:8px;--lh:24px;--maxw:1216px;
+  --brick-gap:8px;--sec-gap:24px}
+
+/* Header and band share one type area — they used to sit at 60px and 14px. */
+.mkt-page{padding:0 max(24px,calc((100vw - var(--maxw))/2))}
+.mkt-page > .sec-hd{padding:0;height:calc(var(--lh)*3);align-items:center}
+.mkt-page > .sec-hd,.mkt-page > .mkt-band{width:100%;max-width:var(--maxw);
+  margin-left:auto;margin-right:auto}
+.hero-sec{padding:0 max(24px,calc((100vw - var(--maxw))/2))}
+
+/* Every child placed by column line, not by eye. */
+.mkt-band{grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  column-gap:var(--gutter);row-gap:0;padding:0 0 calc(var(--lh)*2)}
+.mkt-lead {grid-column:1 / 5}
+.mkt-stack{grid-column:5 / 9}
+.mkt-rail {grid-column:9 / 11}
+
+/* ── vertical rhythm ─────────────────────────────────────────────────────
+   Type sizes and weights are untouched; only the leading is snapped. */
+.pc-hd,.mk-hd{line-height:calc(var(--bl)*2)}
+.mkt-band .mkt-tier-hd,.mkt-band .mkt-index-hd{
+  height:calc(var(--lh)*2);min-height:0;padding:0;margin:0;
+  display:flex;align-items:center;flex:0 0 auto}
+.mkt-band .mkt-index-hd{margin-top:var(--lh);border-top:1px solid var(--hair)}
+
+/* The cards carried a 5px flex gap and a 9px padding — neither on the grid.
+   Zeroing them lets the explicit margins below do the spacing. */
+.mkt-band .pcard{gap:0;padding:0}
+/* align-content on a single class was being outranked, so the three text
+   tracks spread instead of packing under the meta line. */
+.mkt-band .pc-row{padding:var(--bl) 0;align-content:start;align-items:start}
+.mkt-band .mk{gap:0}
+.mkt-lead .mk-daily{min-height:calc(var(--lh)*2);padding:var(--bl) 0 0}
+
+.pc-lead .pc-t{line-height:calc(var(--lh)*4/3);                       /* 32px */
+  max-height:calc(var(--lh)*4);overflow:hidden}
+.pc-lead .pc-snip{line-height:var(--lh);max-height:var(--lh);
+  overflow:hidden;margin:0}
+.pc-lead .pc-img{aspect-ratio:auto;height:calc(var(--lh)*15);           /* 360px */
+  margin:var(--bl) 0 0}
+
+/* Rows size to their content instead of being pinned to five leadings. The
+   content always sums to a multiple of the baseline — 8 padding + 16 meta +
+   24n title + 16 snippet — so the rhythm holds and short rows no longer leave
+   a gap above the hairline.
+   align-items:start matters: grid items stretch in the block axis by default,
+   which was giving the title a 29.34px box instead of a whole number of lines.
+   And -webkit-line-clamp is inert here — a grid item blockifies -webkit-box to
+   flow-root — so the cut is held to a line boundary with max-height instead,
+   which never slices a line in half. */
+.pc-row{min-height:0;row-gap:0;align-items:start;
+  align-content:start;
+  column-gap:var(--gutter);grid-template-columns:minmax(0,1fr) 100px}
+.pc-row .pc-t{line-height:var(--lh);max-height:calc(var(--lh)*3);overflow:hidden}
+.pc-row .pc-snip{line-height:calc(var(--bl)*2);
+  max-height:calc(var(--bl)*2);overflow:hidden}
+.pc-row .pc-img{width:100px;aspect-ratio:auto;height:calc(var(--lh)*3)} /* 72px */
+
+/* A 6px flex gap and a 1px border were pushing rail rows to 79px. The gap goes
+   to zero and the hairline becomes a shadow, which costs no layout — so a row
+   is exactly three leadings. */
+.mkt-rail .mk{min-height:0;padding:var(--bl) 0;gap:0;
+  border-bottom:0;box-shadow:0 1px 0 var(--hair)}
+.mkt-rail .mk:last-child{box-shadow:none}
+.pc-row{border-bottom:0;box-shadow:0 1px 0 var(--hair)}
+.mkt-stack .pc-row:last-child{box-shadow:none}
+/* the live/past variants carry an extra class, so they need one too or the
+   earlier 5-class rule keeps its 6px padding and the row lands at 37px */
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card.ev-live,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-card.ev-past{
+  border-bottom:0;box-shadow:0 1px 0 var(--hair);padding:0;
+  min-height:var(--lh);height:var(--lh);display:flex;align-items:center}
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-name,
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-range{line-height:var(--lh)}
+/* baseline alignment across two different sizes rounded the row to 25px */
+.snap-culture .mkt-lead .culture-cal-band .cal-ev-body{
+  height:var(--lh);align-items:center}
+.mkt-rail .mk-t{line-height:var(--lh);max-height:calc(var(--lh)*3);
+  overflow:hidden}
+.mkt-rail .mk-has-thumb{grid-template-columns:minmax(0,1fr) 48px;
+  column-gap:var(--bl)}
+.mkt-rail .mk-thumb{width:48px;height:48px}
+
+.mkt-lead .cp-grid{gap:0 var(--gutter)}
+.mkt-lead .cp-chip{height:var(--lh);padding:0;display:flex;align-items:center}
+.mkt-lead .culture-cal-band .cal-ev-card{padding:0;min-height:var(--lh);
+  display:flex;align-items:center}
+.mkt-lead .culture-cal-band .cal-ev-body{width:100%}
+
+@media(max-width:768px){
+  .mkt-page{padding:0}
+  .mkt-lead,.mkt-stack,.mkt-rail{grid-column:1 / -1}
+}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
@@ -4154,7 +4261,9 @@ def build_culture(arts, event_news={}, paris_arts=()):
             f'  <div class="mkt-rail"><div class="mkt-tier-hd"><span>Latest</span></div>'
             f'    <div class="mkt-rail-list">{rail}</div></div>'
             f'</div>')
-    return _sec("#D42B17","Culture", body)
+    return (f'<div class="section mkt-page">'
+            f'<div class="sec-hd"><span class="sec-hd-text">Culture</span></div>'
+            f'{body}</div>\n')
 
 def build_paris(arts):
     rows = ""
