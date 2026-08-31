@@ -3104,8 +3104,14 @@ html{scroll-padding-top:0}
   text-transform:uppercase;color:var(--meta);
   padding:13px 0 7px;margin-top:11px;border-top:1px solid var(--hair)}
 
+/* The standing index is last in the lead column, so with a fixed 360px picture
+   above it it was the only thing that could give — and on a laptop screen it
+   gave everything: 6 of 20 flashpoints at 820px tall, 3 at 768, none at 700.
+   It now keeps four rows minimum and the picture yields instead, stepping down
+   in whole leadings so the rhythm survives. */
 .mkt-lead .cp-grid,.mkt-lead .culture-cal-band{
-  flex:1 1 auto;min-height:0;overflow-y:auto;padding:0;max-height:none}
+  flex:1 1 auto;min-height:calc(var(--lh)*4);overflow-y:auto;padding:0;
+  max-height:none}
 
 .mkt-lead .cp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
   gap:var(--brick-gap);align-content:start}
@@ -3164,6 +3170,12 @@ html{scroll-padding-top:0}
 /* ── vertical rhythm ─────────────────────────────────────────────────────
    Type sizes and weights are untouched; only the leading is snapped. */
 .pc-hd,.mk-hd{line-height:calc(var(--bl)*2)}
+/* The rail keeps its label outside .mkt-rail-list, so it never moves. The
+   stack has no such wrapper — it is the scroller itself — so "Long reads"
+   rode up with the content. Pin it to the top of its own scroll box. */
+.mkt-stack .mkt-tier-hd{position:sticky;top:0;z-index:2;
+  background:var(--ground)}
+
 .mkt-band .mkt-tier-hd,.mkt-band .mkt-index-hd{
   height:calc(var(--lh)*2);min-height:0;padding:0;margin:0;
   display:flex;align-items:center;flex:0 0 auto}
@@ -3184,6 +3196,12 @@ html{scroll-padding-top:0}
   overflow:hidden;margin:0}
 .pc-lead .pc-img{aspect-ratio:auto;height:calc(var(--lh)*15);           /* 360px */
   margin:var(--bl) 0 0}
+/* On a short screen the picture steps down in whole leadings so the index
+   below it keeps its rows. */
+@media(max-height:899px){.pc-lead .pc-img{height:calc(var(--lh)*12)}} /* 288 */
+@media(max-height:799px){.pc-lead .pc-img{height:calc(var(--lh)*10)}} /* 240 */
+@media(max-height:719px){.pc-lead .pc-img{height:calc(var(--lh)*8)}}  /* 192 */
+
 
 /* Rows size to their content instead of being pinned to five leadings. The
    content always sums to a multiple of the baseline — 8 padding + 16 meta +
