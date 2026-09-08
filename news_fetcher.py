@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Morning Brief v4"""
 import base64
+import hashlib
+import random
 import calendar as _cal
 import feedparser
 import html as html_lib
@@ -438,12 +440,23 @@ GOSSIP_SOURCES_OTHER = [
     # so these render as designed colour tiles (see .gos-noimg).
     ("The Economist",    "https://www.economist.com/leaders/rss.xml"),
     ("The Economist",    "https://www.economist.com/by-invitation/rss.xml"),
+    # Technology read philosophically rather than as risk-versus-hype.
+    ("The Convivial Society", "https://theconvivialsociety.substack.com/feed"),
+    ("Noema",            "https://www.noemamag.com/feed/"),
+    ("Programmable Mutter", "https://www.programmablemutter.com/feed"),
+    # Quarterly, and the only one of the four with no image in its feed — but
+    # every article page carries an og:image, so the backfill gets them.
+    ("The New Atlantis", "https://www.thenewatlantis.com/feed"),
     *LGC_OPINION_SOURCES,
 ]
 # Per-source time window in days
 GOSSIP_WINDOW_DAYS = {
     "The Economist":     4,   # weekly print cadence → 4 days
     "Works in Progress": 14,  # ~weekly
+    "The Convivial Society": 45,   # roughly monthly
+    "Noema":             21,
+    "Programmable Mutter": 21,
+    "The New Atlantis":  150,      # quarterly print cadence
     **{n: 14 for n in LGC_OPINION},
 }
 # Colour for each source's badge chip (also drives the no-image tile)
@@ -451,6 +464,10 @@ GOSSIP_SOURCE_COLORS = {
     "The Economist":    "#E3120B",   # Economist red
     "Works in Progress":"#2F4858",   # slate
     "Le Grand Continent":"#12324A",
+    "The Convivial Society":"#3B2F1E",
+    "Noema":"#1C2E3A",
+    "Programmable Mutter":"#2B2340",
+    "The New Atlantis":"#2A3524",
 }
 MACRO_SOURCE_COLORS = {
     "Howard Marks":"#123A2E",
@@ -1165,6 +1182,11 @@ SOURCE_CAPS = {
     # ── Opinions
     "The Economist":    10,
     "Works in Progress": 6,
+    # the four new essayists publish slowly — a few each keeps the mix even
+    "The Convivial Society": 3,
+    "Noema":             4,
+    "Programmable Mutter": 3,
+    "The New Atlantis":  3,
     "Lenny's Newsletter":1,
     "Pragmatic Engineer":1,
     "The NBS":           1,
@@ -3065,6 +3087,29 @@ html{scroll-padding-top:0}
 }
 
 
+/* Every scrolling column reserves a strip for its own scrollbar, so the bar
+   sits beside the text instead of on top of it. scrollbar-gutter keeps that
+   strip on the platforms that reserve one; macOS floats its scrollbar over the
+   content and ignores the property, which is why the bar was sitting on the
+   text — so the 8px padding is what actually holds the text clear. The lead is
+   not a scroller, so it keeps its full column width. */
+.mkt-band .mkt-stack,
+.mkt-band .mkt-rail-list,
+.mkt-band .mkt-lead .cp-grid,
+.mkt-band .mkt-lead .culture-cal-band{
+  scrollbar-gutter:stable;padding-right:var(--bl);
+  scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
+.mkt-band ::-webkit-scrollbar{width:6px}
+.mkt-band ::-webkit-scrollbar-track{background:transparent}
+.mkt-band ::-webkit-scrollbar-thumb{background:var(--hair);border-radius:3px}
+
+/* A picture slot with nothing in it reads as a page still loading. Where the
+   publisher makes its image unreachable — FT and the Economist answer 403 to
+   any script, and Google News wraps its links so the article is never reached
+   — the tile carries the masthead instead, so the slot looks decided. */
+.pc-img-flat{position:relative;overflow:hidden}
+.pc-art{position:absolute;inset:0;width:100%;height:100%;display:block}
+
 /* The beat sits between source and time, matching .pc-beat on the cards. */
 .mk-beat{font-size:11.5px;font-weight:300;color:var(--meta)}
 .mk-beat:before{content:"·";margin:0 5px;color:var(--meta)}
@@ -3189,6 +3234,9 @@ html{scroll-padding-top:0}
 .mkt-band .pc-row{padding:var(--bl) 0;align-content:start;align-items:start}
 .mkt-band .mk{gap:0}
 .mkt-lead .mk-daily{min-height:calc(var(--lh)*2);padding:var(--bl) 0 0}
+/* the rail's rows got the leading; these never did, so they sat at 58.59px */
+.mkt-lead .mk-daily .mk-t{line-height:var(--lh);
+  max-height:calc(var(--lh)*2);overflow:hidden}
 
 .pc-lead .pc-t{line-height:calc(var(--lh)*4/3);                       /* 32px */
   max-height:calc(var(--lh)*4);overflow:hidden}
@@ -3242,8 +3290,10 @@ html{scroll-padding-top:0}
   height:var(--lh);align-items:center}
 .mkt-rail .mk-t{line-height:var(--lh);max-height:calc(var(--lh)*3);
   overflow:hidden}
+/* the 48px thumb is taller than meta + one line, and a grid item stretches by
+   default — which grew the title box to 28px and off the baseline */
 .mkt-rail .mk-has-thumb{grid-template-columns:minmax(0,1fr) 48px;
-  column-gap:var(--bl)}
+  column-gap:var(--bl);align-items:start;align-content:start}
 .mkt-rail .mk-thumb{width:48px;height:48px}
 
 .mkt-lead .cp-grid{gap:0 var(--gutter)}
@@ -4229,6 +4279,183 @@ def _build_cal_band_html(event_news={}, paris_arts=()):
 </script>"""
     return f'<div class="culture-cal-band" id="culture-cal-band">{cards_html}</div>{js}'
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  GENERATIVE TILES — for the slots where a picture cannot be had
+# ══════════════════════════════════════════════════════════════════════════════
+def _flat_art(seed_str, col):
+    """A constructivist tile in place of a photograph.
+
+    FT and the Economist answer 403 to any script and Google News never resolves
+    to the article, so a handful of slots can never carry a picture. Rather than
+    a flat colour field — which reads as a page still loading — each of those
+    draws a composition in the International Typographic idiom the rest of the
+    page is built on: arcs, bars, modular fields.
+
+    The seed is the article link, so a story keeps its own tile across rebuilds
+    rather than flickering into a new one every hour. Everything is a few large
+    shapes, because these render at 100x72 in a stack row as well as 472x360 on
+    a lead."""
+    b = hashlib.md5(seed_str.encode("utf-8")).digest()
+    n = lambda i, lo, hi: lo + b[i % 16] % (hi - lo + 1)   # stable pick
+    W, H = 400, 300
+    ink = lambda a: f'rgba(255,255,255,{a})'
+    p = []
+
+    # md5's first byte alone clustered badly on these seeds — five of eight
+    # drew the same figure. Folding four bytes spreads them evenly.
+    kind = (b[0] ^ b[5] ^ b[9] ^ b[13]) % 5
+    if kind == 0:                                   # concentric arcs from a corner
+        cx, cy = (0, H) if b[1] % 2 else (W, 0)
+        for i in range(n(2, 5, 8)):
+            r = 40 + i * n(3, 34, 52)
+            p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" '
+                     f'stroke="{ink(round(.30 - i * .028, 3))}" stroke-width="14"/>')
+    elif kind == 1:                                 # a rhythm of vertical bars
+        x, i = 0, 0
+        while x < W and i < 9:
+            w = n(2 + i, 18, 74)
+            if i % 2 == 0:
+                p.append(f'<rect x="{x}" y="0" width="{w}" height="{H}" '
+                         f'fill="{ink(round(.07 + (i % 3) * .07, 3))}"/>')
+            x += w; i += 1
+    elif kind == 2:                                 # a modular field of circles
+        cols, rows = n(1, 3, 5), 3
+        cw, ch = W / cols, H / rows
+        for r_ in range(rows):
+            for c in range(cols):
+                k = b[(r_ * cols + c) % 16]
+                if k % 4 == 0:
+                    continue
+                rad = (min(cw, ch) / 2) * (0.34 + (k % 5) * 0.13)
+                p.append(f'<circle cx="{cw*(c+.5):.0f}" cy="{ch*(r_+.5):.0f}" '
+                         f'r="{rad:.0f}" fill="{ink(round(.10 + (k % 4) * .07, 3))}"/>')
+    elif kind == 3:                                 # diagonal bands
+        step = n(1, 46, 78)
+        for i in range(-2, 10):
+            x = i * step
+            p.append(f'<path d="M{x} {H} L{x+step*0.55:.0f} {H} '
+                     f'L{x+step*0.55+H:.0f} 0 L{x+H} 0 Z" '
+                     f'fill="{ink(round(.08 + (i % 3) * .06, 3))}"/>')
+    else:                                           # blocks on a 4x3 module field
+        mw, mh = W / 4, H / 3
+        placed = []
+        for i in range(n(1, 3, 5)):
+            c, r_ = b[(i*2) % 16] % 4, b[(i*2+1) % 16] % 3
+            cs_ = 1 + b[(i*3) % 16] % (4 - c)       # span, clipped to the field
+            rs = 1 + b[(i*3+2) % 16] % (3 - r_)
+            if (c, r_) in placed:
+                continue
+            placed.append((c, r_))
+            p.append(f'<rect x="{c*mw:.0f}" y="{r_*mh:.0f}" '
+                     f'width="{cs_*mw:.0f}" height="{rs*mh:.0f}" '
+                     f'fill="{ink(round(.09 + (i % 3) * .08, 3))}"/>')
+
+    return (f'<svg class="pc-art" viewBox="0 0 {W} {H}" '
+            f'preserveAspectRatio="xMidYMid slice" aria-hidden="true" '
+            f'focusable="false">{"".join(p)}</svg>')
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  THE MARK — brush straps
+# ══════════════════════════════════════════════════════════════════════════════
+"""Brush straps in the hand of the reference painting.
+
+Two earlier attempts got this wrong in opposite directions: the first put
+high-frequency jitter on a symmetric ribbon (shaky), the second tapered hard
+with independently curving edges (spiky blades). The reference is neither.
+
+Looking at it properly, a strap is:
+  * near CONSTANT width down its length — it swells and narrows a little, but
+    never tapers to a point;
+  * varied on each edge independently, and slowly — three or four undulations
+    over the whole run, so the silhouette is asymmetric but calm;
+  * long and narrow, roughly 1:12;
+  * blunt at both ends, cut square or on a slight slant;
+  * sometimes broken in two, at heights that differ from strap to strap.
+
+Built as a dense polyline rather than a spline: with 60 samples the outline is
+smooth on screen and, unlike a Q/T chain, it cannot collapse.
+"""
+
+
+def _strap_smooth(vals, n):
+    """Catmull-Rom through a few knots — slow undulation, no jitter."""
+    out, m = [], len(vals) - 1
+    for i in range(n + 1):
+        t = i / n * m
+        k = min(int(t), m - 1)
+        f = t - k
+        p0, p1 = vals[max(k - 1, 0)], vals[k]
+        p2, p3 = vals[min(k + 1, m)], vals[min(k + 2, m)]
+        out.append(0.5 * ((2*p1) + (-p0 + p2)*f
+                          + (2*p0 - 5*p1 + 4*p2 - p3)*f*f
+                          + (-p0 + 3*p1 - 3*p2 + p3)*f*f*f))
+    return out
+
+
+def _strap(x, top, bot, w, seed, slant=None):
+    r = random.Random(seed)
+    n = 60
+    lw = _strap_smooth([r.uniform(0.84, 1.14) for _ in range(4)], n)   # left edge
+    rw = _strap_smooth([r.uniform(0.84, 1.14) for _ in range(4)], n)   # right edge
+    lean = _strap_smooth([r.uniform(-0.4, 0.4) for _ in range(3)], n)  # a slight drift
+    trend = r.uniform(0.86, 1.06)          # a touch wider or narrower at the foot
+    L, R = [], []
+    for i in range(n + 1):
+        t = i / n
+        y = top + (bot - top) * t
+        cx = x + lean[i] * w * 0.4
+        half = w / 2 * (1 + (trend - 1) * t)
+        L.append((cx - half * lw[i], y))
+        R.append((cx + half * rw[i], y))
+    # blunt ends, cut on a slight slant
+    s0 = r.uniform(-0.5, 0.5) * w if slant is None else slant * w
+    s1 = r.uniform(-0.5, 0.5) * w
+    L[0] = (L[0][0], L[0][1] + s0);  R[0] = (R[0][0], R[0][1] - s0)
+    L[-1] = (L[-1][0], L[-1][1] - s1); R[-1] = (R[-1][0], R[-1][1] + s1)
+    pts = L + list(reversed(R))
+    return "M" + "L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pts) + "Z"
+
+
+def _strap_split(x, top, bot, w, seed):
+    r = random.Random(seed + 5)
+    span = bot - top
+    at = r.uniform(0.30, 0.72)
+    gap = r.uniform(0.015, 0.05)
+    return (_strap(x, top, top + span * (at - gap / 2), w * r.uniform(0.96, 1.04), seed)
+            + " " + _strap(x, top + span * (at + gap / 2), bot,
+                          w * r.uniform(0.90, 1.06), seed + 991))
+
+
+def _logo_field(seed0=1971, n=12, W=520, H=216):
+    """The hero lockup: a row of straps sized as a rule above the name."""
+    step, d = W / n, []
+    for i in range(n):
+        r = random.Random(seed0 + i * 37)
+        x, ww = step * (i + .55), step * r.uniform(.32, .44)
+        top, bot = H * r.uniform(.02, .11), H * r.uniform(.90, 1.0)
+        d.append(_strap_split(x, top, bot, ww, seed0 + i * 37) if r.random() < .42
+                 else _strap(x, top, bot, ww, seed0 + i * 37))
+    return (f'<svg class="logo-field" viewBox="0 0 {W} {H}" fill="currentColor" '
+            f'aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'
+            + "".join(f'<path d="{p}"/>' for p in d) + '</svg>')
+
+
+def _logo_mark(seed0=404, n=5, S=160):
+    """The icon: five straps in a square, the same hand at a smaller scale."""
+    step, d = S / n, []
+    for i in range(n):
+        r = random.Random(seed0 + i * 53)
+        x, ww = step * (i + .5), step * r.uniform(.34, .46)
+        top, bot = S * r.uniform(.06, .14), S * r.uniform(.86, .94)
+        d.append(_strap_split(x, top, bot, ww, seed0 + i * 53) if i in (1, 3)
+                 else _strap(x, top, bot, ww, seed0 + i * 53))
+    return (f'<svg viewBox="0 0 {S} {S}" xmlns="http://www.w3.org/2000/svg">'
+            f'<rect width="{S}" height="{S}" fill="#002FA7"/>'
+            + "".join(f'<path d="{p}" fill="#fff"/>' for p in d) + '</svg>')
+
+
 def _pcard(a, colors, extra_cls="", beat="", clamp=3):
     """Picture card in the reference's shape: source · beat · time, then the
     headline, then the image *below* — rather than text laid over a
@@ -4245,7 +4472,8 @@ def _pcard(a, colors, extra_cls="", beat="", clamp=3):
         media = (f'<span class="pc-img" style="background-image:url({_s(img)})"></span>')
         cls = "pcard"
     else:
-        media = f'<span class="pc-img pc-img-flat" style="--pc-col:{col}"></span>'
+        media = (f'<span class="pc-img pc-img-flat" style="--pc-col:{col}">'
+                 f'{_flat_art(a.get("link") or a["title"], col)}</span>')
         cls = "pcard pc-noimg"
     snip_html = f'<span class="pc-snip">{snip}</span>' if snip else ""
     return (f'<a href="{_s(a["link"])}" target="_blank" rel="noopener" '
@@ -4304,13 +4532,18 @@ def build_gossip(arts):
     # rather than leaving the rail with a couple of orphans
     n_stack = min(8, max(3, (len(arts) - 1) // 2))
     def beat(a): return LGC_BEAT.get(a["source"], "")
-    lead  = _pcard(arts[0], GOSSIP_SOURCE_COLORS, extra_cls="pc-lead",
-                   beat=beat(arts[0]), clamp=3)
+    # Order is otherwise strict arrival, but the lead is the one slot big enough
+    # that a generated tile is obvious — so it takes the freshest piece that has
+    # a real picture, and only falls back to the newest if none does.
+    lead_a = next((a for a in arts if a.get("img")), arts[0])
+    rest   = [a for a in arts if a is not lead_a]
+    lead  = _pcard(lead_a, GOSSIP_SOURCE_COLORS, extra_cls="pc-lead",
+                   beat=beat(lead_a), clamp=3)
     stack = "".join(_pcard(a, GOSSIP_SOURCE_COLORS, extra_cls="pc-row",
                            beat=beat(a), clamp=3)
-                    for a in arts[1:1 + n_stack])
+                    for a in rest[:n_stack])
     rail  = "".join(_brick([a], thumb=True, beat=beat(a))
-                    for a in arts[1 + n_stack:35])
+                    for a in rest[n_stack:34])
     return (f'<div class="section mkt-page">'
             f'<div class="sec-hd"><span class="sec-hd-text">Opinions</span></div>'
             f'<div class="mkt-band">'
@@ -4706,12 +4939,14 @@ def main():
              if SOURCE_CADENCE.get(a["source"]) == "slow" and not a.get("img")]
     if _slow:
         _backfill_images(_slow, limit=12)
+    _backfill_images(tech_raw, limit=30)
     tech_grp = _dedup(tech_raw)
     print(f"    → {len(tech_raw)} articles → {len(tech_grp)} stories")
     print("  Fetching Macro…")
     macro_raw = _cap_per_source(_dedup_exact(_filter_recent(
         _drop_audio_dupes(_strip_gn_suffix(_keep_block_daily(_fetch(MACRO_SOURCES))))
         + afp["macro"])))
+    _backfill_images(macro_raw, limit=30)
     macro_grp = _dedup(macro_raw)
     print(f"    → {len(macro_raw)} articles → {len(macro_grp)} stories")
     print("  Fetching Culture…")
@@ -4724,7 +4959,7 @@ def main():
     seen_links = {a["link"] for a in pinned if a.get("link")}
     culture_arts = pinned + [a for a in culture_raw if a.get("link") not in seen_links]
     # try for a real picture before falling back to a colour tile
-    _backfill_images(culture_arts, limit=30)
+    _backfill_images(culture_arts, limit=40)
     _c_img = sum(1 for a in culture_arts if a.get("img"))
     print(f"    → {len(culture_arts)} articles total, "
           f"{_c_img} with image / {len(culture_arts)-_c_img} colour tiles")
@@ -4764,7 +4999,7 @@ def main():
     gossip_raw.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     gossip_raw = _cap_per_source(gossip_raw)   # newest N per source
     gossip_raw = gossip_raw[:40]
-    _backfill_images(gossip_raw)
+    _backfill_images(gossip_raw, limit=40)
     _n_img = sum(1 for a in gossip_raw if a.get("img"))
     print(f"    → {len(gossip_raw)} gossip articles (after dedup), "
           f"{_n_img} with image / {len(gossip_raw)-_n_img} colour tiles")
@@ -4798,7 +5033,7 @@ def main():
                 or (a.get("ts") and a["ts"] >= _wib_cut)]
     geo_arts.sort(key=lambda a: a["date"] or datetime.min.replace(tzinfo=timezone.utc),
                   reverse=True)
-    _backfill_images([a for a in geo_arts if a["source"] in LGC_GEO], limit=10)
+    _backfill_images(geo_arts, limit=30)
     print(f"    → {len(geo_arts)} geo articles, "
           f"{sum(1 for a in geo_arts if a.get('img'))} with image")
     now_paris = datetime.now(_PARIS)
@@ -4820,6 +5055,7 @@ def main():
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060606">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4921,6 +5157,7 @@ def main():
 </script>
 </body>
 </html>"""
+    (OUTPUT_FILE.parent / "icon.svg").write_text(_logo_mark(), encoding="utf-8")
     OUTPUT_FILE.write_text(page, encoding="utf-8")
     print("─"*54)
     print(f"✓  Saved → {OUTPUT_FILE}")
