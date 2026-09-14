@@ -59,7 +59,7 @@ POLY_CACHE_FILE     = OUTPUT_DIR / "poly_cache.json"
 MAX_PER_SOURCE = 100   # effectively uncapped — 24h filter does the work
 # Sources that publish weekly or less — get a 7-day window instead of 24h
 WEEKLY_SOURCES = frozenset([
-    "Not Boring", "Silicon Carne", "TBPN", "SiliconMania",
+    "Not Boring", "Silicon Carne", "TBPN",
     "Dezeen", "The Ankler",
     # Listed for other callers' sake, but the geo panel passes weekly_days=2,
     # so Playbook Paris is held to the same 48h as the rest of that section and
@@ -78,11 +78,11 @@ LGC_RUBRIQUES = {
     "LGC Histoire":          ("histoire-en-images", "Histoire en image"),
     "LGC Discours":          ("discours",           "Archives et discours"),
     "LGC Études":            ("etudes",             "Études"),
-    "LGC Actualité":         ("actu-longues",       "Perspectives sur l\u2019actualité"),
-    "LGC Brèves":            ("actu-breves",        "Perspectives sur l\u2019actualité"),
+    # "Perspectives sur l'actualité" (actu-longues / actu-breves) is no longer
+    # free, so both rubriques are dropped.
 }
 LGC_OPINION = ("LGC Entretiens", "LGC Comptes rendus", "LGC Doctrine", "LGC Histoire")
-LGC_GEO     = ("LGC Discours", "LGC Études", "LGC Actualité", "LGC Brèves")
+LGC_GEO     = ("LGC Discours", "LGC Études")
 
 def _lgc_feeds(names):
     return [(n, f"https://legrandcontinent.eu/fr/{LGC_RUBRIQUES[n][0]}/feed/")
@@ -226,7 +226,6 @@ TECH_SOURCES = [
     ("FT Companies Tech",   "https://www.ft.com/companies/technology?format=rss"),
     ("The NBS",             "https://news.google.com/rss/search?q=site:the-nbs.fr&hl=fr&gl=FR&ceid=FR:fr"),
     # Les Echos fetched separately via _fetch_les_echos_tech() — Python-side keyword filtering
-    ("SiliconMania",        "https://news.google.com/rss/search?q=site:siliconmania.tv&hl=fr&gl=FR&ceid=FR:fr"),
     # Added
     ("MTS Newsletter",      "https://mtslive.substack.com/feed"),
     ("Stratechery",         "https://stratechery.com/feed/"),
@@ -246,10 +245,11 @@ SOURCE_CADENCE = {
     # once a day, read these first
     "MTS Newsletter":"daily", "Stratechery":"slow", "The NBS":"daily",
     "FirstFT":"daily", "The Block Daily":"daily",     "Howard Marks":"slow", "Musings on Markets":"slow", "Citation Needed":"slow",
+    "The War Room":"slow",
     **{n: "slow" for n in LGC_RUBRIQUES},
     # several times a day
     "TechCrunch":"fast", "FT Tech":"fast", "FT Companies Tech":"fast", "FT":"fast",
-    "The Block":"fast", "The Street":"fast", "SiliconMania":"fast",
+    "The Block":"fast", "The Street":"fast",
     "Les Echos":"fast", "Les Echos tech":"fast", "Les Echos macro":"fast",
     "tech":"fast", "macro":"fast", "AFP":"fast",
     # every week or two, or rarer
@@ -269,7 +269,7 @@ TECH_EVERGREEN = [
 ]
 
 # Per-source recency windows (days). Anything absent uses the section default.
-SOURCE_WINDOW_DAYS = {"Howard Marks":365,
+SOURCE_WINDOW_DAYS = {"Howard Marks":365, "The War Room":60,
                       **{n: 14 for n in LGC_RUBRIQUES}, "Musings on Markets":45,
                       "Citation Needed":21,     "Scott Aaronson":    14,   # ~2 posts a week
     "Film Comment":      30,   # publishes in bursts, then goes quiet for weeks
@@ -308,6 +308,15 @@ GEO_SOURCES = [
     ("Playbook Paris",  "https://www.politico.eu/newsletter/playbook-paris/feed/"),
     ("Politico France", "https://www.politico.eu/country/france/feed/"),
     ("Politico EU",     "https://www.politico.eu/feed/"),
+    # The Economist's defence newsletter. It is subscriber-only by email, but
+    # each issue is also published as an article and filed under whichever
+    # region it covers — so it turns up in the public section feeds, current
+    # issue included. The topic page itself (/topics/military-history) and every
+    # feed under it answer 403. _keep_war_room() keeps only the newsletter
+    # issues out of these sections.
+    *[("The War Room", f"https://www.economist.com/{sec}/rss.xml")
+      for sec in ("international", "europe", "united-states",
+                  "middle-east-and-africa", "asia", "china", "britain")],
     # The long-form tier: Politico is a wire, this is the essay side. Le Grand
     # Continent is taken rubrique by rubrique rather than through its main
     # feed, whose categories are topical and don't say what kind of piece it is.
@@ -332,6 +341,26 @@ def _strip_gn_suffix(arts):
     for a in arts:
         a["title"] = _GN_SUFFIX.sub("", a["title"]).strip()
     return arts
+
+def _keep_war_room(arts):
+    """The section feeds carry everything in that region. Keep only the War Room
+    newsletter issues, and drop the prefix — the source is printed above it.
+    An issue can be filed under two regions, so repeats are dropped by link."""
+    out, seen = [], set()
+    for a in arts:
+        if a["source"] != "The War Room":
+            out.append(a)
+            continue
+        if a["link"] in seen:
+            continue
+        t = re.sub(r"\s*-\s*The Economist\s*$", "", a["title"]).strip()
+        m = re.match(r"^The War Room newsletter\s*:\s*(.+)$", t, re.I)
+        if not m:
+            continue
+        seen.add(a["link"])
+        a["title"] = m.group(1).strip()
+        out.append(a)
+    return out
 
 def _keep_world_brief(arts):
     """The World in Brief feed is a Google News search over the whole section,
@@ -491,8 +520,6 @@ SPORTS_SOURCES_INT = [
 ]
 CONFLICT_NEWS_SOURCES = [
     # ── Broad wire / world feeds ──────────────────────────────────────────────
-    ("Reuters World",  "https://feeds.reuters.com/reuters/worldNews"),
-    ("Reuters Top",    "https://feeds.reuters.com/reuters/topNews"),
     ("BBC World",      "http://feeds.bbci.co.uk/news/world/rss.xml"),
     ("Al Jazeera",     "https://www.aljazeera.com/xml/rss/all.xml"),
     # ── Quality press ─────────────────────────────────────────────────────────
@@ -526,8 +553,6 @@ CONFLICT_NEWS_SOURCES = [
 ]
 PARIS_SOURCES = [
     # Direct event guides
-    ("Sortir à Paris", "https://www.sortiraparis.com/rss/"),
-    ("Timeout Paris",  "https://www.timeout.com/paris/rss"),
     # Google News fallbacks — topic-specific so any source can surface
     ("Expos Paris",    "https://news.google.com/rss/search?q=exposition+paris+mus%C3%A9e+OR+galerie+OR+vernissage&hl=fr&gl=FR&ceid=FR:fr"),
     ("Sorties Paris",  "https://news.google.com/rss/search?q=agenda+paris+concert+OR+th%C3%A9%C3%A2tre+OR+spectacle+OR+danse+OR+ballet&hl=fr&gl=FR&ceid=FR:fr"),
@@ -770,7 +795,8 @@ def _backfill_images(arts, limit=25):
 
 def _filter_recent(arts, days=2, weekly_days=7):
     """Keep articles from the last `days` days. SOURCE_WINDOW_DAYS overrides that
-    per source; WEEKLY_SOURCES falls back to `weekly_days`."""
+    per source; WEEKLY_SOURCES falls back to `weekly_days`; otherwise the window
+    follows the source's cadence, so a newsletter is not judged by wire time."""
     now_ts = datetime.now(timezone.utc).timestamp()
     result = []
     for a in arts:
@@ -778,10 +804,21 @@ def _filter_recent(arts, days=2, weekly_days=7):
             result.append(a)
             continue
         src = a["source"]
+        cad = SOURCE_CADENCE.get(src)
         if src in SOURCE_WINDOW_DAYS:
             window = SOURCE_WINDOW_DAYS[src]
         elif src in WEEKLY_SOURCES:
             window = weekly_days
+        elif cad == "daily":
+            # A daily debrief skips weekends. At 48h the Friday issue was gone
+            # by Monday midday — MTS, The Block Daily and FirstFT all vanished
+            # from the page. Four days covers a weekend plus a bank holiday;
+            # the builders then keep only the newest issue.
+            window = max(days, 4)
+        elif cad == "slow":
+            # Long reads publish weekly or less. Without their own entry they
+            # were getting the 48h wire window and never appeared at all.
+            window = max(days, 21)
         else:
             window = days
         if a["ts"] >= now_ts - window * 86400:
@@ -956,14 +993,26 @@ def _dedup(arts):
     def words(t):
         return {w for w in re.sub(r"[^a-z0-9àâéèêëîïôùûü ]","",t.lower()).split()
                 if w not in STOP and len(w)>2}
+    # Clustering is for the wire — the same story from several outlets. A daily
+    # roundup names half the day's stories in its headline, so it was being
+    # merged into whichever wire group it overlapped: FirstFT ended up hidden
+    # inside a TechCrunch group and the page led with a wire story instead.
+    # Debriefs and long reads always stand alone.
+    def _solo(x):
+        c = SOURCE_CADENCE.get(x["source"]) or SOURCE_CADENCE.get(x.get("_canon") or "")
+        return c in ("daily", "slow")
     groups, used = [], set()
     for i, a in enumerate(arts):
         if i in used: continue
+        if _solo(a):
+            used.add(i); groups.append([a])
+            continue
         wi = words(a["title"])
         ei = _entities(a["title"])
         grp = [a]
         for j, b in enumerate(arts):
             if j<=i or j in used: continue
+            if _solo(b): continue
             wj = words(b["title"])
             ej = _entities(b["title"])
             u  = wi | wj
@@ -1169,6 +1218,7 @@ def _fetch_les_echos(keywords, label):
 # Sources capped at 1 article (show only latest)
 SOURCE_CAPS = {
     "Howard Marks":      1,
+    "The War Room":      3,
     "Musings on Markets":1,
     "Citation Needed":   3,
     "Silicon Carne":     1,
@@ -1190,7 +1240,6 @@ SOURCE_CAPS = {
     "Lenny's Newsletter":1,
     "Pragmatic Engineer":1,
     "The NBS":           1,
-    "SiliconMania":      1,
     "First Round Review":1,
     "Dezeen":            10,
     "Film Comment":       6,
@@ -3451,6 +3500,7 @@ def build_geo_feed(arts):
 GEO_SOURCE_COLORS = {
     "World in Brief":"#3B1512", "Playbook Paris":"#1E2A4A",
     "Le Grand Continent":"#12324A",
+    "The War Room":"#2E4A1E",
     "Politico Europe":"#1E2A4A", "Politico France":"#1E2A4A",
 }
 
@@ -3466,7 +3516,7 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
     others = [a for a in rest if a["source"] == "Playbook Paris"][:1]
     # spread the stack across rubriques before filling by recency, so one
     # prolific rubrique doesn't take the whole column
-    _lgc   = [a for a in rest if a["source"] in LGC_GEO]
+    _lgc   = [a for a in rest if a["source"] in LGC_GEO or a["source"] == "The War Room"]
     seen, longs = set(), []
     for a in _lgc:
         if a["source"] in seen:
@@ -3474,8 +3524,8 @@ def build_map(conflicts_json, articles_json, geo_arts=()):
         seen.add(a["source"])
         longs.append(a)
     longs += [a for a in _lgc if a not in longs]
-    wire   = [a for a in rest
-              if a["source"] not in LGC_GEO and a["source"] != "Playbook Paris"]
+    wire   = [a for a in rest if a["source"] not in LGC_GEO
+              and a["source"] not in ("Playbook Paris", "The War Room")]
     stack  = "".join(_pcard(a, GEO_SOURCE_COLORS, extra_cls="pc-row",
                             beat=LGC_BEAT.get(a["source"], ""), clamp=3)
                      for a in longs[:8])
@@ -5024,7 +5074,8 @@ def main():
     # Politico gets 48h; the weekly window is pinned to the same value so
     # Playbook Paris can't reach back further than the rest of the panel.
     geo_arts = _dedup_exact(_filter_recent(
-        _keep_world_brief(_fetch(GEO_SOURCES)), days=2, weekly_days=2))
+        _keep_war_room(_keep_world_brief(_fetch(GEO_SOURCES))),
+        days=2, weekly_days=2))
     # World in Brief is a daily — only ever show the current issue, not the
     # back catalogue Google News returns.
     _wib_cut = datetime.now(timezone.utc).timestamp() - 86400
