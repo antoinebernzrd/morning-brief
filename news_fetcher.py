@@ -3467,6 +3467,15 @@ html{scroll-padding-top:0}
 
   /* the phone gutter — one value, everything hangs off it */
   :root{--ph-pad:16px}
+  /* the desktop reserves a strip for a scrollbar; phones overlay theirs, and
+     the reserved 8px was pushing these columns' right edge past the lead's */
+  .mkt-band .mkt-stack,
+  .mkt-band .mkt-lead .cp-grid,.mkt-band .mkt-lead .culture-cal-band{
+    padding-right:0}
+  /* the rail list keeps the page gutter on both sides — zeroing it with the
+     others sent its rows and thumbnails to the screen edge */
+  .mkt-band .mkt-rail-list{padding-left:var(--ph-pad);
+    padding-right:var(--ph-pad)}
   .mkt-lead,.mkt-rail-list,.mkt-band > .mkt-stack > .mkt-tier-hd,
   .mkt-rail > .mkt-tier-hd{padding-left:var(--ph-pad);padding-right:var(--ph-pad)}
 
@@ -3481,7 +3490,7 @@ html{scroll-padding-top:0}
   .pc-lead .pc-snip{display:none}
   .pc-lead .pc-img{height:auto;aspect-ratio:4/3;margin-top:var(--bl)}
   .mkt-lead .mk-daily{padding:var(--bl) 0}
-  .mkt-lead .mk-daily .mk-t{font-size:17px;max-height:none;
+  .mkt-lead .mk-daily .mk-t{font-size:16px;max-height:none;
     -webkit-line-clamp:unset}
 
   /* the standing index under the lead — two columns, no inner scroller */
@@ -3491,8 +3500,13 @@ html{scroll-padding-top:0}
   .mkt-lead .cp-chip{height:calc(var(--lh)*1.5);font-size:14px}
 
   /* ── the middle tier slides sideways ───────────────────────────────── */
+  /* x-mandatory snapping aligns the first card to the scrollport edge and
+     ignores the container's padding, so the track loaded scrolled 16px and the
+     first card sat outside the margin every other element keeps.
+     scroll-padding makes the snap respect the gutter. */
   .ph-track{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;
-    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scroll-snap-type:x mandatory;scroll-padding-left:var(--ph-pad);
+    -webkit-overflow-scrolling:touch;
     scrollbar-width:none;padding:0 var(--ph-pad) var(--bl)}
   .ph-track::-webkit-scrollbar{display:none}
   .ph-track .pc-row{flex:0 0 74vw;display:flex;flex-direction:column;
@@ -3500,20 +3514,31 @@ html{scroll-padding-top:0}
   .ph-track .pc-row .pc-img{display:block;width:100%;height:auto;
     aspect-ratio:4/3;margin-top:var(--bl)}
   .ph-track .pc-row .pc-hd{font-size:12px;line-height:calc(var(--bl)*2)}
-  .ph-track .pc-row .pc-t{font-size:19px;line-height:var(--lh);
-    max-height:calc(var(--lh)*4);-webkit-line-clamp:4!important}
+  /* Every card is the same module. The headline block is a fixed three lines
+     whether it needs them or not, so the pictures start on the same line and
+     every card ends on the same one — a two-line headline was letting its
+     card finish 24px short and leaving a gap under it. */
+  .ph-track .pc-row .pc-t{font-size:17px;line-height:var(--lh);
+    height:calc(var(--lh)*3);max-height:calc(var(--lh)*3);
+    -webkit-line-clamp:3!important}
   .ph-track .pc-row .pc-snip{display:none}
 
   /* ── the wire stays a list ─────────────────────────────────────────── */
   .mkt-rail .mk{min-height:0;padding:var(--bl) 0}
-  .mkt-rail .mk-t{font-size:17px;max-height:calc(var(--lh)*4);
+  /* Leading stays on the baseline, so the SIZE is what opens the ratio.
+     17px over three or four lines at 24px leading is 1.41 — dense on a phone.
+     15px on the same leading gives 1.60, the comfortable reading range, and
+     the column reads lighter as well as smaller. */
+  .mkt-rail .mk-t{font-size:15px;max-height:calc(var(--lh)*4);
     -webkit-line-clamp:4}
+  .mkt-rail .mk-hd{font-size:12px;line-height:calc(var(--bl)*2)}
   .mkt-rail .mk-has-thumb{grid-template-columns:minmax(0,1fr) 64px}
   .mkt-rail .mk-thumb{width:64px;height:64px}
 
   /* tier labels */
   .mkt-band .mkt-tier-hd,.mkt-band .mkt-index-hd{
-    height:calc(var(--lh)*2);font-size:11px;letter-spacing:.1em}
+    height:calc(var(--lh)*2);font-size:11px;letter-spacing:.1em;
+    line-height:calc(var(--bl)*2)}   /* was 17.6px — the one off-baseline value */
 
   /* ── the tab bar, sticky at the top ────────────────────────────────── */
   .ph-brand{display:flex;align-items:baseline;gap:8px;
