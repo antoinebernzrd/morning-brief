@@ -3466,7 +3466,12 @@ html{scroll-padding-top:0}
     grid-column:auto;padding:0;min-height:0}
 
   /* the phone gutter — one value, everything hangs off it */
-  :root{--ph-pad:16px}
+  /* and the strip at the top of the screen the system keeps for itself:
+     zero in a browser tab, the height of the camera cutout once the page is
+     installed to the home screen. One token, so the three rules that have to
+     clear it stay in step — and so it can be set by hand to test the
+     notched geometry on a machine that has no notch. */
+  :root{--ph-pad:16px;--safe-top:env(safe-area-inset-top,0px)}
   /* the desktop reserves a strip for a scrollbar; phones overlay theirs, and
      the reserved 8px was pushing these columns' right edge past the lead's */
   .mkt-band .mkt-stack,
@@ -3513,7 +3518,16 @@ html{scroll-padding-top:0}
     height:auto;min-height:0;padding:0;box-shadow:none;scroll-snap-align:start}
   .ph-track .pc-row .pc-img{display:block;width:100%;height:auto;
     aspect-ratio:4/3;margin-top:var(--bl)}
-  .ph-track .pc-row .pc-hd{font-size:12px;line-height:calc(var(--bl)*2)}
+  /* The meta line is one line, always. It is a wrapping flex row, so a long
+     beat pushed the time down onto a second line and that card's picture
+     started 16px below its neighbour's — the row of images stopped reading
+     as a row. Source and beat give up width to an ellipsis; the time, the
+     one thing you scan the row for, never shrinks. */
+  .ph-track .pc-row .pc-hd{font-size:12px;line-height:calc(var(--bl)*2);
+    height:calc(var(--bl)*2);flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+  .ph-track .pc-row .pc-src,.ph-track .pc-row .pc-beat{
+    min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ph-track .pc-row .pc-time{flex:0 0 auto}
   /* Every card is the same module. The headline block is a fixed three lines
      whether it needs them or not, so the pictures start on the same line and
      every card ends on the same one — a two-line headline was letting its
@@ -3541,15 +3555,19 @@ html{scroll-padding-top:0}
     line-height:calc(var(--bl)*2)}   /* was 17.6px — the one off-baseline value */
 
   /* ── the tab bar, sticky at the top ────────────────────────────────── */
+  /* Installed to the home screen this page draws under the status bar — the
+     manifest asks for exactly that, with viewport-fit=cover and a translucent
+     bar — so the top strip of the screen belongs to the clock and the camera
+     cutout, and the first row of content has to begin below it. */
   .ph-brand{display:flex;align-items:baseline;gap:8px;
-    padding:calc(var(--bl)*2) var(--ph-pad) var(--bl)}
+    padding:calc(var(--bl)*2 + var(--safe-top)) var(--ph-pad) var(--bl)}
   .ph-brand b{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
   .ph-brand span{font-size:11px;font-weight:300;color:var(--meta)}
 
   /* The tab row is sticky from the first pixel, so its box never moves and
      there is nothing to jump. Scrolling only changes paint — ground to glass,
      square to pill, flat to lifted — and every one of those animates. */
-  .ph-tabs{position:sticky;top:var(--bl);z-index:900;
+  .ph-tabs{position:sticky;top:calc(var(--bl) + var(--safe-top));z-index:900;
     display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;
     margin:0 var(--ph-pad) var(--bl);padding:0 14px;
     background:var(--ground);border:1px solid transparent;border-radius:6px;
@@ -3583,6 +3601,19 @@ html{scroll-padding-top:0}
       border-color:rgba(255,255,255,.14);box-shadow:0 6px 22px rgba(0,0,0,.5)}
     .ph-tabs.is-float .ph-tab.on{color:#fff}
   }
+
+  /* Moving the tab row down leaves the strip behind the status bar empty and
+     the page scrolls up through it — headlines would pass behind the clock.
+     This covers it, above the tab row so the pill slides under its edge. At
+     rest nothing is under there yet, so it stays clear and the brand reads
+     against the page as before; once the page moves it goes opaque in the
+     colour of the section sliding beneath, and there is no seam either way.
+     Same two durations as the pill: quick back down, slower up. */
+  body::before{content:"";position:fixed;top:0;left:0;right:0;z-index:901;
+    height:calc(var(--safe-top) + var(--bl));background:transparent;pointer-events:none;
+    transition:background-color .14s ease-out}
+  body.ph-float::before{background:var(--ground);
+    transition-duration:.28s;transition-timing-function:cubic-bezier(.22,.8,.3,1)}
 
   /* the two cross-section views */
   .ph-digest{display:none;padding:var(--lh) 0 calc(var(--lh)*3)}
@@ -3709,25 +3740,44 @@ PHONE_APP = """
        moves and neither a scroll offset nor a viewport-rooted observer works.
        The row's own distance from the top is the one reliable signal, and
        listening in the capture phase catches the scroll wherever it happens. */
-    var stick = parseFloat(getComputedStyle(tabs).top) || 8;
+    /* the pill and the strip behind the status bar are one state */
+    var setFloat = function(on){
+      tabs.classList.toggle('is-float', on);
+      document.body.classList.toggle('ph-float', on);
+    };
+    /* Where the row comes to rest: 8px, plus whatever the system keeps for
+       itself at the top of the screen. That second part is zero in a browser
+       tab and the height of the camera cutout once the page is installed, and
+       it changes when the phone is turned — so it is measured, not assumed,
+       and measured again whenever the window changes shape. Both triggers
+       below read it, which is why re-measuring rebuilds the observer too. */
+    var stick = 8, io = null;
     var onScroll = function(){
-      tabs.classList.toggle('is-float', tabs.getBoundingClientRect().top <= stick + 1);
+      setFloat(tabs.getBoundingClientRect().top <= stick + 1);
+    };
+    var measure = function(){
+      var t = parseFloat(getComputedStyle(tabs).top);
+      if (!isNaN(t)) stick = t;
+      if (io) { io.disconnect(); io = null; }
+      /* Second, event-independent trigger. <html> is the scroll container
+         here rather than the viewport, and that makes scroll delivery
+         unreliable — the sentinel crossing the top of the scroller is
+         observed directly. */
+      if (window.IntersectionObserver) {
+        var scroller = document.scrollingElement || document.documentElement;
+        var oy = getComputedStyle(scroller).overflowY;
+        io = new IntersectionObserver(function(e){
+          setFloat(!e[0].isIntersecting);
+        }, {root: (oy === 'scroll' || oy === 'auto') ? scroller : null,
+            rootMargin: '-' + stick + 'px 0px 0px 0px',
+            threshold: 0});
+        io.observe(sentinel);
+      }
+      onScroll();
     };
     document.addEventListener('scroll', onScroll, {passive:true, capture:true});
-    window.addEventListener('resize', onScroll, {passive:true});
-    /* Second, event-independent trigger. <html> is the scroll container here
-       rather than the viewport, and that makes scroll delivery unreliable —
-       the sentinel crossing the top of the scroller is observed directly. */
-    if (window.IntersectionObserver) {
-      var scroller = document.scrollingElement || document.documentElement;
-      var oy = getComputedStyle(scroller).overflowY;
-      new IntersectionObserver(function(e){
-        tabs.classList.toggle('is-float', !e[0].isIntersecting);
-      }, {root: (oy === 'scroll' || oy === 'auto') ? scroller : null,
-          rootMargin: '-' + stick + 'px 0px 0px 0px',
-          threshold: 0}).observe(sentinel);
-    }
-    onScroll();
+    window.addEventListener('resize', measure, {passive:true});
+    measure();
   }
 
   function sync(){ if (MQ.matches) build(); }
@@ -5515,9 +5565,22 @@ def main():
 </script>
 </body>
 </html>"""
+    # A build that fetched nothing still renders perfectly well: the shell is
+    # 147KB of stylesheet and script with not one article in it, and it weighs
+    # enough to look like a real page. Writing that over a good index.html
+    # blanks the site until the next cron — which is exactly what happened on
+    # 27 September. So count what actually reached the page, and if there is
+    # essentially nothing, leave the last good file alone and fail loudly.
+    cards = page.count('class="pcard')
+    rows  = page.count('<span class="mk-t">')
+    if cards + rows < 20:
+        print("─"*54)
+        print(f"✗  Refusing to write: {cards} cards + {rows} rows is an empty page.")
+        print(f"   {OUTPUT_FILE.name} left as it was. Check the network and re-run.")
+        raise SystemExit(1)
     (OUTPUT_FILE.parent / "icon.svg").write_text(_logo_mark(), encoding="utf-8")
     OUTPUT_FILE.write_text(page, encoding="utf-8")
     print("─"*54)
-    print(f"✓  Saved → {OUTPUT_FILE}")
+    print(f"✓  Saved → {OUTPUT_FILE}  ({cards} cards, {rows} rows)")
 if __name__ == "__main__":
     main()
