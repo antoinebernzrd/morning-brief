@@ -571,128 +571,163 @@ MARSEILLE_SOURCE_NAMES = {"Le Monde Marseille", "Marsactu", "BFM Marseille"}
 # ══════════════════════════════════════════════════════════════════════════════
 #  CALENDAR
 # ══════════════════════════════════════════════════════════════════════════════
-CALENDAR_EVENTS = [
-    # ══ 2026 ══════════════════════════════════════════════════════════════════
-    # January
-    {"name":"CES Las Vegas",                "start":"2026-01-06","end":"2026-01-09","cat":"tech"},
-    {"name":"Davos / WEF",                  "start":"2026-01-19","end":"2026-01-23","cat":"finance"},
-    {"name":"Australian Open",              "start":"2026-01-19","end":"2026-02-01","cat":"tennis"},
-    {"name":"Haute Couture SS",             "start":"2026-01-26","end":"2026-01-30","cat":"fashion"},
-    # February
-    {"name":"Super Bowl LX",                "start":"2026-02-01","end":"2026-02-01","cat":"football"},
-    {"name":"Six Nations Rugby",            "start":"2026-02-07","end":"2026-03-21","cat":"rugby"},
-    {"name":"NY Fashion Week FW",           "start":"2026-02-06","end":"2026-02-11","cat":"fashion"},
-    {"name":"London Fashion Week FW",       "start":"2026-02-13","end":"2026-02-17","cat":"fashion"},
-    {"name":"Berlinale",                    "start":"2026-02-12","end":"2026-02-22","cat":"culture"},
-    {"name":"Milan Fashion Week FW",        "start":"2026-02-17","end":"2026-02-23","cat":"fashion"},
-    {"name":"MWC Barcelona",               "start":"2026-02-23","end":"2026-02-26","cat":"tech"},
-    # March
-    {"name":"Paris Fashion Week FW",        "start":"2026-02-24","end":"2026-03-03","cat":"fashion"},
-    {"name":"F1 Season 2026",               "start":"2026-03-15","end":"2026-11-29","cat":"f1"},
-    # April
-    {"name":"Art Paris",                    "start":"2026-04-02","end":"2026-04-05","cat":"culture"},
-    {"name":"Grand National",               "start":"2026-04-04","end":"2026-04-04","cat":"horses"},
-    {"name":"The Masters",                  "start":"2026-04-09","end":"2026-04-12","cat":"golf"},
-    {"name":"Coachella",                    "start":"2026-04-10","end":"2026-04-19","cat":"music"},
-    {"name":"Venice Biennale",              "start":"2026-04-18","end":"2026-11-22","cat":"culture"},
-    # May
-    {"name":"Met Gala",                     "start":"2026-05-04","end":"2026-05-04","cat":"fashion"},
-    {"name":"Frieze New York",              "start":"2026-05-07","end":"2026-05-11","cat":"culture"},
-    {"name":"European Aquatics Champs",     "start":"2026-05-11","end":"2026-05-17","cat":"swimming"},
-    {"name":"Cannes Film Festival",         "start":"2026-05-12","end":"2026-05-23","cat":"culture"},
-    {"name":"UEFA Europa League Final",     "start":"2026-05-20","end":"2026-05-20","cat":"football"},
-    {"name":"F1 Monaco GP",                 "start":"2026-05-24","end":"2026-05-24","cat":"f1"},
-    {"name":"Roland Garros",                "start":"2026-05-25","end":"2026-06-07","cat":"tennis"},
-    {"name":"UEFA Champions League Final",  "start":"2026-05-30","end":"2026-05-30","cat":"football"},
-    # June
-    {"name":"Epsom Derby",                  "start":"2026-06-06","end":"2026-06-06","cat":"horses"},
-    {"name":"Prix du Jockey Club",          "start":"2026-06-07","end":"2026-06-07","cat":"horses"},
-    {"name":"FIFA World Cup 2026",          "start":"2026-06-11","end":"2026-07-19","cat":"football"},
-    {"name":"Vivatech Paris",               "start":"2026-06-11","end":"2026-06-14","cat":"tech"},
-    {"name":"G7 Summit",                    "start":"2026-06-13","end":"2026-06-15","cat":"finance"},
-    {"name":"Royal Ascot",                  "start":"2026-06-16","end":"2026-06-20","cat":"horses"},
-    {"name":"Art Basel Basel",              "start":"2026-06-17","end":"2026-06-21","cat":"culture"},
-    {"name":"US Open Golf",                 "start":"2026-06-18","end":"2026-06-21","cat":"golf"},
-    {"name":"Paris Men's Fashion Week",     "start":"2026-06-23","end":"2026-06-28","cat":"fashion"},
-    {"name":"Glastonbury",                  "start":"2026-06-24","end":"2026-06-28","cat":"music"},
-    {"name":"Wimbledon",                    "start":"2026-06-29","end":"2026-07-12","cat":"tennis"},
-    {"name":"Henley Royal Regatta",         "start":"2026-06-30","end":"2026-07-04","cat":"rowing"},
-    # July
-    {"name":"Tour de France",               "start":"2026-07-04","end":"2026-07-26","cat":"cycling"},
-    {"name":"F1 British GP (Silverstone)",  "start":"2026-07-05","end":"2026-07-05","cat":"f1"},
-    {"name":"Haute Couture FW",             "start":"2026-07-06","end":"2026-07-10","cat":"fashion"},
-    {"name":"The Open Championship",        "start":"2026-07-16","end":"2026-07-19","cat":"golf"},
-    {"name":"World Aquatics Champs",        "start":"2026-07-17","end":"2026-08-02","cat":"swimming"},
-    # August
-    {"name":"Rolex Fastnet Race",           "start":"2026-08-09","end":"2026-08-16","cat":"sailing"},
-    {"name":"US Open Tennis",               "start":"2026-08-31","end":"2026-09-13","cat":"tennis"},
-    {"name":"Venice Film Festival",         "start":"2026-08-26","end":"2026-09-05","cat":"culture"},
-    # September
-    {"name":"F1 Italian GP (Monza)",        "start":"2026-09-06","end":"2026-09-06","cat":"f1"},
-    {"name":"World Rowing Champs",          "start":"2026-09-06","end":"2026-09-13","cat":"rowing"},
-    {"name":"TIFF Toronto",                 "start":"2026-09-10","end":"2026-09-20","cat":"culture"},
-    {"name":"NY Fashion Week SS",           "start":"2026-09-05","end":"2026-09-11","cat":"fashion"},
-    {"name":"London Fashion Week SS",       "start":"2026-09-12","end":"2026-09-16","cat":"fashion"},
-    {"name":"UN General Assembly",          "start":"2026-09-15","end":"2026-09-25","cat":"finance"},
-    {"name":"Milan Fashion Week SS",        "start":"2026-09-16","end":"2026-09-22","cat":"fashion"},
-    # October
-    {"name":"Paris Fashion Week SS",        "start":"2026-09-28","end":"2026-10-06","cat":"fashion"},
-    {"name":"Prix de l'Arc de Triomphe",    "start":"2026-10-04","end":"2026-10-04","cat":"horses"},
-    {"name":"Frieze London",                "start":"2026-10-14","end":"2026-10-18","cat":"culture"},
-    # November
-    {"name":"Web Summit",                   "start":"2026-11-02","end":"2026-11-05","cat":"tech"},
-    {"name":"Paris Photo",                  "start":"2026-11-12","end":"2026-11-15","cat":"culture"},
-    {"name":"G20 Summit",                   "start":"2026-11-18","end":"2026-11-19","cat":"finance"},
-    {"name":"F1 Abu Dhabi GP",              "start":"2026-11-29","end":"2026-11-29","cat":"f1"},
-    # December
-    {"name":"Art Basel Miami",              "start":"2026-12-04","end":"2026-12-06","cat":"culture"},
-
-    # ══ 2027 ══════════════════════════════════════════════════════════════════
-    # January
-    {"name":"CES Las Vegas 2027",           "start":"2027-01-05","end":"2027-01-08","cat":"tech"},
-    {"name":"Davos / WEF 2027",             "start":"2027-01-18","end":"2027-01-22","cat":"finance"},
-    {"name":"Australian Open 2027",         "start":"2027-01-18","end":"2027-02-01","cat":"tennis"},
-    {"name":"Haute Couture SS 2027",        "start":"2027-01-25","end":"2027-01-29","cat":"fashion"},
-    # February
-    {"name":"Six Nations Rugby 2027",       "start":"2027-02-06","end":"2027-03-20","cat":"rugby"},
-    {"name":"NY Fashion Week FW 2027",      "start":"2027-02-05","end":"2027-02-10","cat":"fashion"},
-    {"name":"Berlinale 2027",               "start":"2027-02-11","end":"2027-02-21","cat":"culture"},
-    {"name":"London Fashion Week FW 2027",  "start":"2027-02-12","end":"2027-02-16","cat":"fashion"},
-    {"name":"Milan Fashion Week FW 2027",   "start":"2027-02-16","end":"2027-02-22","cat":"fashion"},
-    {"name":"MWC Barcelona 2027",           "start":"2027-02-22","end":"2027-02-25","cat":"tech"},
-    # March
-    {"name":"Paris Fashion Week FW 2027",   "start":"2027-02-23","end":"2027-03-02","cat":"fashion"},
-    # April
-    {"name":"Art Paris 2027",               "start":"2027-04-01","end":"2027-04-04","cat":"culture"},
-    {"name":"Grand National 2027",          "start":"2027-04-03","end":"2027-04-03","cat":"horses"},
-    {"name":"The Masters 2027",             "start":"2027-04-08","end":"2027-04-11","cat":"golf"},
-    {"name":"Coachella 2027",               "start":"2027-04-09","end":"2027-04-18","cat":"music"},
-    # May
-    {"name":"Met Gala 2027",                "start":"2027-05-03","end":"2027-05-03","cat":"fashion"},
-    {"name":"Cannes Film Festival 2027",    "start":"2027-05-11","end":"2027-05-22","cat":"culture"},
-    {"name":"F1 Monaco GP 2027",            "start":"2027-05-23","end":"2027-05-23","cat":"f1"},
-    {"name":"Roland Garros 2027",           "start":"2027-05-24","end":"2027-06-06","cat":"tennis"},
-    # June
-    {"name":"Art Basel Basel 2027",         "start":"2027-06-16","end":"2027-06-20","cat":"culture"},
-    {"name":"Glastonbury 2027",             "start":"2027-06-23","end":"2027-06-27","cat":"music"},
-    {"name":"Wimbledon 2027",               "start":"2027-06-28","end":"2027-07-11","cat":"tennis"},
-    # July
-    {"name":"Tour de France 2027",          "start":"2027-07-03","end":"2027-07-25","cat":"cycling"},
-    {"name":"Haute Couture FW 2027",        "start":"2027-07-05","end":"2027-07-09","cat":"fashion"},
-    # August
-    {"name":"Venice Film Festival 2027",    "start":"2027-08-25","end":"2027-09-04","cat":"culture"},
-    # September
-    {"name":"Rugby World Cup 2027",         "start":"2027-09-06","end":"2027-10-23","cat":"rugby"},
-    {"name":"TIFF 2027",                    "start":"2027-09-09","end":"2027-09-19","cat":"culture"},
-    {"name":"Ryder Cup 2027",               "start":"2027-09-24","end":"2027-09-26","cat":"golf"},
-    # October
-    {"name":"Prix de l'Arc 2027",           "start":"2027-10-03","end":"2027-10-03","cat":"horses"},
-    {"name":"Frieze London 2027",           "start":"2027-10-13","end":"2027-10-17","cat":"culture"},
-    # November
-    {"name":"Paris Photo 2027",             "start":"2027-11-11","end":"2027-11-14","cat":"culture"},
-    # December
-    {"name":"Art Basel Miami 2027",         "start":"2027-12-03","end":"2027-12-05","cat":"culture"},
+# ══════════════════════════════════════════════════════════════════════════════
+#  The calendar used to be 93 hand-typed dated entries. Checked against
+#  Wikidata, 12 of the 19 that could be verified were wrong — G20 a month off,
+#  World Rowing two weeks early, Venice a week early (so it showed as over
+#  while it was still running) — and the list simply ran out after 2027.
+#
+#  Each event is now a recurring SERIES. Where Wikidata holds an edition, its
+#  item ID seeds a walk along "followed by" (P156), so the next edition and its
+#  official dates are found without anyone typing them. One SPARQL request per
+#  build fetches every series at once. `est` is the usual window, used both as
+#  the fallback and as a plausibility gate: a looked-up date more than 60 days
+#  from it is rejected, which is how a title that resolved to a whole F1
+#  season was caught. Fashion weeks, CES, the UN General Assembly and a few
+#  others have no dated editions on Wikidata; they stay estimated, and the
+#  page shows them by month rather than pretending to a day.
+# ══════════════════════════════════════════════════════════════════════════════
+# (name, category, (est start MM-DD, est end MM-DD), wikidata seed or None, every N years, anchor year)
+CALENDAR_SERIES = [
+    ("CES Las Vegas",               "tech",     ("01-06","01-09"), None,         1, None),
+    ("Davos / WEF",                 "finance",  ("01-19","01-23"), None,         1, None),
+    ("Australian Open",             "tennis",   ("01-19","02-01"), "Q131917667", 1, None),
+    ("Haute Couture SS",            "fashion",  ("01-26","01-30"), None,         1, None),
+    ("Super Bowl",                  "football", ("02-08","02-08"), "Q118876146", 1, None),
+    ("Six Nations Rugby",           "rugby",    ("02-05","03-14"), "Q134693359", 1, None),
+    ("NY Fashion Week FW",          "fashion",  ("02-06","02-11"), None,         1, None),
+    ("Berlinale",                   "culture",  ("02-12","02-22"), "Q134698151", 1, None),
+    ("London Fashion Week FW",      "fashion",  ("02-13","02-17"), None,         1, None),
+    ("Milan Fashion Week FW",       "fashion",  ("02-17","02-23"), None,         1, None),
+    ("MWC Barcelona",               "tech",     ("02-23","02-26"), None,         1, None),
+    ("Paris Fashion Week FW",       "fashion",  ("02-24","03-03"), None,         1, None),
+    ("F1 Season",                   "f1",       ("03-08","12-06"), "Q115942640", 1, None),
+    ("Art Paris",                   "culture",  ("04-02","04-05"), None,         1, None),
+    ("The Masters",                 "golf",     ("04-09","04-12"), "Q138114512", 1, None),
+    ("Coachella",                   "music",    ("04-10","04-19"), "Q136406271", 1, None),
+    ("Grand National",              "horses",   ("04-11","04-11"), "Q139254824", 1, None),
+    ("Venice Biennale",             "culture",  ("04-18","11-22"), "Q131380247", 2, 2026),
+    ("Met Gala",                    "fashion",  ("05-04","05-04"), None,         1, None),
+    ("Frieze New York",             "culture",  ("05-07","05-11"), None,         1, None),
+    ("Cannes Film Festival",        "culture",  ("05-12","05-23"), "Q138481168", 1, None),
+    ("UEFA Europa League Final",    "football", ("05-20","05-20"), "Q126042993", 1, None),
+    ("Roland Garros",               "tennis",   ("05-24","06-07"), "Q134821363", 1, None),
+    ("UEFA Champions League Final", "football", ("05-30","05-30"), "Q126044615", 1, None),
+    ("F1 Monaco GP",                "f1",       ("06-05","06-07"), "Q131177738", 1, None),
+    ("Epsom Derby",                 "horses",   ("06-06","06-06"), "Q139407010", 1, None),
+    ("Prix du Jockey Club",         "horses",   ("06-07","06-07"), None,         1, None),
+    ("FIFA World Cup",              "football", ("06-11","07-19"), "Q5020214",   4, 2026),
+    ("Vivatech Paris",              "tech",     ("06-11","06-14"), None,         1, None),
+    ("G7 Summit",                   "finance",  ("06-15","06-17"), "Q134977918", 1, None),
+    ("Royal Ascot",                 "horses",   ("06-16","06-20"), None,         1, None),
+    ("Art Basel",                   "culture",  ("06-17","06-21"), None,         1, None),
+    ("US Open Golf",                "golf",     ("06-18","06-21"), "Q136513751", 1, None),
+    ("Paris Men's Fashion Week",    "fashion",  ("06-23","06-28"), None,         1, None),
+    ("Glastonbury",                 "music",    ("06-24","06-28"), None,         1, None),
+    ("Wimbledon",                   "tennis",   ("06-29","07-12"), "Q135334216", 1, None),
+    ("Henley Royal Regatta",        "rowing",   ("06-30","07-04"), None,         1, None),
+    ("F1 British GP (Silverstone)", "f1",       ("07-03","07-05"), "Q131193692", 1, None),
+    ("Tour de France",              "cycling",  ("07-04","07-26"), "Q126721429", 1, None),
+    ("Haute Couture FW",            "fashion",  ("07-06","07-10"), None,         1, None),
+    ("The Open Championship",       "golf",     ("07-15","07-19"), "Q136841866", 1, None),
+    ("Rolex Fastnet Race",          "sailing",  ("07-25","07-31"), None,         2, 2025),
+    ("World Rowing Champs",         "rowing",   ("08-24","08-30"), "Q118207536", 1, None),
+    ("US Open Tennis",              "tennis",   ("08-31","09-13"), "Q136159486", 1, None),
+    ("Venice Film Festival",        "culture",  ("09-02","09-12"), "Q138684025", 1, None),
+    ("F1 Italian GP (Monza)",       "f1",       ("09-04","09-06"), "Q134821695", 1, None),
+    ("NY Fashion Week SS",          "fashion",  ("09-05","09-11"), None,         1, None),
+    ("TIFF Toronto",                "culture",  ("09-10","09-20"), "Q139801915", 1, None),
+    ("London Fashion Week SS",      "fashion",  ("09-12","09-16"), None,         1, None),
+    ("UN General Assembly",         "finance",  ("09-15","09-25"), None,         1, None),
+    ("Milan Fashion Week SS",       "fashion",  ("09-16","09-22"), None,         1, None),
+    ("Paris Fashion Week SS",       "fashion",  ("09-28","10-06"), None,         1, None),
+    ("Prix de l'Arc de Triomphe",   "horses",   ("10-04","10-04"), None,         1, None),
+    ("Frieze London",               "culture",  ("10-14","10-18"), None,         1, None),
+    ("Web Summit",                  "tech",     ("11-02","11-05"), None,         1, None),
+    ("Paris Photo",                 "culture",  ("11-12","11-15"), None,         1, None),
+    ("F1 Abu Dhabi GP",             "f1",       ("12-04","12-06"), None,         1, None),
+    ("Art Basel Miami",             "culture",  ("12-04","12-06"), None,         1, None),
+    ("G20 Summit",                  "finance",  ("12-14","12-15"), "Q136595417", 1, None),
 ]
+
+_WIKIDATA_UA = {"User-Agent": "MorningBrief/1.0 (personal news dashboard; event calendar)",
+                "Accept": "application/sparql-results+json"}
+
+
+def _calendar_editions():
+    """Every dated edition reachable from each seed, in one SPARQL request.
+    Returns {seed_qid: [(start, end), ...]} with day-precision dates only —
+    Wikidata stores next year's F1 season as "2027", and that must never be
+    read as 1 January."""
+    seeds = sorted({q for _, _, _, q, _, _ in CALENDAR_SERIES if q})
+    if not seeds:
+        return {}
+    query = """SELECT ?seed ?item ?start ?sp ?end ?ep ?pt ?pp WHERE {
+      VALUES ?seed { %s }
+      ?seed wdt:P156* ?item .
+      OPTIONAL { ?item p:P580/psv:P580 [ wikibase:timeValue ?start ; wikibase:timePrecision ?sp ] }
+      OPTIONAL { ?item p:P582/psv:P582 [ wikibase:timeValue ?end ; wikibase:timePrecision ?ep ] }
+      OPTIONAL { ?item p:P585/psv:P585 [ wikibase:timeValue ?pt ; wikibase:timePrecision ?pp ] }
+    }""" % " ".join("wd:" + q for q in seeds)
+    try:
+        req = urllib.request.Request(
+            "https://query.wikidata.org/sparql?format=json&query=" + urllib.parse.quote(query),
+            headers=_WIKIDATA_UA)
+        with urllib.request.urlopen(req, timeout=40) as r:
+            rows = json.loads(r.read())["results"]["bindings"]
+    except Exception as e:
+        print(f"  ⚠  calendar: Wikidata unavailable ({type(e).__name__}) — using estimates")
+        return {}
+    val = lambda b, k: b.get(k, {}).get("value")
+    out = {}
+    for b in rows:
+        if "/entity/" not in (val(b, "item") or ""):
+            continue                                    # blank nodes in the chain
+        day = lambda t, p: t[:10] if t and p and int(p) >= 11 else None
+        start = day(val(b, "start"), val(b, "sp")) or day(val(b, "pt"), val(b, "pp"))
+        if not start:
+            continue
+        end = day(val(b, "end"), val(b, "ep")) or start
+        seed = val(b, "seed").rsplit("/", 1)[1]
+        out.setdefault(seed, set()).add((start, end))
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def _build_calendar_events(years=None, verify=True):
+    """This year's and next year's occurrence of every series, verified where
+    Wikidata allows. Each event carries verified=True/False."""
+    from datetime import date
+    today = date.today()
+    years = years or (today.year, today.year + 1)
+    editions = _calendar_editions() if verify else {}
+    events, n_ok = [], 0
+    for name, cat, (es, ee), qid, every, anchor in CALENDAR_SERIES:
+        for y in years:
+            if every > 1 and (y - (anchor or y)) % every:
+                continue                                 # not an edition year
+            est_s = date(y, *map(int, es.split("-")))
+            est_e = date(y + (1 if ee < es else 0), *map(int, ee.split("-")))
+            chosen = None
+            for s_, e_ in editions.get(qid, []):
+                d = date.fromisoformat(s_)
+                if d.year == y and abs((d - est_s).days) <= 60:
+                    chosen = (s_, e_)
+                    break
+            if chosen:
+                n_ok += 1
+                events.append({"name": name, "cat": cat, "start": chosen[0],
+                               "end": chosen[1], "verified": True})
+            else:
+                events.append({"name": name, "cat": cat, "start": est_s.isoformat(),
+                               "end": est_e.isoformat(), "verified": False})
+    if editions:
+        print(f"    → calendar: {n_ok}/{len(events)} occurrences verified against Wikidata")
+    return events
+
+
+# Estimates only at import, so importing this module never touches the network.
+# main() replaces it with the verified list before anything reads it.
+CALENDAR_EVENTS = _build_calendar_events(verify=False)
 # ══════════════════════════════════════════════════════════════════════════════
 #  HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -962,11 +997,20 @@ def _dedup_exact(arts):
     """Collapse articles with identical titles from the same canonical publication.
     e.g. FT Tech + FT Companies Tech publishing the same article → keep one."""
     seen = {}   # (canonical_source, normalised_title) → index kept
+    seen_links = set()
     result = []
     for a in arts:
+        # the same URL from two of a publisher's feeds is one article — Politico's
+        # EU and France feeds were both delivering it, and the source+title key
+        # treats them as different sources so it never collapsed them
+        link = (a.get("link") or "").split("?")[0]
+        if link and link in seen_links:
+            continue
         canon  = SOURCE_CANONICAL.get(a["source"], a["source"])
         key    = (canon, re.sub(r"\s+", " ", a["title"].strip().lower()))
         if key not in seen:
+            if link:
+                seen_links.add(link)
             seen[key] = True
             # Store canonical name so grouping later sees it correctly
             a = dict(a); a["_canon"] = canon
@@ -1111,10 +1155,14 @@ _TRUSTED_PUBS = frozenset([
     "sortir","leparisien","parisien",
 ])
 
-def _fetch_event_news(name, max_items=8):
-    """Fetch latest news for a calendar event, filtered to trusted sources."""
+def _fetch_event_news(name, max_items=8, extra=""):
+    """Fetch latest news for a calendar event, filtered to trusted sources.
+    `name` is matched as an exact phrase; `extra` (a year) is matched loosely —
+    put inside the quotes it produced phrases like "London Fashion Week SS
+    2026" that no headline ever contains."""
     q = name.replace(" ", "+").replace("'", "").replace("&", "and")
-    url = (f"https://news.google.com/rss/search?q=%22{q}%22+when:7d"
+    x = ("+" + urllib.parse.quote(extra)) if extra else ""
+    url = (f"https://news.google.com/rss/search?q=%22{q}%22{x}+when:7d"
            f"&hl=en&gl=US&ceid=US:en")
     try:
         feed = feedparser.parse(
@@ -1146,6 +1194,29 @@ def _fetch_event_news(name, max_items=8):
         print(f"  ⚠  event news ({name}): {ex}")
         return []
 
+# Google matches an event's phrase anywhere in the article, so series that
+# share words bleed into each other — London Fashion Week was showing New York
+# shows, the Biennale was showing the Film Festival. For those families the
+# headline itself has to name the one that's meant.
+EVENT_TITLE_MUST = {
+    # the city alone is far too broad — "paris" matched any Paris listing — so
+    # each of these needs the city and the event together
+    "NY Fashion Week SS": ("new york+fashion", "nyfw"),
+    "NY Fashion Week FW": ("new york+fashion", "nyfw"),
+    "London Fashion Week SS": ("london+fashion",),  "London Fashion Week FW": ("london+fashion",),
+    "Milan Fashion Week SS": ("milan+fashion",),    "Milan Fashion Week FW": ("milan+fashion",),
+    "Paris Fashion Week SS": ("paris+fashion",),    "Paris Fashion Week FW": ("paris+fashion",),
+    "Paris Men's Fashion Week": ("paris+men",),
+    "Haute Couture SS": ("couture",),               "Haute Couture FW": ("couture",),
+    # "biennale" alone matched Gwangju and Gyeonggi; a term with + needs both
+    "Venice Biennale": ("venice+biennale",),        "Venice Film Festival": ("venice+film",),
+    "Art Basel": ("basel",),                        "Art Basel Miami": ("miami",),
+    "US Open Tennis": ("tennis",),                  "US Open Golf": ("golf",),
+    "F1 Monaco GP": ("monaco",),                    "F1 Abu Dhabi GP": ("abu dhabi",),
+    "F1 Italian GP (Monza)": ("monza", "italian"),  "F1 British GP (Silverstone)": ("silverstone", "british"),
+}
+
+
 def _fetch_calendar_event_news():
     """Fetch news for calendar events active within a ±30/+90 day window."""
     from datetime import timedelta
@@ -1157,7 +1228,17 @@ def _fetch_calendar_event_news():
     out = {}
     for e in relevant:
         print(f"    → event news: {e['name']}")
-        arts = _fetch_event_news(e["name"])
+        # the phrase is the event itself — not the season code, not the venue in
+        # brackets — and the year narrows it without being part of the phrase
+        core = re.sub(r"\s*\([^)]*\)|\s+(?:SS|FW)$", "", e["name"]).strip()
+        arts = _fetch_event_news(core, extra=e["start"][:4], max_items=20)
+        must = EVENT_TITLE_MUST.get(e["name"])
+        if must:
+            def _hit(title):
+                t = title.lower()
+                return any(all(w in t for w in m.split("+")) for m in must)
+            arts = [a for a in arts if _hit(a["title"])]
+        arts = arts[:8]
         if arts:
             out[e["name"]] = arts
     return out
@@ -3356,99 +3437,280 @@ html{scroll-padding-top:0}
   .mkt-lead,.mkt-stack,.mkt-rail{grid-column:1 / -1}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PHONE
+   The desktop band is three columns side by side. On a phone it becomes one
+   column deep: the lead as a full-width brick, the middle tier sliding
+   sideways, the wire as a plain list. One section at a time, chosen from a
+   tab bar at the top — the sections themselves, plus two views that cut
+   across all of them, because a per-section "long reads" would hold one or
+   three items while all of them together holds forty.
+   Same 8px baseline, same paint, same row shapes as the desktop.
+   ═════════════════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  html{scroll-snap-type:none!important}
+  .hero-sec{display:none}
+  /* two older phone rules set height/min-height/overflow with !important, so
+     these have to as well — otherwise the section stays one screen tall and
+     clips the rest of its content */
+  .snap-sec{display:none;height:auto!important;min-height:0!important;
+    overflow:visible!important;clip-path:none!important;
+    padding-bottom:0!important;scroll-snap-align:none}
+  .snap-sec.ph-on{display:block}
+  .mkt-page{padding:0;height:auto;overflow:visible}
+  .mkt-page > .sec-hd{display:none}          /* the tab bar names the section */
+  .mkt-band{display:block;padding:0 0 calc(var(--lh)*3);overflow:visible;
+    max-width:none;margin:0}
+  .mkt-lead,.mkt-stack,.mkt-rail{display:block;overflow:visible;
+    grid-column:auto;padding:0;min-height:0}
+
+  /* the phone gutter — one value, everything hangs off it */
+  :root{--ph-pad:16px}
+  .mkt-lead,.mkt-rail-list,.mkt-band > .mkt-stack > .mkt-tier-hd,
+  .mkt-rail > .mkt-tier-hd{padding-left:var(--ph-pad);padding-right:var(--ph-pad)}
+
+  /* ── the big brick ─────────────────────────────────────────────────── */
+  .pc-lead{padding:0}
+  .pc-lead .pc-hd{font-size:12px;line-height:calc(var(--bl)*2)}
+  /* the desktop clamps headlines to fit a column; a phone has the room, so
+     let them run. The lead's snippet is dropped — for the daily debriefs it
+     just repeats the headline underneath it. */
+  .pc-lead .pc-t{font-size:28px;line-height:calc(var(--lh)*4/3);
+    max-height:none;-webkit-line-clamp:unset!important}
+  .pc-lead .pc-snip{display:none}
+  .pc-lead .pc-img{height:auto;aspect-ratio:4/3;margin-top:var(--bl)}
+  .mkt-lead .mk-daily{padding:var(--bl) 0}
+  .mkt-lead .mk-daily .mk-t{font-size:17px;max-height:none;
+    -webkit-line-clamp:unset}
+
+  /* the standing index under the lead — two columns, no inner scroller */
+  .mkt-lead .cp-grid,.mkt-lead .culture-cal-band{
+    min-height:0;max-height:none;overflow:visible;padding-right:0}
+  .mkt-lead .cp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mkt-lead .cp-chip{height:calc(var(--lh)*1.5);font-size:14px}
+
+  /* ── the middle tier slides sideways ───────────────────────────────── */
+  .ph-track{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding:0 var(--ph-pad) var(--bl)}
+  .ph-track::-webkit-scrollbar{display:none}
+  .ph-track .pc-row{flex:0 0 74vw;display:flex;flex-direction:column;
+    height:auto;min-height:0;padding:0;box-shadow:none;scroll-snap-align:start}
+  .ph-track .pc-row .pc-img{display:block;width:100%;height:auto;
+    aspect-ratio:4/3;margin-top:var(--bl)}
+  .ph-track .pc-row .pc-hd{font-size:12px;line-height:calc(var(--bl)*2)}
+  .ph-track .pc-row .pc-t{font-size:19px;line-height:var(--lh);
+    max-height:calc(var(--lh)*4);-webkit-line-clamp:4!important}
+  .ph-track .pc-row .pc-snip{display:none}
+
+  /* ── the wire stays a list ─────────────────────────────────────────── */
+  .mkt-rail .mk{min-height:0;padding:var(--bl) 0}
+  .mkt-rail .mk-t{font-size:17px;max-height:calc(var(--lh)*4);
+    -webkit-line-clamp:4}
+  .mkt-rail .mk-has-thumb{grid-template-columns:minmax(0,1fr) 64px}
+  .mkt-rail .mk-thumb{width:64px;height:64px}
+
+  /* tier labels */
+  .mkt-band .mkt-tier-hd,.mkt-band .mkt-index-hd{
+    height:calc(var(--lh)*2);font-size:11px;letter-spacing:.1em}
+
+  /* ── the tab bar, sticky at the top ────────────────────────────────── */
+  .ph-brand{display:flex;align-items:baseline;gap:8px;
+    padding:calc(var(--bl)*2) var(--ph-pad) var(--bl)}
+  .ph-brand b{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .ph-brand span{font-size:11px;font-weight:300;color:var(--meta)}
+
+  /* The tab row is sticky from the first pixel, so its box never moves and
+     there is nothing to jump. Scrolling only changes paint — ground to glass,
+     square to pill, flat to lifted — and every one of those animates. */
+  .ph-tabs{position:sticky;top:var(--bl);z-index:900;
+    display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;
+    margin:0 var(--ph-pad) var(--bl);padding:0 14px;
+    background:var(--ground);border:1px solid transparent;border-radius:6px;
+    box-shadow:0 0 0 rgba(0,0,0,0);
+    -webkit-backdrop-filter:blur(0px);backdrop-filter:blur(0px);
+    /* A transition belongs to the state being moved TO, so these two
+       durations are the two directions: settling back to a plain band is
+       quick, lifting into glass is slower. Symmetrical timing made the
+       return feel sluggish. */
+    transition:background-color .14s ease-out, border-radius .14s ease-out,
+      box-shadow .14s ease-out, border-color .14s ease-out,
+      -webkit-backdrop-filter .14s ease-out, backdrop-filter .14s ease-out}
+  .ph-tabs::-webkit-scrollbar{display:none}
+  .ph-tab{flex:0 0 auto;background:none;border:0;font-family:inherit;
+    font-size:15px;font-weight:500;color:var(--meta);cursor:pointer;
+    padding:10px 0;border-bottom:2px solid transparent;white-space:nowrap;
+    transition:color .2s ease}
+  .ph-tab.on{color:var(--ink);border-bottom-color:#D42B17}
+
+  /* once the page has moved, the same box turns to glass */
+  .ph-tabs.is-float{
+    transition-duration:.28s;transition-timing-function:cubic-bezier(.22,.8,.3,1);
+    background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.55);
+    border-radius:999px;box-shadow:0 6px 22px rgba(0,0,0,.10);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+    backdrop-filter:blur(22px) saturate(180%)}
+  .ph-tabs.is-float .ph-tab{border-bottom-color:transparent}
+  .ph-tabs.is-float .ph-tab.on{color:#000;font-weight:700}
+  @media(prefers-color-scheme:dark){
+    .ph-tabs.is-float{background:rgba(28,28,28,.62);
+      border-color:rgba(255,255,255,.14);box-shadow:0 6px 22px rgba(0,0,0,.5)}
+    .ph-tabs.is-float .ph-tab.on{color:#fff}
+  }
+
+  /* the two cross-section views */
+  .ph-digest{display:none;padding:var(--lh) 0 calc(var(--lh)*3)}
+  .ph-digest.ph-on{display:block}
+  .ph-digest .ph-group{font-size:11px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--meta);
+    padding:var(--lh) var(--ph-pad) var(--bl);
+    border-top:1px solid var(--hair);margin-top:var(--bl)}
+  .ph-digest .ph-group:first-child{border-top:0;margin-top:0;padding-top:0}
+  .ph-digest .pc-row{display:flex;flex-direction:column;height:auto;
+    min-height:0;box-shadow:none;padding:0 var(--ph-pad) var(--lh)}
+  .ph-digest .pc-row .pc-img{display:block;width:100%;height:auto;
+    aspect-ratio:16/9;margin-top:var(--bl)}
+  .ph-digest .pc-row .pc-t{font-size:21px;line-height:calc(var(--lh)*7/6);
+    max-height:none;-webkit-line-clamp:unset!important}
+  .ph-digest .pc-row .pc-snip{font-size:13px;line-height:var(--lh);
+    max-height:calc(var(--lh)*2);-webkit-line-clamp:2!important}
+  .ph-digest .mk{padding:var(--bl) var(--ph-pad)}
+}
+
 """
 # ══════════════════════════════════════════════════════════════════════════════
 #  MOBILE NAV (bottom tab bar — rendered only ≤768px via CSS)
 # ══════════════════════════════════════════════════════════════════════════════
-PHONE_FIT_JS = """
+PHONE_APP = """
 <script>
+/* The phone build. The desktop band is three columns abreast; here it is one
+   column deep, one section at a time, chosen from the tab bar.
+   Two of the tabs cut across every section: Latest gathers all the wire rows
+   and Long reads all the feature cards. Per-section those tiers hold three to
+   twelve items; together they hold ninety-five and forty, which is what makes
+   them worth a destination — the wire otherwise sits at the bottom of every
+   section and never gets read.
+   Everything here is cloned, never moved, so nothing is lost if the window
+   grows back to desktop width. */
 (function(){
-  /* Culture's bricks must be square AND fill the screen. CSS can express one
-     or the other, not both: a column can't take its width from a row's flexed
-     height. So measure once and hand the result back as --sq. */
-  function fitPhone(){
-    if (window.innerWidth > 768) return;
-    var sec   = document.querySelector('.snap-culture');
-    var cards = document.querySelector('.snap-culture .cards');
-    var hd    = document.querySelector('.snap-culture .sec-hd');
-    var band  = document.querySelector('.culture-cal-band');
-    if (!sec || !cards || !hd) return;
-    var cs   = getComputedStyle(sec);
-    var pad  = parseFloat(cs.paddingBottom) || 0;
-    var gap  = parseFloat(getComputedStyle(cards).rowGap) || 4;
-    var cpad = parseFloat(getComputedStyle(cards).paddingTop) || 4;
-    var avail = sec.getBoundingClientRect().height - pad
-              - hd.getBoundingClientRect().height
-              - (band ? band.getBoundingClientRect().height : 0)
-              - cpad * 2;
-    var sq = Math.floor((avail - gap * 2) / 3);
-    if (sq > 40) cards.style.setProperty('--sq', sq + 'px');
-  }
-  fitPhone();
-  window.addEventListener('resize', fitPhone);
-  window.addEventListener('orientationchange', function(){ setTimeout(fitPhone, 250); });
-  if (document.readyState !== 'complete') window.addEventListener('load', fitPhone);
-})();
-</script>
-"""
+  var MQ = window.matchMedia('(max-width:768px)');
+  var built = false;
 
-MOBILE_NAV = """
-<nav class="mb-nav" id="mb-nav" aria-label="Sections">
-  <a href="#" data-sec=".snap-geo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9s1.4-6.4 3.9-9z"/></svg>World</a>
-  <a href="#" data-sec=".snap-feed"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/></svg>News</a>
-  <a href="#" data-sec=".snap-culture"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="15" rx="1"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="8.5" r="1.3"/></svg>Culture</a>
-  <a href="#" data-sec=".snap-gossip"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.8A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>Opinions</a>
-</nav>
-<script>
-(function(){
-  var mq = window.matchMedia('(max-width:768px)');
-  var nav = document.getElementById('mb-nav');
-  if (!nav) return;
-  var links = [].slice.call(nav.querySelectorAll('a[data-sec]'));
-  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('data-sec')); });
-  // tap -> smooth scroll to section
-  links.forEach(function(a, i){
-    a.addEventListener('click', function(e){
-      e.preventDefault();
-      if (secs[i]) secs[i].scrollIntoView({behavior:'smooth', block:'start'});
+  function build(){
+    if (built) return; built = true;
+    var secs = [].slice.call(document.querySelectorAll('.snap-sec')).filter(function(s){
+      return s.querySelector('.mkt-band');
     });
-  });
-  // active tab follows scroll position
-  function setOn(idx){ links.forEach(function(a, j){ a.classList.toggle('on', idx===j); }); }
-  function onScroll(){
-    if (!mq.matches) return;
-    var y = window.scrollY + window.innerHeight * 0.35, cur = -1;
-    secs.forEach(function(s, i){ if (s && s.offsetTop <= y) cur = i; });
-    setOn(cur);
-  }
-  window.addEventListener('scroll', onScroll, {passive:true});
-  onScroll();
-  // collapse long lists to 8 items behind a "show more" button
-  // (#city-list excluded: it has its own city filter)
-  function clampLists(){
-    if (!mq.matches) return;
-    var lists = document.querySelectorAll(
-      '.snap-feed .story-list, .snap-bottom .story-list:not(#city-list), .snap-bottom .paris-list');
-    [].forEach.call(lists, function(list){
-      if (list.dataset.mbClamped) return;
-      var items = list.querySelectorAll(':scope > .sg, :scope > .pi');
-      if (items.length <= 10) return;
-      list.dataset.mbClamped = '1';
-      list.classList.add('mb-clamp');
-      var btn = document.createElement('button');
-      btn.className = 'mb-more';
-      btn.textContent = 'Show ' + (items.length - 8) + ' more ↓';
-      btn.addEventListener('click', function(){
-        list.classList.remove('mb-clamp');
-        btn.remove();
+    if (!secs.length) return;
+
+    /* the middle tier scrolls sideways, so its label has to sit outside it */
+    secs.forEach(function(s){
+      var stack = s.querySelector('.mkt-stack');
+      if (!stack || stack.querySelector('.ph-track')) return;
+      var track = document.createElement('div');
+      track.className = 'ph-track';
+      [].slice.call(stack.children).forEach(function(c){
+        if (!c.classList.contains('mkt-tier-hd')) track.appendChild(c);
       });
-      list.appendChild(btn);
+      stack.appendChild(track);
     });
+
+    /* brand, sentinel and tab row are siblings at the top of the body — the
+       tab row has to be a direct child or `position:sticky` would be trapped
+       inside a wrapper and scroll away with it. */
+    var count = (document.querySelector('.hero-count') || {}).textContent || '';
+    var brand = document.createElement('div');
+    brand.className = 'ph-brand';
+    brand.innerHTML = '<b>Morning Brief</b><span>' +
+                      count.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+    var sentinel = document.createElement('div');
+    sentinel.setAttribute('aria-hidden','true');
+    sentinel.style.cssText = 'height:1px;margin:0;padding:0';
+    var tabs = document.createElement('div');
+    tabs.className = 'ph-tabs'; tabs.id = 'ph-tabs';
+    document.body.insertBefore(tabs, document.body.firstChild);
+    document.body.insertBefore(sentinel, tabs);
+    document.body.insertBefore(brand, sentinel);
+
+    var panes = [];
+    secs.forEach(function(s){
+      var name = (s.querySelector('.sec-hd-text') || {}).textContent || 'Section';
+      panes.push({label: name, el: s});
+    });
+
+    /* the two cross-section views, built by cloning */
+    function digest(id, label, pick){
+      var d = document.createElement('div');
+      d.className = 'ph-digest'; d.id = id;
+      secs.forEach(function(s){
+        var items = [].slice.call(s.querySelectorAll(pick));
+        if (!items.length) return;
+        var h = document.createElement('div');
+        h.className = 'ph-group';
+        h.textContent = (s.querySelector('.sec-hd-text') || {}).textContent || '';
+        d.appendChild(h);
+        items.forEach(function(it){ d.appendChild(it.cloneNode(true)); });
+      });
+      document.body.appendChild(d);
+      panes.push({label: label, el: d});
+      return d;
+    }
+    digest('ph-latest', 'Latest', '.mkt-rail-list .mk');
+    digest('ph-longreads', 'Long reads', '.ph-track .pc-row');
+
+    panes.forEach(function(p, i){
+      var b = document.createElement('button');
+      b.className = 'ph-tab'; b.type = 'button'; b.textContent = p.label;
+      b.addEventListener('click', function(){ show(i); });
+      tabs.appendChild(b);
+      p.tab = b;
+    });
+
+    function show(i){
+      panes.forEach(function(p, j){
+        p.el.classList.toggle('ph-on', i === j);
+        p.tab.classList.toggle('on', i === j);
+      });
+      window.scrollTo(0, 0);
+      var t = panes[i].tab;
+      t.scrollIntoView({block:'nearest', inline:'nearest'});
+    }
+    show(0);
+    window.__phShow = show;
+
+    /* Turn to glass the moment the row actually sticks. Not a scroll
+       threshold: <html> is the scroll container here, so window.scrollY never
+       moves and neither a scroll offset nor a viewport-rooted observer works.
+       The row's own distance from the top is the one reliable signal, and
+       listening in the capture phase catches the scroll wherever it happens. */
+    var stick = parseFloat(getComputedStyle(tabs).top) || 8;
+    var onScroll = function(){
+      tabs.classList.toggle('is-float', tabs.getBoundingClientRect().top <= stick + 1);
+    };
+    document.addEventListener('scroll', onScroll, {passive:true, capture:true});
+    window.addEventListener('resize', onScroll, {passive:true});
+    /* Second, event-independent trigger. <html> is the scroll container here
+       rather than the viewport, and that makes scroll delivery unreliable —
+       the sentinel crossing the top of the scroller is observed directly. */
+    if (window.IntersectionObserver) {
+      var scroller = document.scrollingElement || document.documentElement;
+      var oy = getComputedStyle(scroller).overflowY;
+      new IntersectionObserver(function(e){
+        tabs.classList.toggle('is-float', !e[0].isIntersecting);
+      }, {root: (oy === 'scroll' || oy === 'auto') ? scroller : null,
+          rootMargin: '-' + stick + 'px 0px 0px 0px',
+          threshold: 0}).observe(sentinel);
+    }
+    onScroll();
   }
-  clampLists();
+
+  function sync(){ if (MQ.matches) build(); }
+  sync();
+  MQ.addEventListener ? MQ.addEventListener('change', sync) : MQ.addListener(sync);
 })();
-</script>
-"""
+</script>"""
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  HTML BUILDERS
@@ -4198,10 +4460,21 @@ def _build_cal_band_html(event_news={}, paris_arts=()):
         if e["end"] >= today_str:               return (1, e["start"])
         return                                        (2, e["start"])
     # As a standing index this only has to answer "what's on" — everything
-    # running now, plus the next one to open. The rest is calendar noise.
-    _ordered   = sorted(CALENDAR_EVENTS, key=_ev_sort)
-    _live      = [e for e in _ordered if e["start"] <= today_str <= e["end"]]
-    _upcoming  = [e for e in _ordered if e["start"] > today_str][:1]
+    # running now, plus the next one to open.
+    #
+    # Live events used to sort by start date, which pinned the season-long ones
+    # (F1 since March, the Biennale since April) permanently above whatever was
+    # actually happening that week. Now: this week's events before season-long
+    # backdrops, verified before estimated within each, then soonest to close.
+    from datetime import date as _date
+    def _span(e):
+        return (_date.fromisoformat(e["end"]) - _date.fromisoformat(e["start"])).days
+    def _live_key(e):
+        return (_span(e) > 45, not e.get("verified", True), e["end"])
+    _live      = sorted([e for e in CALENDAR_EVENTS if e["start"] <= today_str <= e["end"]],
+                        key=_live_key)
+    _upcoming  = sorted([e for e in CALENDAR_EVENTS if e["start"] > today_str],
+                        key=lambda e: e["start"])[:1]
     sorted_evs = _live + _upcoming
     # Paris — What's On used to be its own column. It reads as a standing
     # listing rather than news, so it sits in this index like any other event.
@@ -4223,8 +4496,17 @@ def _build_cal_band_html(event_news={}, paris_arts=()):
     for i, ev in enumerate(sorted_evs):
         col     = cat_col.get(ev["cat"], "#555")
         lbl     = cat_lbl.get(ev["cat"], ev["cat"])
-        rng     = ev.get("_range") or fmt_range(ev["start"], ev["end"])
-        is_live = ev["start"] <= today_str <= ev["end"]
+        verified = ev.get("verified", True)
+        if ev.get("_range"):
+            rng = ev["_range"]
+        elif verified:
+            rng = fmt_range(ev["start"], ev["end"])
+        else:
+            # no source gives the day, so don't print one
+            _s0, _e0 = ev["start"], ev["end"]
+            m0 = mon_abbr[int(_s0[5:7])]; m1 = mon_abbr[int(_e0[5:7])]
+            rng = (f"{m0} {_s0[:4]}" if m0 == m1 else f"{m0} – {m1} {_e0[:4]}")
+        is_live = verified and ev["start"] <= today_str <= ev["end"]
         is_past = ev["end"] < today_str
         cls     = (" ev-live" if is_live else " ev-past" if is_past else "")
         live_badge = '<span class="cal-live-badge">LIVE</span>' if is_live else ""
@@ -5059,6 +5341,9 @@ def main():
     macro_grp = _enrich_groups(macro_grp, ai_client, headline_cache)
     _save_headline_cache(headline_cache)
     print(f"    → {sum(1 for g in tech_grp+macro_grp if len(g)>1)} groups enriched")
+    global CALENDAR_EVENTS
+    print("  Checking the event calendar…")
+    CALENDAR_EVENTS = _build_calendar_events()
     print("  Fetching calendar event news…")
     event_news = _fetch_calendar_event_news()
     print(f"    → {len(event_news)} events with coverage")
@@ -5175,11 +5460,8 @@ def main():
 {build_gossip(gossip_raw)}
 </section>
 
-<!-- Mobile bottom tab bar -->
-{MOBILE_NAV}
-
-<!-- Phone sizing -->
-{PHONE_FIT_JS}
+<!-- Phone -->
+{PHONE_APP}
 
 <!-- Unread dot tracker -->
 <script>
