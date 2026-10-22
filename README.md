@@ -59,10 +59,15 @@ git config core.hooksPath .githooks   # enable the pre-commit hook
 
 | Path | Purpose |
 |------|---------|
-| `news_fetcher.py` | Fetching, dedup, ranking and HTML rendering |
+| `news_fetcher.py` | Entry point: fetch, rank, write `index.html` |
+| `fetchers.py` | Everything that touches the network (feeds, Telegram, prices, Polymarket, AI headlines) |
+| `articles.py` | Pure helpers: dates, filters, dedup, per-source caps |
+| `render.py` | HTML for each section, plus the inlined CSS and phone-nav script |
+| `calendar_events.py` | Events calendar, resolved against Wikidata |
 | `sources.py` | Source lists, keyword sets, per-source rules (pure config) |
-| `assets/` | `brief.css` and `phone_app.html`, inlined into the page at build |
-| `tests/` | pytest suite for the dedup, date and filter logic |
+| `paths.py` | File locations |
+| `assets/` | `brief.css` and `phone_app.html` |
+| `tests/` | pytest suite for dedup, filters and HTML rendering |
 | `scripts/` | Manual diagnostics (e.g. which FT feeds still work) |
 | `telegram_auth.py` | One-time Telegram login |
 | `index.html` | Generated output (committed by the bot) |

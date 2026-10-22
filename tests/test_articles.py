@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
-import news_fetcher as nf
+import articles as nf
 import sources
 
 
@@ -177,10 +177,3 @@ def test_cap_per_source_respects_specific_and_default_caps():
 def test_one_per_source_keeps_first_group_of_each_source():
     groups = [[art("a", "X")], [art("b", "X")], [art("c", "Y")]]
     assert [g[0]["title"] for g in nf._one_per_source(groups)] == ["a", "c"]
-
-
-# ── generated-asset contract ─────────────────────────────────────────────────
-
-def test_assets_are_loaded_and_well_formed():
-    assert nf.CSS.lstrip().startswith("*,*::before")
-    assert nf.PHONE_APP.lstrip().startswith("<script>") and nf.PHONE_APP.rstrip().endswith("</script>")
