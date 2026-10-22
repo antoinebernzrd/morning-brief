@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test which FT RSS / proxy URLs actually return Technology section articles.
-Run this on your Mac:  python3 ~/news_dashboard/test_ft_feeds.py
+Run this on your Mac:  python3 scripts/check_ft_feeds.py
 """
 import feedparser, http.cookiejar, urllib.request, sys
 

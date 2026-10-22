@@ -1,0 +1,147 @@
+
+<script>
+/* The phone build. The desktop band is three columns abreast; here it is one
+   column deep, one section at a time, chosen from the tab bar.
+   Two of the tabs cut across every section: Latest gathers all the wire rows
+   and Long reads all the feature cards. Per-section those tiers hold three to
+   twelve items; together they hold ninety-five and forty, which is what makes
+   them worth a destination — the wire otherwise sits at the bottom of every
+   section and never gets read.
+   Everything here is cloned, never moved, so nothing is lost if the window
+   grows back to desktop width. */
+(function(){
+  var MQ = window.matchMedia('(max-width:768px)');
+  var built = false;
+
+  function build(){
+    if (built) return; built = true;
+    var secs = [].slice.call(document.querySelectorAll('.snap-sec')).filter(function(s){
+      return s.querySelector('.mkt-band');
+    });
+    if (!secs.length) return;
+
+    /* the middle tier scrolls sideways, so its label has to sit outside it */
+    secs.forEach(function(s){
+      var stack = s.querySelector('.mkt-stack');
+      if (!stack || stack.querySelector('.ph-track')) return;
+      var track = document.createElement('div');
+      track.className = 'ph-track';
+      [].slice.call(stack.children).forEach(function(c){
+        if (!c.classList.contains('mkt-tier-hd')) track.appendChild(c);
+      });
+      stack.appendChild(track);
+    });
+
+    /* brand, sentinel and tab row are siblings at the top of the body — the
+       tab row has to be a direct child or `position:sticky` would be trapped
+       inside a wrapper and scroll away with it. */
+    var count = (document.querySelector('.hero-count') || {}).textContent || '';
+    var brand = document.createElement('div');
+    brand.className = 'ph-brand';
+    brand.innerHTML = '<b>Morning Brief</b><span>' +
+                      count.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+    var sentinel = document.createElement('div');
+    sentinel.setAttribute('aria-hidden','true');
+    sentinel.style.cssText = 'height:1px;margin:0;padding:0';
+    var tabs = document.createElement('div');
+    tabs.className = 'ph-tabs'; tabs.id = 'ph-tabs';
+    document.body.insertBefore(tabs, document.body.firstChild);
+    document.body.insertBefore(sentinel, tabs);
+    document.body.insertBefore(brand, sentinel);
+
+    var panes = [];
+    secs.forEach(function(s){
+      var name = (s.querySelector('.sec-hd-text') || {}).textContent || 'Section';
+      panes.push({label: name, el: s});
+    });
+
+    /* the two cross-section views, built by cloning */
+    function digest(id, label, pick){
+      var d = document.createElement('div');
+      d.className = 'ph-digest'; d.id = id;
+      secs.forEach(function(s){
+        var items = [].slice.call(s.querySelectorAll(pick));
+        if (!items.length) return;
+        var h = document.createElement('div');
+        h.className = 'ph-group';
+        h.textContent = (s.querySelector('.sec-hd-text') || {}).textContent || '';
+        d.appendChild(h);
+        items.forEach(function(it){ d.appendChild(it.cloneNode(true)); });
+      });
+      document.body.appendChild(d);
+      panes.push({label: label, el: d});
+      return d;
+    }
+    digest('ph-latest', 'Latest', '.mkt-rail-list .mk');
+    digest('ph-longreads', 'Long reads', '.ph-track .pc-row');
+
+    panes.forEach(function(p, i){
+      var b = document.createElement('button');
+      b.className = 'ph-tab'; b.type = 'button'; b.textContent = p.label;
+      b.addEventListener('click', function(){ show(i); });
+      tabs.appendChild(b);
+      p.tab = b;
+    });
+
+    function show(i){
+      panes.forEach(function(p, j){
+        p.el.classList.toggle('ph-on', i === j);
+        p.tab.classList.toggle('on', i === j);
+      });
+      window.scrollTo(0, 0);
+      var t = panes[i].tab;
+      t.scrollIntoView({block:'nearest', inline:'nearest'});
+    }
+    show(0);
+    window.__phShow = show;
+
+    /* Turn to glass the moment the row actually sticks. Not a scroll
+       threshold: <html> is the scroll container here, so window.scrollY never
+       moves and neither a scroll offset nor a viewport-rooted observer works.
+       The row's own distance from the top is the one reliable signal, and
+       listening in the capture phase catches the scroll wherever it happens. */
+    /* the pill and the strip behind the status bar are one state */
+    var setFloat = function(on){
+      tabs.classList.toggle('is-float', on);
+      document.body.classList.toggle('ph-float', on);
+    };
+    /* Where the row comes to rest: 8px, plus whatever the system keeps for
+       itself at the top of the screen. That second part is zero in a browser
+       tab and the height of the camera cutout once the page is installed, and
+       it changes when the phone is turned — so it is measured, not assumed,
+       and measured again whenever the window changes shape. Both triggers
+       below read it, which is why re-measuring rebuilds the observer too. */
+    var stick = 8, io = null;
+    var onScroll = function(){
+      setFloat(tabs.getBoundingClientRect().top <= stick + 1);
+    };
+    var measure = function(){
+      var t = parseFloat(getComputedStyle(tabs).top);
+      if (!isNaN(t)) stick = t;
+      if (io) { io.disconnect(); io = null; }
+      /* Second, event-independent trigger. <html> is the scroll container
+         here rather than the viewport, and that makes scroll delivery
+         unreliable — the sentinel crossing the top of the scroller is
+         observed directly. */
+      if (window.IntersectionObserver) {
+        var scroller = document.scrollingElement || document.documentElement;
+        var oy = getComputedStyle(scroller).overflowY;
+        io = new IntersectionObserver(function(e){
+          setFloat(!e[0].isIntersecting);
+        }, {root: (oy === 'scroll' || oy === 'auto') ? scroller : null,
+            rootMargin: '-' + stick + 'px 0px 0px 0px',
+            threshold: 0});
+        io.observe(sentinel);
+      }
+      onScroll();
+    };
+    document.addEventListener('scroll', onScroll, {passive:true, capture:true});
+    window.addEventListener('resize', measure, {passive:true});
+    measure();
+  }
+
+  function sync(){ if (MQ.matches) build(); }
+  sync();
+  MQ.addEventListener ? MQ.addEventListener('change', sync) : MQ.addListener(sync);
+})();
+</script>

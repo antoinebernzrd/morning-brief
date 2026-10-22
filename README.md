@@ -36,6 +36,15 @@ python news_fetcher.py             # writes index.html
 Telegram channels are optional. Run `telegram_auth.py` once with `TELEGRAM_API_ID` and
 `TELEGRAM_API_HASH` set; the session is stored in `~/.config/morning-brief/`, outside the repo.
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+They run offline and in CI on every push.
+
 ## Secrets
 
 Nothing sensitive is committed. Keys come from environment variables or git-ignored files.
@@ -50,7 +59,11 @@ git config core.hooksPath .githooks   # enable the pre-commit hook
 
 | Path | Purpose |
 |------|---------|
-| `news_fetcher.py` | Fetching, ranking and HTML rendering |
+| `news_fetcher.py` | Fetching, dedup, ranking and HTML rendering |
+| `sources.py` | Source lists, keyword sets, per-source rules (pure config) |
+| `assets/` | `brief.css` and `phone_app.html`, inlined into the page at build |
+| `tests/` | pytest suite for the dedup, date and filter logic |
+| `scripts/` | Manual diagnostics (e.g. which FT feeds still work) |
 | `telegram_auth.py` | One-time Telegram login |
 | `index.html` | Generated output (committed by the bot) |
 | `manifest.webmanifest`, `icons/` | PWA assets |
