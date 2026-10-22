@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+# Telegram sessions are SQLite files, not text: block them by path.
+[[rules]]
+id = "telegram-session-file"
+description = "Telegram session file"
+path = '''(?i)\.session$'''
